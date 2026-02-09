@@ -1,57 +1,83 @@
-___
-# DELETE THIS INSTRUCTIONS AND ADD AN INTRODUCTION ABOUT YOUR PROJECT
-___
+# School Transport Vehicle Management System
 
-# eYY-co2060-project-template
+A web-based school transport management and real-time tracking system developed using the **PERN stack (PostgreSQL, Express, React, Node.js)**.
 
-This is a sample repository you can use for your Software Systems Design Project. Once you followed these instructions, remove the text and add a brief introduction to here.
+This repository contains the source code and documentation for the project, which is being developed as part of an academic software project.
 
-### Enable GitHub Pages
+---
 
-You can put the things to be shown in GitHub pages into the _docs/_ folder. Both html and md file formats are supported. You need to go to settings and enable GitHub pages and select _main_ branch and _docs_ folder from the dropdowns, as shown in the below image.
+## 📌 Project Description
 
-![image](https://user-images.githubusercontent.com/11540782/98789936-028d3600-2429-11eb-84be-aaba665fdc75.png)
+The School Transport Vehicle Management System aims to improve the safety, transparency, and efficiency of school transportation by providing real-time vehicle tracking, journey management, and communication between schools, drivers, and parents.
 
-### Special Configurations
+The system is designed as a **web application** following a **three-tier architecture**.
 
-These projects will be automatically added into [https://projects.ce.pdn.ac.lk](). If you like to show more details about your project on this site, you can fill the parameters in the file, _/docs/index.json_
+---
+
+## 🧱 High-Level Architecture
+
+* **Frontend:** React-based web applications
+* **Backend:** Node.js with Express (REST APIs + WebSockets)
+* **Database:** PostgreSQL
+
+External services such as mapping and notifications are integrated where required.
+
+---
+
+## ⚙️ Technology Stack
+
+* Frontend: React
+* Backend: Node.js, Express
+* Database: PostgreSQL
+* Real-time Communication: WebSockets (Socket.io)
+* Version Control: Git & GitHub
+
+---
+
+## 📁 Repository Structure (Initial)
 
 ```
-{
-  "title": "This is the title of the project",
-  "team": [
-    {
-      "name": "Team Member Name 1",
-      "email": "email@eng.pdn.ac.lk",
-      "eNumber": "E/yy/xxx"
-    },
-    {
-      "name": "Team Member Name 2",
-      "email": "email@eng.pdn.ac.lk",
-      "eNumber": "E/yy/xxx"
-    },
-    {
-      "name": "Team Member Name 3",
-      "email": "email@eng.pdn.ac.lk",
-      "eNumber": "E/yy/xxx"
-    }
-  ],
-  "supervisors": [
-    {
-      "name": "Dr. Supervisor 1",
-      "email": "email@eng.pdn.ac.lk"
-    },
-    {
-      "name": "Supervisor 2",
-      "email": "email@eng.pdn.ac.lk"
-    }
-  ],
-  "tags": ["Web", "Software Systems", "CO2060"]
-}
+root/
+│
+├── code/
+├── docs/
+└── README.md
 ```
 
-Once you filled this _index.json_ file, please verify the syntax is correct. (You can use [this](https://jsonlint.com/) tool).
+> The folder structure will be expanded as development progresses.
 
-### Page Theme
+---
 
-A custom theme integrated with this GitHub Page, which is based on [github.com/cepdnaclk/eYY-project-theme](https://github.com/cepdnaclk/eYY-project-theme). If you like to remove this default theme, you can remove the file, _docs/\_config.yml_ and use HTML based website.
+## 🌿 Branching Model
+
+* `main` – Stable code
+* `develop` – Active development
+* `feature/*` – Feature branches
+
+All work should be merged into `develop` via pull requests.
+
+---
+
+## 🚀 Getting Started
+
+```bash
+# Clone the repository
+git clone <repository-url>
+
+# Switch to develop branch
+git checkout develop
+```
+
+Further setup instructions will be added later.
+
+---
+
+## 📄 Notes
+
+* This README is intentionally kept **general** at the current stage
+* Detailed setup, API documentation, and contribution guidelines will be added later
+
+---
+
+### Project Team
+48 - Team AlphaWolves
