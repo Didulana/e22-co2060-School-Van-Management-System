@@ -82,7 +82,7 @@ Future enhancements may include real-time GPS tracking, automated notifications 
 
 ## Links
 
-- [Project Repository](https://github.com/cepdnaclk/{{ page.repository-name }}){:target="_blank"}
-- [Project Page](https://cepdnaclk.github.io/{{ page.repository-name }}){:target="_blank"}
+- [Project Repository](https://github.com/yourusername/e22-co2060-school-van-management){:target="_blank"}
+- [Project Page](https://yourusername.github.io/e22-co2060-school-van-management){:target="_blank"}
 - [Department of Computer Engineering](http://www.ce.pdn.ac.lk/)
 - [University of Peradeniya](https://eng.pdn.ac.lk/)
