@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import TrackingMap from "./pages/TrackingMap";
-import Notifications from "./pages/Notifications";
+import TrackingMap from "./pages/parent/LiveTracking";
+import Notifications from "./pages/parent/Notifications";
 
 export default function App() {
   return (
