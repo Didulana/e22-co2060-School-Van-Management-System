@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { Home, MapPin, Clock, Bell, LogOut, Bus } from "lucide-react";
-import { cn } from "../ui/utils";
+import { cn } from "../components/ui/utils";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/parent" },
