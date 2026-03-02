@@ -37,7 +37,7 @@ const roles = [
   },
 ];
 
-export function RoleSelect() {
+export default function RoleSelect() {
   const navigate = useNavigate();
 
   return (

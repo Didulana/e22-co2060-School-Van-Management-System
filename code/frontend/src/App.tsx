@@ -2,25 +2,25 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Layouts
 import { ParentLayout } from "./layouts/ParentLayout";
-// import { AdminLayout } from "./layouts/AdminLayout";
+import AdminLayout from "./layouts/AdminLayout";
 // import { DriverLayout } from "./layouts/DriverLayout";
 
 // Parent pages
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import LiveTracking from "./pages/parent/LiveTracking";
 import Notifications from "./pages/parent/Notifications";
-import { TripHistory } from "./pages/parent/TripHistory";
+import TripHistory from "./pages/parent/TripHistory";
 
 // Public/Auth
 import RoleSelect from "./pages/RoleSelect";
 
 // Admin pages (uncomment when you add them)
-// import AdminDashboard from "./pages/admin/AdminDashboard";
-// import AdminStudents from "./pages/admin/AdminStudents";
-// import AdminVehicles from "./pages/admin/AdminVehicles";
-// import AdminRoutes from "./pages/admin/AdminRoutes";
-// import AdminTracking from "./pages/admin/AdminTracking";
-// import AdminSettings from "./pages/admin/AdminSettings";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminStudents from "./pages/admin/AdminStudents";
+import AdminVehicles from "./pages/admin/AdminVehicles";
+import AdminRoutes from "./pages/admin/AdminRoutes";
+import AdminTracking from "./pages/admin/AdminTracking";
+import AdminSettings from "./pages/admin/AdminSettings";
 
 // Driver pages (uncomment when you add them)
 // import DriverDashboard from "./pages/driver/DriverDashboard";
@@ -44,7 +44,7 @@ export default function App() {
         </Route>
 
         {/* Admin routes (enable when Admin pages/layout exist) */}
-        {/*
+        
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="students" element={<AdminStudents />} />
@@ -53,7 +53,7 @@ export default function App() {
           <Route path="tracking" element={<AdminTracking />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
-        */}
+        
 
         {/* Driver routes (enable when Driver pages/layout exist) */}
         {/*

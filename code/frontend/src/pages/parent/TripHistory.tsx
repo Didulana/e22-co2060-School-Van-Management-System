@@ -95,7 +95,7 @@ function getStatusBadge(status: string, label: string) {
   return <StatusBadge status={map[status] || "neutral"}>{label}</StatusBadge>;
 }
 
-export function TripHistory() {
+export default function TripHistory() {
   return (
     <div className="p-4 pb-6 max-w-lg mx-auto space-y-5">
       <div className="pt-2">
