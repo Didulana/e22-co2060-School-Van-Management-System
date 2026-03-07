@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS journey_locations (
+    id SERIAL PRIMARY KEY,
+    driver_id INTEGER NOT NULL,
+    journey_id INTEGER NOT NULL,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    recorded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

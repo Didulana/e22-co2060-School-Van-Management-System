@@ -4,8 +4,9 @@ import { Server } from "socket.io";
 import app from "./app";
 import { initSocket } from "./services/socketService";
 import { registerTrackingSocket } from "./sockets/trackingSocket";
+import { testDbConnection } from "./config/db";
 
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = Number(process.env.PORT) || 5001;
 
 const server = http.createServer(app);
 
@@ -19,6 +20,12 @@ const io = new Server(server, {
 initSocket(io);
 registerTrackingSocket(io);
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`Server listening on port ${PORT}`);
+
+  try {
+    await testDbConnection();
+  } catch (error) {
+    console.error("Database connection failed:", error);
+  }
 });
