@@ -1,13 +1,22 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { processLocationUpdate } from "../services/trackingService";
 import { getLatestLocations } from "../models/locationModel";
+import { AuthenticatedRequest } from "../middleware/authMiddleware";
 
-export async function updateLocation(req: Request, res: Response) {
+export async function updateLocation(
+  req: AuthenticatedRequest,
+  res: Response
+) {
   try {
-    const { driverId, journeyId, lat, lng } = req.body;
+    const { journeyId, lat, lng } = req.body;
+
+    if (!req.user) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
 
     if (
-      driverId === undefined ||
       journeyId === undefined ||
       lat === undefined ||
       lng === undefined
@@ -17,8 +26,14 @@ export async function updateLocation(req: Request, res: Response) {
       });
     }
 
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        error: "Only drivers can update location",
+      });
+    }
+
     await processLocationUpdate({
-      driverId: Number(driverId),
+      driverId: req.user.id,
       journeyId: Number(journeyId),
       lat: Number(lat),
       lng: Number(lng),
@@ -26,6 +41,7 @@ export async function updateLocation(req: Request, res: Response) {
 
     return res.json({
       status: "location updated",
+      driverId: req.user.id,
     });
   } catch (error) {
     console.error("updateLocation error:", error);
@@ -36,7 +52,10 @@ export async function updateLocation(req: Request, res: Response) {
   }
 }
 
-export async function fetchLatestLocations(_req: Request, res: Response) {
+export async function fetchLatestLocations(
+  _req: AuthenticatedRequest,
+  res: Response
+) {
   try {
     const locations = await getLatestLocations();
 

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import trackingRoutes from "./routes/trackingRoutes";
+import devAuthRoutes from "./routes/devAuthRoutes";
 
 const app = express();
 
@@ -18,5 +19,6 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/tracking", trackingRoutes);
+app.use("/api/dev-auth", devAuthRoutes);
 
 export default app;
