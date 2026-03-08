@@ -27,4 +27,28 @@ router.post("/test-driver-token", (_req, res) => {
   });
 });
 
+router.post("/test-parent-token", (_req, res) => {
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!jwtSecret) {
+    return res.status(500).json({
+      error: "JWT secret is not configured",
+    });
+  }
+
+  const token = jwt.sign(
+    {
+      id: 101,
+      email: "parent1@test.com",
+      role: "parent",
+    },
+    jwtSecret,
+    { expiresIn: "1h" }
+  );
+
+  return res.json({
+    token,
+  });
+});
+
 export default router;
