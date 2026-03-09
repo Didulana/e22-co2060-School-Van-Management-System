@@ -51,3 +51,16 @@ export async function markNotificationAsRead(id: number) {
 
   await pool.query(query, [id]);
 }
+
+export async function getUnreadNotificationCount(journeyId: number) {
+  const query = `
+    SELECT COUNT(*) AS unread_count
+    FROM notifications
+    WHERE journey_id = $1
+      AND is_read = FALSE
+  `;
+
+  const result = await pool.query(query, [journeyId]);
+
+  return Number(result.rows[0].unread_count);
+}

@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { sendJourneyNotification } from "../services/notificationService";
 import { getNotificationsByJourney } from "../models/notificationModel";
+import { markNotificationAsRead } from "../models/notificationModel";
+import { getUnreadNotificationCount } from "../models/notificationModel";
 
 export async function createNotification(req: Request, res: Response) {
   try {
@@ -50,6 +52,49 @@ export async function getNotifications(req: Request, res: Response) {
 
     return res.status(500).json({
       error: "Failed to fetch notifications",
+    });
+  }
+}
+
+export async function markAsRead(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    await markNotificationAsRead(Number(id));
+
+    return res.json({
+      status: "notification marked as read",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Failed to update notification",
+    });
+  }
+}
+
+export async function getUnreadCount(req: Request, res: Response) {
+  try {
+    const { journeyId } = req.query;
+
+    if (!journeyId) {
+      return res.status(400).json({
+        error: "journeyId required",
+      });
+    }
+
+    const unreadCount = await getUnreadNotificationCount(Number(journeyId));
+
+    return res.json({
+      unreadCount,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Failed to fetch unread count",
     });
   }
 }
