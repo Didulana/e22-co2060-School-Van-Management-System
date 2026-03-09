@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { sendJourneyNotification } from "../services/notificationService";
+import { getNotificationsByJourney } from "../models/notificationModel";
 
 export async function createNotification(req: Request, res: Response) {
   try {
@@ -21,6 +22,34 @@ export async function createNotification(req: Request, res: Response) {
 
     return res.status(500).json({
       error: "Notification failed",
+    });
+  }
+}
+
+export async function getNotifications(req: Request, res: Response) {
+  try {
+    const { journeyId } = req.query;
+
+    if (!journeyId) {
+      return res.status(400).json({
+        error: "journeyId required",
+      });
+    }
+
+    const notifications = await getNotificationsByJourney(
+      Number(journeyId)
+    );
+
+    return res.json({
+      count: notifications.length,
+      data: notifications,
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      error: "Failed to fetch notifications",
     });
   }
 }

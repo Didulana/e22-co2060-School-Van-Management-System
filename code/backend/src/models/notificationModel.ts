@@ -22,3 +22,21 @@ export async function saveNotification(record: NotificationRecord) {
 
   await pool.query(query, values);
 }
+
+export async function getNotificationsByJourney(journeyId: number) {
+  const query = `
+    SELECT
+      id,
+      journey_id,
+      type,
+      message,
+      created_at
+    FROM notifications
+    WHERE journey_id = $1
+    ORDER BY created_at DESC
+  `;
+
+  const result = await pool.query(query, [journeyId]);
+
+  return result.rows;
+}
