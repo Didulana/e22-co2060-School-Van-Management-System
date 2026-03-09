@@ -21,10 +21,19 @@ app.get("/api/health", (_req, res) => {
   res.json({ message: "Backend is running" });
 });
 
+app.get("/api/system/status", (_req, res) => {
+  res.json({
+    status: "ok",
+    service: "tracking-service",
+    timestamp: new Date()
+  });
+});
+
 app.use("/api/tracking", trackingRoutes);
 app.use("/api/dev-auth", devAuthRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/journey-events", journeyEventRoutes);
 app.use("/api/boarding", studentBoardingRoutes);
+
 
 export default app;
