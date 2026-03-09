@@ -30,6 +30,7 @@ export async function getNotificationsByJourney(journeyId: number) {
       journey_id,
       type,
       message,
+      is_read,
       created_at
     FROM notifications
     WHERE journey_id = $1
@@ -39,4 +40,14 @@ export async function getNotificationsByJourney(journeyId: number) {
   const result = await pool.query(query, [journeyId]);
 
   return result.rows;
+}
+
+export async function markNotificationAsRead(id: number) {
+  const query = `
+    UPDATE notifications
+    SET is_read = TRUE
+    WHERE id = $1
+  `;
+
+  await pool.query(query, [id]);
 }
