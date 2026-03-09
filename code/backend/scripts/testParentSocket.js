@@ -29,6 +29,10 @@ socket.on("tracking:location-broadcast", (data) => {
   console.log("Live location received:", data);
 });
 
+socket.on("notification:new", (data) => {
+  console.log("Notification received:", data);
+});
+
 socket.on("auth:error", (data) => {
   console.log("Auth error:", data);
 });

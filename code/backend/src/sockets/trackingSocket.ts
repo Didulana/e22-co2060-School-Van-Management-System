@@ -13,7 +13,7 @@ interface AuthenticatedSocket extends Socket {
   user?: JwtUserPayload;
 }
 
-// Temporary placeholder until database integration is added
+// Temporary until parent-student-journey assignment is implemented
 async function canParentViewJourney(
   userId: number,
   journeyId: number
@@ -100,7 +100,10 @@ export function registerTrackingSocket(io: Server): void {
             return emitAuthError(socket, "journeyId is required");
           }
 
-          if (socket.user?.role !== "parent" && socket.user?.role !== "admin") {
+          if (
+            socket.user?.role !== "parent" &&
+            socket.user?.role !== "admin"
+          ) {
             return emitAuthError(
               socket,
               "Only parents or admins can subscribe to journey tracking"
@@ -119,6 +122,7 @@ export function registerTrackingSocket(io: Server): void {
           }
 
           const room = journeyRoom(journeyId);
+
           socket.join(room);
 
           const response: TrackingSubscribedPayload = {
