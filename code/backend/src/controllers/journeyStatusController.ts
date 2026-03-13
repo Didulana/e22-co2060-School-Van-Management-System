@@ -3,31 +3,36 @@ import {
   getLatestLocation,
   getBoardedCount,
   getDroppedCount,
-  getNotificationCount
+  getNotificationCount,
 } from "../models/journeyStatusModel";
 
 export async function getJourneyStatus(req: Request, res: Response) {
   try {
     const journeyId = Number(req.params.id);
 
-    const location = await getLatestLocation(journeyId);
-    const boarded = await getBoardedCount(journeyId);
-    const dropped = await getDroppedCount(journeyId);
+    if (!journeyId || Number.isNaN(journeyId)) {
+      return res.status(400).json({
+        error: "Invalid journey id",
+      });
+    }
+
+    const latestLocation = await getLatestLocation(journeyId);
+    const boardedCount = await getBoardedCount(journeyId);
+    const droppedCount = await getDroppedCount(journeyId);
     const notifications = await getNotificationCount(journeyId);
 
     return res.json({
       journeyId,
-      latestLocation: location,
-      boardedCount: boarded,
-      droppedCount: dropped,
-      notifications
+      latestLocation,
+      boardedCount,
+      droppedCount,
+      notifications,
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("getJourneyStatus error:", error);
 
     return res.status(500).json({
-      error: "Failed to fetch journey status"
+      error: "Failed to fetch journey status",
     });
   }
 }

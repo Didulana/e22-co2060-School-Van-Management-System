@@ -10,7 +10,6 @@ export async function getLatestLocation(journeyId: number) {
   `;
 
   const result = await pool.query(query, [journeyId]);
-
   return result.rows[0] || null;
 }
 
@@ -22,7 +21,6 @@ export async function getBoardedCount(journeyId: number) {
   `;
 
   const result = await pool.query(query, [journeyId]);
-
   return Number(result.rows[0].count);
 }
 
@@ -34,7 +32,6 @@ export async function getDroppedCount(journeyId: number) {
   `;
 
   const result = await pool.query(query, [journeyId]);
-
   return Number(result.rows[0].count);
 }
 
@@ -46,6 +43,5 @@ export async function getNotificationCount(journeyId: number) {
   `;
 
   const result = await pool.query(query, [journeyId]);
-
   return Number(result.rows[0].count);
 }
