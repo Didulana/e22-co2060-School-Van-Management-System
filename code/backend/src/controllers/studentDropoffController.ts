@@ -1,8 +1,8 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
-import { handleBoardingWorkflow } from "../services/journeyOrchestratorService";
+import { handleDropoffWorkflow } from "../services/journeyOrchestratorService";
 
-export async function studentBoarded(
+export async function studentDropped(
   req: AuthenticatedRequest,
   res: Response
 ) {
@@ -21,20 +21,20 @@ export async function studentBoarded(
       });
     }
 
-    await handleBoardingWorkflow(
+    await handleDropoffWorkflow(
       Number(journeyId),
       req.user.id,
       Number(studentId)
     );
 
     return res.json({
-      status: "student boarding recorded",
+      status: "student dropoff recorded",
     });
   } catch (error) {
     console.error(error);
 
     return res.status(500).json({
-      error: "Boarding failed",
+      error: "Dropoff failed",
     });
   }
 }

@@ -5,6 +5,9 @@ import devAuthRoutes from "./routes/devAuthRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import journeyEventRoutes from "./routes/journeyEventRoutes";
 import studentBoardingRoutes from "./routes/studentBoardingRoutes";
+import studentDropoffRoutes from "./routes/studentDropoffRoutes";
+import journeyStatusRoutes from "./routes/journeyStatusRoutes";
+import journeyTimelineRoutes from "./routes/journeyTimelineRoutes";
 
 const app = express();
 
@@ -34,6 +37,8 @@ app.use("/api/dev-auth", devAuthRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/journey-events", journeyEventRoutes);
 app.use("/api/boarding", studentBoardingRoutes);
-
+app.use("/api/dropoff", studentDropoffRoutes);
+app.use("/api/journey", journeyStatusRoutes);
+app.use("/api/journey", journeyTimelineRoutes);
 
 export default app;
