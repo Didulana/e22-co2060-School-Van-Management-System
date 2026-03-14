@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
-import { triggerJourneyEvent } from "../services/journeyEventService";
+import { handleJourneyEventWorkflow } from "../services/journeyOrchestratorService";
 import { getJourneyEventsByJourneyId } from "../models/journeyEventModel";
 
 export async function createJourneyEvent(
@@ -22,7 +22,7 @@ export async function createJourneyEvent(
       });
     }
 
-    await triggerJourneyEvent(
+    await handleJourneyEventWorkflow(
       journeyId,
       req.user.id,
       type,
