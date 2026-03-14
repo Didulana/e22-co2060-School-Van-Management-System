@@ -23,3 +23,21 @@ export async function saveJourneyEvent(
     message,
   ]);
 }
+
+export async function getJourneyEventsByJourneyId(journeyId: number) {
+  const query = `
+    SELECT
+      id,
+      journey_id,
+      driver_id,
+      event_type,
+      message,
+      created_at
+    FROM journey_events
+    WHERE journey_id = $1
+    ORDER BY created_at DESC
+  `;
+
+  const result = await pool.query(query, [journeyId]);
+  return result.rows;
+}
