@@ -1,7 +1,6 @@
-const express = require('express');
-const cors = require('cors');
-
-const adminRoutes = require('./src/routes/adminRoutes');
+import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import adminRoutes from './src/routes/adminRoutes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -10,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // Health check
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.send('Backend server is running');
 });
 
@@ -18,7 +17,7 @@ app.get('/', (req, res) => {
 app.use('/api/admin', adminRoutes);
 
 // Global error fallback
-app.use((err, req, res, next) => {
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Unhandled server error:', err);
   res.status(500).json({
     message: 'Internal server error'
