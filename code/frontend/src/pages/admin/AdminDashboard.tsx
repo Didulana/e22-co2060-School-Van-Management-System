@@ -1,18 +1,38 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, CSSProperties } from "react";
+
+interface AdminSummary {
+  totalUsers: number;
+  totalVehicles: number;
+  activeRoutes: number;
+}
+
+interface Driver {
+  id: number;
+  name: string;
+  phone: string;
+  vehicle: string;
+}
+
+interface Student {
+  id: number;
+  name: string;
+  grade: string;
+  route: string;
+}
 
 export default function AdminDashboard() {
-  const [summary, setSummary] = useState({
+  const [summary, setSummary] = useState<AdminSummary>({
     totalUsers: 0,
     totalVehicles: 0,
     activeRoutes: 0,
   });
 
-  const [drivers] = useState([
+  const [drivers] = useState<Driver[]>([
     { id: 1, name: "Kasun Silva", phone: "0771234567", vehicle: "NB-1234" },
     { id: 2, name: "Nimal Perera", phone: "0779876543", vehicle: "NC-4567" },
   ]);
 
-  const [students] = useState([
+  const [students] = useState<Student[]>([
     { id: 1, name: "Ayesha Fernando", grade: "Grade 5", route: "Route A" },
     { id: 2, name: "Dilan Peris", grade: "Grade 3", route: "Route B" },
   ]);
@@ -153,14 +173,14 @@ export default function AdminDashboard() {
   );
 }
 
-const tableHeaderStyle = {
+const tableHeaderStyle: CSSProperties = {
   border: "1px solid #ddd",
   padding: "10px",
   backgroundColor: "#f1f1f1",
   textAlign: "left",
 };
 
-const tableCellStyle = {
+const tableCellStyle: CSSProperties = {
   border: "1px solid #ddd",
   padding: "10px",
 };
