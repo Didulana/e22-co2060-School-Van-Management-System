@@ -76,3 +76,31 @@ export async function markNotificationAsRead(id: number, token: string) {
 
   return response.json();
 }
+
+export async function getParentChildren(token: string) {
+  const response = await fetch(`${API_BASE_URL}/parent/children`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch parent's children");
+  }
+
+  return response.json();
+}
+
+export async function getChildStatus(studentId: number, token: string) {
+  const response = await fetch(`${API_BASE_URL}/parent/children/${studentId}/status`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch child status");
+  }
+
+  return response.json();
+}
