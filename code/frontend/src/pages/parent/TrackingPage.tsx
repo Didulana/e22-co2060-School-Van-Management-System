@@ -112,7 +112,16 @@ export default function TrackingPage() {
 
   useEffect(() => {
     if (selectedChildId !== null) {
+      // Fetch immediately on child select
       loadChildData(selectedChildId);
+
+      // Set up recurring live polling every 10 seconds
+      const pollInterval = setInterval(() => {
+        loadChildData(selectedChildId, true); // true = transparent refresh without hiding the map
+      }, 10000);
+
+      // Cleanup interval if the user clicks a different child or unmounts the page
+      return () => clearInterval(pollInterval);
     }
   }, [selectedChildId]);
 
