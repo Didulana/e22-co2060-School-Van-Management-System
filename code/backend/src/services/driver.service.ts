@@ -1,9 +1,10 @@
-const driverModel = require("../models/driver.model");
+import * as driverModel from "../models/driver.model";
+import { Driver } from "../models/driver.model";
 
 /**
  * Create driver
  */
-const createDriver = async (data) => {
+export const createDriver = async (data: Driver): Promise<Driver> => {
   const { name, phone, license_number } = data;
 
   // Basic validation
@@ -17,39 +18,31 @@ const createDriver = async (data) => {
 /**
  * Get all drivers
  */
-const getDrivers = async () => {
+export const getDrivers = async (): Promise<Driver[]> => {
   return await driverModel.getAllDrivers();
 };
 
 /**
  * Update driver
  */
-const updateDriver = async (id, data) => {
+export const updateDriver = async (id: number, data: Driver): Promise<Driver> => {
   return await driverModel.updateDriver(id, data);
 };
 
 /**
  * Delete driver
  */
-const deleteDriver = async (id) => {
+export const deleteDriver = async (id: number): Promise<void> => {
   return await driverModel.deleteDriver(id);
 };
 
 /**
  * Assign vehicle to driver
  */
-const assignVehicle = async (driverId, vehicleId) => {
+export const assignVehicle = async (driverId: number, vehicleId: number): Promise<Driver> => {
   if (!vehicleId) {
     throw new Error("Vehicle ID is required");
   }
 
   return await driverModel.assignVehicle(driverId, vehicleId);
-};
-
-module.exports = {
-  createDriver,
-  getDrivers,
-  updateDriver,
-  deleteDriver,
-  assignVehicle,
 };

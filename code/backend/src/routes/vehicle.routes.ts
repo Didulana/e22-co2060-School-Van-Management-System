@@ -1,7 +1,7 @@
-const express = require("express");
-const router = express.Router();
+import { Router } from "express";
+import * as vehicleController from "../controllers/vehicle.controller";
 
-const vehicleController = require("../controllers/vehicle.controller");
+const router = Router();
 
 /**
  * Create vehicle
@@ -23,4 +23,4 @@ router.put("/:id", vehicleController.updateVehicle);
  */
 router.delete("/:id", vehicleController.deleteVehicle);
 
-module.exports = router;
+export default router;

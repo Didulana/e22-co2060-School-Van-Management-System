@@ -1,9 +1,10 @@
-const vehicleModel = require("../models/vehicle.model");
+import * as vehicleModel from "../models/vehicle.model";
+import { Vehicle } from "../models/vehicle.model";
 
 /**
  * Create vehicle
  */
-const createVehicle = async (data) => {
+export const createVehicle = async (data: Vehicle): Promise<Vehicle> => {
   const { vehicle_number, type, capacity } = data;
 
   if (!vehicle_number || !type || !capacity) {
@@ -16,27 +17,20 @@ const createVehicle = async (data) => {
 /**
  * Get all vehicles
  */
-const getVehicles = async () => {
+export const getVehicles = async (): Promise<Vehicle[]> => {
   return await vehicleModel.getAllVehicles();
 };
 
 /**
  * Update vehicle
  */
-const updateVehicle = async (id, data) => {
+export const updateVehicle = async (id: number, data: Vehicle): Promise<Vehicle> => {
   return await vehicleModel.updateVehicle(id, data);
 };
 
 /**
  * Delete vehicle
  */
-const deleteVehicle = async (id) => {
+export const deleteVehicle = async (id: number): Promise<void> => {
   return await vehicleModel.deleteVehicle(id);
-};
-
-module.exports = {
-  createVehicle,
-  getVehicles,
-  updateVehicle,
-  deleteVehicle,
 };

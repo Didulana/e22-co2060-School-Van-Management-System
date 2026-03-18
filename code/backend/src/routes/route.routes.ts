@@ -1,7 +1,7 @@
-const express = require("express");
-const router = express.Router();
+import { Router } from "express";
+import * as routeController from "../controllers/route.controller";
 
-const routeController = require("../controllers/route.controller");
+const router = Router();
 
 /**
  * Create route
@@ -14,4 +14,4 @@ router.post("/", routeController.createRoute);
  */
 router.get("/", routeController.getRoutes);
 
-module.exports = router;
+export default router;

@@ -1,7 +1,7 @@
-const express = require("express");
-const router = express.Router();
+import { Router } from "express";
+import * as driverController from "../controllers/driver.controller";
 
-const driverController = require("../controllers/driver.controller");
+const router = Router();
 
 /**
  * Create driver
@@ -28,4 +28,4 @@ router.delete("/:id", driverController.deleteDriver);
  */
 router.put("/:id/assign-vehicle", driverController.assignVehicle);
 
-module.exports = router;
+export default router;

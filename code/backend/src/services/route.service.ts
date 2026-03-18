@@ -1,9 +1,10 @@
-const routeModel = require("../models/route.model");
+import * as routeModel from "../models/route.model";
+import { Route } from "../models/route.model";
 
 /**
  * Create a new route
  */
-const createRoute = async (data) => {
+export const createRoute = async (data: Route): Promise<Route> => {
   const { route_name, driver_id, vehicle_id, schedule, stops } = data;
 
   if (!route_name || !route_name.trim()) {
@@ -85,15 +86,10 @@ const createRoute = async (data) => {
  * Get all routes
  * Optional filter by driver
  */
-const getRoutes = async (driverId) => {
+export const getRoutes = async (driverId?: number | string) => {
   if (driverId && Number.isNaN(Number(driverId))) {
     throw new Error("Driver ID must be a number");
   }
 
-  return await routeModel.getAllRoutes(driverId ? Number(driverId) : null);
-};
-
-module.exports = {
-  createRoute,
-  getRoutes,
+  return await routeModel.getAllRoutes(driverId ? Number(driverId) : undefined);
 };

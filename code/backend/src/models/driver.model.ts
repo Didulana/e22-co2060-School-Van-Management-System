@@ -1,9 +1,17 @@
-const db = require("../../config/db");
+import db from "../config/db";
+
+export interface Driver {
+  id?: number;
+  name: string;
+  phone: string;
+  license_number: string;
+  vehicle_id?: number | null;
+}
 
 /**
  * Create a new driver
  */
-const createDriver = async (driver) => {
+export const createDriver = async (driver: Driver): Promise<Driver> => {
   const { name, phone, license_number } = driver;
 
   const query = `
@@ -21,7 +29,7 @@ const createDriver = async (driver) => {
 /**
  * Get all drivers
  */
-const getAllDrivers = async () => {
+export const getAllDrivers = async (): Promise<Driver[]> => {
   const result = await db.query("SELECT * FROM drivers ORDER BY id;");
   return result.rows;
 };
@@ -29,7 +37,7 @@ const getAllDrivers = async () => {
 /**
  * Update driver
  */
-const updateDriver = async (id, driver) => {
+export const updateDriver = async (id: number, driver: Driver): Promise<Driver> => {
   const { name, phone, license_number } = driver;
 
   const query = `
@@ -50,7 +58,7 @@ const updateDriver = async (id, driver) => {
 /**
  * Delete driver
  */
-const deleteDriver = async (id) => {
+export const deleteDriver = async (id: number): Promise<void> => {
   const query = "DELETE FROM drivers WHERE id = $1;";
   await db.query(query, [id]);
 };
@@ -58,7 +66,7 @@ const deleteDriver = async (id) => {
 /**
  * Assign vehicle to driver
  */
-const assignVehicle = async (driverId, vehicleId) => {
+export const assignVehicle = async (driverId: number, vehicleId: number): Promise<Driver> => {
   const query = `
     UPDATE drivers
     SET vehicle_id = $1
@@ -68,12 +76,4 @@ const assignVehicle = async (driverId, vehicleId) => {
 
   const result = await db.query(query, [vehicleId, driverId]);
   return result.rows[0];
-};
-
-module.exports = {
-  createDriver,
-  getAllDrivers,
-  updateDriver,
-  deleteDriver,
-  assignVehicle,
 };

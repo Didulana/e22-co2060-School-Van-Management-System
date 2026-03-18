@@ -1,9 +1,16 @@
-const db = require("../../config/db");
+import db from "../config/db";
+
+export interface Vehicle {
+  id?: number;
+  vehicle_number: string;
+  type: string;
+  capacity: number;
+}
 
 /**
  * Create vehicle
  */
-const createVehicle = async (vehicle) => {
+export const createVehicle = async (vehicle: Vehicle): Promise<Vehicle> => {
   const { vehicle_number, type, capacity } = vehicle;
 
   const query = `
@@ -21,7 +28,7 @@ const createVehicle = async (vehicle) => {
 /**
  * Get all vehicles
  */
-const getAllVehicles = async () => {
+export const getAllVehicles = async (): Promise<Vehicle[]> => {
   const result = await db.query("SELECT * FROM vehicles ORDER BY id;");
   return result.rows;
 };
@@ -29,7 +36,7 @@ const getAllVehicles = async () => {
 /**
  * Update vehicle
  */
-const updateVehicle = async (id, vehicle) => {
+export const updateVehicle = async (id: number, vehicle: Vehicle): Promise<Vehicle> => {
   const { vehicle_number, type, capacity } = vehicle;
 
   const query = `
@@ -50,14 +57,7 @@ const updateVehicle = async (id, vehicle) => {
 /**
  * Delete vehicle
  */
-const deleteVehicle = async (id) => {
+export const deleteVehicle = async (id: number): Promise<void> => {
   const query = "DELETE FROM vehicles WHERE id = $1;";
   await db.query(query, [id]);
-};
-
-module.exports = {
-  createVehicle,
-  getAllVehicles,
-  updateVehicle,
-  deleteVehicle,
 };

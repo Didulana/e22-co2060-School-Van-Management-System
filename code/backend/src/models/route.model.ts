@@ -1,9 +1,23 @@
-const db = require("../../config/db");
+import db from "../config/db";
+
+export interface Stop {
+  stop_name: string;
+  stop_order: number;
+}
+
+export interface Route {
+  id?: number;
+  route_name: string;
+  driver_id: number;
+  vehicle_id: number;
+  schedule: string;
+  stops?: Stop[];
+}
 
 /**
  * Check whether driver exists
  */
-const findDriverById = async (driverId) => {
+export const findDriverById = async (driverId: number) => {
   const result = await db.query(
     "SELECT id, vehicle_id FROM drivers WHERE id = $1",
     [driverId]
@@ -14,7 +28,7 @@ const findDriverById = async (driverId) => {
 /**
  * Check whether vehicle exists
  */
-const findVehicleById = async (vehicleId) => {
+export const findVehicleById = async (vehicleId: number) => {
   const result = await db.query(
     "SELECT id FROM vehicles WHERE id = $1",
     [vehicleId]
@@ -25,7 +39,7 @@ const findVehicleById = async (vehicleId) => {
 /**
  * Create route and related stops inside one transaction
  */
-const createRoute = async ({ route_name, driver_id, vehicle_id, schedule, stops }) => {
+export const createRoute = async ({ route_name, driver_id, vehicle_id, schedule, stops }: Route): Promise<Route> => {
   const client = await db.connect();
 
   try {
@@ -43,18 +57,20 @@ const createRoute = async ({ route_name, driver_id, vehicle_id, schedule, stops 
 
     const insertedStops = [];
 
-    for (let i = 0; i < stops.length; i++) {
-      const stop = stops[i];
+    if (stops && stops.length > 0) {
+      for (let i = 0; i < stops.length; i++) {
+        const stop = stops[i];
 
-      const stopQuery = `
-        INSERT INTO route_stops (route_id, stop_name, stop_order)
-        VALUES ($1, $2, $3)
-        RETURNING *;
-      `;
+        const stopQuery = `
+          INSERT INTO route_stops (route_id, stop_name, stop_order)
+          VALUES ($1, $2, $3)
+          RETURNING *;
+        `;
 
-      const stopValues = [newRoute.id, stop.stop_name, stop.stop_order];
-      const stopResult = await client.query(stopQuery, stopValues);
-      insertedStops.push(stopResult.rows[0]);
+        const stopValues = [newRoute.id, stop.stop_name, stop.stop_order];
+        const stopResult = await client.query(stopQuery, stopValues);
+        insertedStops.push(stopResult.rows[0]);
+      }
     }
 
     await client.query("COMMIT");
@@ -74,7 +90,7 @@ const createRoute = async ({ route_name, driver_id, vehicle_id, schedule, stops 
 /**
  * Get all routes with driver and vehicle details
  */
-const getAllRoutes = async (driverId) => {
+export const getAllRoutes = async (driverId?: number) => {
   let query = `
     SELECT
       r.id,
@@ -90,7 +106,7 @@ const getAllRoutes = async (driverId) => {
     JOIN vehicles v ON r.vehicle_id = v.id
   `;
 
-  const values = [];
+  const values: any[] = [];
 
   if (driverId) {
     query += ` WHERE r.driver_id = $1 `;
@@ -118,11 +134,4 @@ const getAllRoutes = async (driverId) => {
   }
 
   return routes;
-};
-
-module.exports = {
-  findDriverById,
-  findVehicleById,
-  createRoute,
-  getAllRoutes,
 };
