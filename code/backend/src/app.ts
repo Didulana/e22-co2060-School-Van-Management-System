@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import authRoutes from "./routes/authRoutes";
 import trackingRoutes from "./routes/trackingRoutes";
 import devAuthRoutes from "./routes/devAuthRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
@@ -28,10 +29,11 @@ app.get("/api/system/status", (_req, res) => {
   res.json({
     status: "ok",
     service: "tracking-service",
-    timestamp: new Date()
+    timestamp: new Date(),
   });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/tracking", trackingRoutes);
 app.use("/api/dev-auth", devAuthRoutes);
 app.use("/api/notifications", notificationRoutes);
