@@ -12,7 +12,8 @@ async function migrate() {
     "notifications.sql",
     "student_boarding.sql",
     "journey_locations.sql",
-    "student_dropoff.sql"
+    "student_dropoff.sql",
+    "parent_students.sql"
   ];
 
   for (const file of files) {
