@@ -1,0 +1,432 @@
+import React, { FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  fetchCurrentUser,
+  fetchDemoAccounts,
+  login,
+} from "../../features/auth/api";
+import {
+  clearStoredSession,
+  readStoredSession,
+  storeSession,
+} from "../../features/auth/storage";
+import { AuthSession, DemoAccount } from "../../features/auth/types";
+
+const emptyCredentials = {
+  email: "",
+  password: "",
+};
+
+const passwordHints: Record<string, string> = {
+  admin: "Admin@123",
+  driver: "Driver@123",
+  parent: "Parent@123",
+};
+
+function LoginPage() {
+  const [credentials, setCredentials] = useState(emptyCredentials);
+  const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
+  const [selectedAccountEmail, setSelectedAccountEmail] = useState("");
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function bootstrap() {
+      try {
+        const [accounts, storedSession] = await Promise.all([
+          fetchDemoAccounts(),
+          Promise.resolve(readStoredSession()),
+        ]);
+
+        if (!active) {
+          return;
+        }
+
+        setDemoAccounts(accounts);
+        setSelectedAccountEmail(accounts[0]?.email ?? "");
+
+        if (!storedSession) {
+          setIsBootstrapping(false);
+          return;
+        }
+
+        const currentUser = await fetchCurrentUser(storedSession.token);
+
+        if (!active) {
+          return;
+        }
+
+        const refreshedSession = {
+          token: storedSession.token,
+          user: currentUser,
+        };
+
+        setSession(refreshedSession);
+        storeSession(refreshedSession);
+      } catch {
+        clearStoredSession();
+
+        if (active) {
+          setSession(null);
+          setBootstrapError(
+            "Frontend loaded, but the initial auth bootstrap failed. Check that the backend is running on http://localhost:5001."
+          );
+        }
+      } finally {
+        if (active) {
+          setIsBootstrapping(false);
+        }
+      }
+    }
+
+    void bootstrap();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const selectedAccount = useMemo(
+    () => demoAccounts.find((account) => account.email === selectedAccountEmail) ?? null,
+    [demoAccounts, selectedAccountEmail]
+  );
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      const nextSession = await login(credentials.email, credentials.password);
+      setSession(nextSession);
+      storeSession(nextSession);
+      setCredentials(emptyCredentials);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unable to sign in"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function handleDemoSelect(email: string) {
+    setSelectedAccountEmail(email);
+    const account = demoAccounts.find((item) => item.email === email);
+
+    if (!account) {
+      return;
+    }
+
+    setCredentials({
+      email: account.email,
+      password: passwordHints[account.role] ?? "",
+    });
+    setErrorMessage(null);
+  }
+
+  function handleLogout() {
+    clearStoredSession();
+    setSession(null);
+    setCredentials(emptyCredentials);
+  }
+
+  if (isBootstrapping) {
+    return (
+      <div className="min-h-screen bg-gray-50 text-gray-900">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mb-5 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            Frontend loaded successfully on Vite. Backend target:
+            {" "}
+            <strong>http://localhost:5001/api</strong>
+          </div>
+
+          <div className="flex h-72 items-center justify-center rounded-[3rem] bg-white shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-500" />
+              <p className="text-sm font-medium text-slate-500">Preparing sign in portal...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f8f8f6] text-slate-900">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mb-5 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          Frontend loaded successfully on Vite. Backend target:
+          {" "}
+          <strong>http://localhost:5001/api</strong>
+        </div>
+
+        <section className="relative overflow-hidden rounded-[3rem] bg-[#c7d8d2] shadow-[0_35px_90px_rgba(15,23,42,0.12)]">
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(77,108,102,0.28),rgba(77,108,102,0.35))]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_22%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,0.12),transparent_20%),linear-gradient(115deg,rgba(109,141,134,0.55),rgba(165,191,183,0.25))]" />
+          <div className="absolute left-10 top-20 hidden h-72 w-72 rounded-full border border-white/15 bg-white/10 blur-3xl lg:block" />
+          <div className="absolute bottom-[-4rem] left-1/4 hidden h-40 w-[28rem] rounded-full bg-emerald-200/30 blur-3xl lg:block" />
+
+          <div className="relative z-10 px-6 py-8 md:px-10 lg:px-12 lg:py-10">
+            <div className="flex flex-col gap-6 lg:min-h-[38rem]">
+              <header className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border-4 border-emerald-400/80 bg-white/70 text-lg font-bold text-emerald-600">
+                    S
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold tracking-tight text-white">SchoolVan</div>
+                    <div className="text-sm text-white/75">Transport management platform</div>
+                  </div>
+                </div>
+
+                <nav className="flex flex-wrap items-center gap-6 text-lg text-white/90">
+                  <a className="transition hover:text-white" href="#home">
+                    Home
+                  </a>
+                  <a className="transition hover:text-white" href="#why-us">
+                    Why us
+                  </a>
+                  <a className="transition hover:text-white" href="#how-it-works">
+                    How it works
+                  </a>
+                  <a className="transition hover:text-white" href="#contact">
+                    Contact
+                  </a>
+                </nav>
+              </header>
+
+              <div className="grid flex-1 gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.72fr)] lg:items-center">
+                <div className="max-w-3xl py-4 lg:py-10">
+                  <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/70">
+                    School transport portal
+                  </p>
+                  <h1
+                    id="home"
+                    className="max-w-[12ch] text-5xl font-light leading-[0.98] tracking-tight text-white sm:text-6xl lg:text-7xl"
+                  >
+                    Your school transport
+                    {" "}
+                    <span className="font-extrabold">management system</span>
+                  </h1>
+                  <p className="mt-5 max-w-2xl text-xl leading-9 text-white/90">
+                    One place to manage school vans, routes, parent communication, and real-time
+                    journey visibility.
+                  </p>
+                </div>
+
+                <aside className="rounded-[2rem] bg-white/95 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.12)] backdrop-blur sm:p-8">
+                  {session ? (
+                    <div className="space-y-5">
+                      <div>
+                        <p className="text-sm text-slate-500">Active session</p>
+                        <h2 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
+                          Welcome back
+                        </h2>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                          <div className="text-sm text-slate-400">Name</div>
+                          <div className="mt-1 text-base font-semibold text-slate-900">
+                            {session.user.name || session.user.email}
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                          <div className="text-sm text-slate-400">Role</div>
+                          <div className="mt-1 text-base font-semibold capitalize text-slate-900">
+                            {session.user.role}
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                          <div className="text-sm text-slate-400">Email</div>
+                          <div className="mt-1 break-all text-sm font-medium text-slate-700">
+                            {session.user.email}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                        {roleDescriptions[session.user.role]}
+                      </div>
+
+                      <button
+                        className="w-full rounded-2xl bg-emerald-500 px-4 py-4 text-xl font-semibold text-white transition hover:bg-emerald-600"
+                        onClick={handleLogout}
+                        type="button"
+                      >
+                        Log out
+                      </button>
+                    </div>
+                  ) : (
+                    <form className="space-y-5" onSubmit={handleSubmit}>
+                      <div>
+                        <label
+                          className="mb-3 block text-2xl font-medium tracking-tight text-slate-800"
+                          htmlFor="user-select"
+                        >
+                          Select user
+                        </label>
+                        <select
+                          className="w-full rounded-2xl border border-emerald-100 bg-white px-4 py-5 text-xl text-slate-500 shadow-[0_8px_24px_rgba(16,185,129,0.08)] outline-none transition focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
+                          id="user-select"
+                          onChange={(event) => handleDemoSelect(event.target.value)}
+                          value={selectedAccountEmail}
+                        >
+                          {demoAccounts.map((account) => (
+                            <option key={account.email} value={account.email}>
+                              {account.role.charAt(0).toUpperCase() + account.role.slice(1)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <input
+                          autoComplete="email"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-5 text-xl text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
+                          onChange={(event) =>
+                            setCredentials((current) => ({
+                              ...current,
+                              email: event.target.value,
+                            }))
+                          }
+                          placeholder="Username"
+                          type="email"
+                          value={credentials.email}
+                        />
+                      </div>
+
+                      <div>
+                        <input
+                          autoComplete="current-password"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-5 text-xl text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
+                          onChange={(event) =>
+                            setCredentials((current) => ({
+                              ...current,
+                              password: event.target.value,
+                            }))
+                          }
+                          placeholder="Password"
+                          type="password"
+                          value={credentials.password}
+                        />
+                      </div>
+
+                      <div className="text-sm text-slate-400 underline underline-offset-4">
+                        Forgot password?
+                      </div>
+
+                      {errorMessage ? (
+                        <div className="rounded-2xl border-l-4 border-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+                          {errorMessage}
+                        </div>
+                      ) : null}
+
+                      <button
+                        className="w-full rounded-2xl bg-emerald-500 px-4 py-4 text-2xl font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-wait disabled:opacity-70"
+                        disabled={isSubmitting}
+                        type="submit"
+                      >
+                        {isSubmitting ? "Signing in..." : "Log in"}
+                      </button>
+
+                      <div className="text-center text-sm text-slate-500">
+                        Demo account:
+                        {" "}
+                        <span className="font-medium text-slate-700">
+                          {selectedAccount?.email ?? "Not selected"}
+                        </span>
+                      </div>
+                    </form>
+                  )}
+                </aside>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="why-us" className="px-2 py-12 sm:px-4">
+          <div className="mb-10">
+            <h2 className="text-3xl font-light tracking-tight text-slate-700 sm:text-4xl">
+              Why use
+              {" "}
+              <span className="font-extrabold text-slate-800">SchoolVan?</span>
+            </h2>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3">
+            <article className="flex gap-5 rounded-[2rem] bg-white px-6 py-7 shadow-[0_16px_40px_rgba(15,23,42,0.05)]">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-500">
+                <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M9 12h6m-6 4h6M8 4h8l1 2h2a1 1 0 011 1v11a2 2 0 01-2 2H6a2 2 0 01-2-2V7a1 1 0 011-1h2l1-2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-medium leading-tight text-slate-800">
+                  Better transport control
+                </h3>
+                <p className="mt-4 text-lg leading-8 text-slate-400">
+                  Manage vans, routes, and school transport operations from one connected system.
+                </p>
+              </div>
+            </article>
+
+            <article id="how-it-works" className="flex gap-5 rounded-[2rem] bg-white px-6 py-7 shadow-[0_16px_40px_rgba(15,23,42,0.05)]">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-500">
+                <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-medium leading-tight text-slate-800">
+                  Real-time visibility
+                </h3>
+                <p className="mt-4 text-lg leading-8 text-slate-400">
+                  View journey progress, live location updates, and key route events as they happen.
+                </p>
+              </div>
+            </article>
+
+            <article id="contact" className="flex gap-5 rounded-[2rem] bg-white px-6 py-7 shadow-[0_16px_40px_rgba(15,23,42,0.05)]">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-500">
+                <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M9 17l3 3 7-7M5 12l3 3L19 4"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-medium leading-tight text-slate-800">
+                  Faster parent updates
+                </h3>
+                <p className="mt-4 text-lg leading-8 text-slate-400">
+                  Reduce uncertainty with clear communication around boarding, drop-off, and delays.
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+export default LoginPage;

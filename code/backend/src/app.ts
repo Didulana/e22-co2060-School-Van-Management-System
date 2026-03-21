@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
 
+// --- ROUTES FROM feature/auth-frontend ---
+import authRoutes from "./routes/authRoutes";
+
 // --- ROUTES FROM feature/driver-route ---
 import routes from "./routes";
 
@@ -40,9 +43,12 @@ app.get("/api/system/status", (_req, res) => {
   res.json({
     status: "ok",
     service: "tracking-service",
-    timestamp: new Date()
+    timestamp: new Date(),
   });
 });
+
+// Routes from feature/auth-frontend
+app.use("/api/auth", authRoutes);
 
 // Routes from feature/driver-route (mounts /api/drivers, /api/vehicles, etc.)
 app.use("/api", routes);
