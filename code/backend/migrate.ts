@@ -4,15 +4,18 @@ import path from "path";
 
 async function migrate() {
   const files = [
+    "users.sql",
     "drivers.sql",
     "vehicles.sql",
     "routes.sql",
+    "journeys.sql",
     "route_stops.sql",
     "journey_events.sql",
     "notifications.sql",
     "student_boarding.sql",
     "journey_locations.sql",
-    "student_dropoff.sql"
+    "student_dropoff.sql",
+    "parent_students.sql"
   ];
 
   for (const file of files) {
