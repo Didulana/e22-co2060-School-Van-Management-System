@@ -1,5 +1,5 @@
-import React, { FormEvent, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { FormEvent, useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { fetchDemoAccounts, login } from "../../features/auth/api";
 import { DemoAccount } from "../../features/auth/types";
 import { useAuth } from "../../features/auth/AuthContext";
@@ -42,7 +42,8 @@ function LoginPage() {
 
         if (!active) return;
         setDemoAccounts(accounts);
-        setSelectedAccountEmail(accounts[0]?.email ?? "");
+        const firstVisible = accounts.find(a => a.role !== "admin");
+        setSelectedAccountEmail(firstVisible?.email ?? "");
       } catch {
         if (active) {
           setBootstrapError(
@@ -75,10 +76,6 @@ function LoginPage() {
     }
   }, [session, isBootstrapping, navigate]);
 
-  const selectedAccount = useMemo(
-    () => demoAccounts.find((account) => account.email === selectedAccountEmail) ?? null,
-    [demoAccounts, selectedAccountEmail]
-  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -251,7 +248,7 @@ function LoginPage() {
                           onChange={(event) => handleDemoSelect(event.target.value)}
                           value={selectedAccountEmail}
                         >
-                          {demoAccounts.map((account) => (
+                          {demoAccounts.filter(a => a.role !== "admin").map((account) => (
                             <option key={account.email} value={account.email}>
                               {account.role.charAt(0).toUpperCase() + account.role.slice(1)}
                             </option>
@@ -294,6 +291,13 @@ function LoginPage() {
                       >
                         {isSubmitting ? "Signing in..." : "Log in"}
                       </button>
+
+                      <p className="mt-4 text-center text-sm text-slate-600">
+                        Don't have an account?{" "}
+                        <Link to="/register" className="font-medium text-emerald-600 hover:text-emerald-500 underline underline-offset-4">
+                          Sign up
+                        </Link>
+                      </p>
 
                       {bootstrapError && (
                         <div className="text-center text-xs text-red-500 mt-2">{bootstrapError}</div>

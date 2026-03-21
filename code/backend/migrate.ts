@@ -4,6 +4,7 @@ import path from "path";
 
 async function migrate() {
   const files = [
+    "users.sql",
     "drivers.sql",
     "vehicles.sql",
     "routes.sql",

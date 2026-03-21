@@ -50,8 +50,8 @@ export const startJourney = async (req: Request, res: Response) => {
  */
 export const boardStudent = async (req: Request, res: Response) => {
   try {
-    const journeyId = parseInt(req.params.id, 10);
-    const studentId = parseInt(req.params.studentId, 10);
+    const journeyId = parseInt(req.params.id as string, 10);
+    const studentId = parseInt(req.params.studentId as string, 10);
 
     const journey = await getJourneyById(journeyId);
     if (!journey) {
@@ -71,7 +71,7 @@ export const boardStudent = async (req: Request, res: Response) => {
  */
 export const arriveAtSchool = async (req: Request, res: Response) => {
   try {
-    const journeyId = parseInt(req.params.id, 10);
+    const journeyId = parseInt(req.params.id as string, 10);
 
     const journey = await getJourneyById(journeyId);
     if (!journey) {
@@ -98,7 +98,7 @@ export const arriveAtSchool = async (req: Request, res: Response) => {
  */
 export const startReturn = async (req: Request, res: Response) => {
   try {
-    const journeyId = parseInt(req.params.id, 10);
+    const journeyId = parseInt(req.params.id as string, 10);
 
     const journey = await getJourneyById(journeyId);
     if (!journey) {
@@ -125,8 +125,8 @@ export const startReturn = async (req: Request, res: Response) => {
  */
 export const dropStudent = async (req: Request, res: Response) => {
   try {
-    const journeyId = parseInt(req.params.id, 10);
-    const studentId = parseInt(req.params.studentId, 10);
+    const journeyId = parseInt(req.params.id as string, 10);
+    const studentId = parseInt(req.params.studentId as string, 10);
 
     const journey = await getJourneyById(journeyId);
     if (!journey) {
@@ -146,7 +146,7 @@ export const dropStudent = async (req: Request, res: Response) => {
  */
 export const completeJourney = async (req: Request, res: Response) => {
   try {
-    const journeyId = parseInt(req.params.id, 10);
+    const journeyId = parseInt(req.params.id as string, 10);
 
     const journey = await getJourneyById(journeyId);
     if (!journey) {
@@ -217,7 +217,7 @@ export const getJourneyHistory = async (req: Request, res: Response) => {
  */
 export const getJourneyStudents = async (req: Request, res: Response) => {
   try {
-    const journeyId = parseInt(req.params.id, 10);
+    const journeyId = parseInt(req.params.id as string, 10);
     const students = await getStudentsForJourney(journeyId);
     res.json(students);
   } catch (error: any) {
