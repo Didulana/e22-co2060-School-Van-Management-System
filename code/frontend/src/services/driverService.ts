@@ -27,6 +27,19 @@ export interface AttendanceRecord {
   dropped_count: number;
 }
 
+export interface PredefinedStop {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface OnboardingStatus {
+  completed: boolean;
+  step?: number;
+  driverId?: number;
+}
+
 // ---- Journey lifecycle ----
 
 export async function startJourney(driverId: number, routeId: number): Promise<Journey> {
@@ -127,4 +140,40 @@ export async function sendAnnouncement(
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Failed to send announcement");
   return data;
+}
+
+// ---- Onboarding ----
+
+const getAuthToken = () => {
+    const session = JSON.parse(localStorage.getItem("session") || "{}");
+    return session.token;
+};
+
+export async function getOnboardingStatus(): Promise<OnboardingStatus> {
+  const res = await fetch(`${API_BASE}/onboarding/status`, {
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
+  return await res.json();
+}
+
+export async function getPredefinedStops(): Promise<PredefinedStop[]> {
+  const res = await fetch(`${API_BASE}/onboarding/stops`, {
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
+  return await res.json();
+}
+
+export async function submitOnboarding(data: any): Promise<void> {
+  const res = await fetch(`${API_BASE}/onboarding/submit`, {
+    method: "POST",
+    headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${getAuthToken()}` 
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.error || "Failed to submit onboarding");
+  }
 }

@@ -10,6 +10,7 @@ import AnnouncementPage from "./pages/driver/AnnouncementPage";
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import ChildManagement from "./pages/parent/ChildManagement";
 import ParentHistory from "./pages/parent/ParentHistory";
+import DriverOnboarding from "./pages/driver/DriverOnboarding";
 import SidebarLayout from "./components/SidebarLayout";
 import { AuthProvider } from "./features/auth/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -84,7 +85,16 @@ export default function App() {
                 <AnnouncementPage />
               </ProtectedRoute>
             } />
+            
+            {/* driver onboarding (outside sidebar layout or inside?) */}
+            {/* The user said "a page that ask him to add the route", usually full page without sidebar for focus */}
           </Route>
+
+          <Route path="/driver/onboarding" element={
+            <ProtectedRoute allowedRoles={["driver"]}>
+              <DriverOnboarding />
+            </ProtectedRoute>
+          } />
 
           {/* catch-all fallback to login */}
           <Route path="*" element={<Navigate to="/login" replace />} />

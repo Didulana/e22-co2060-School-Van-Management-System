@@ -2,8 +2,7 @@ import db from "../config/db";
 
 export interface Driver {
   id?: number;
-  name: string;
-  phone: string;
+  user_id: number;
   license_number: string;
   vehicle_id?: number | null;
 }
@@ -12,18 +11,23 @@ export interface Driver {
  * Create a new driver
  */
 export const createDriver = async (driver: Driver): Promise<Driver> => {
-  const { name, phone, license_number } = driver;
+  const { user_id, license_number } = driver;
 
   const query = `
-    INSERT INTO drivers (name, phone, license_number)
-    VALUES ($1, $2, $3)
+    INSERT INTO drivers (user_id, license_number)
+    VALUES ($1, $2)
     RETURNING *;
   `;
 
-  const values = [name, phone, license_number];
+  const values = [user_id, license_number];
 
   const result = await db.query(query, values);
   return result.rows[0];
+};
+
+export const getDriverByUserId = async (userId: number): Promise<Driver | null> => {
+  const result = await db.query("SELECT * FROM drivers WHERE user_id = $1", [userId]);
+  return result.rows[0] || null;
 };
 
 /**
@@ -37,19 +41,18 @@ export const getAllDrivers = async (): Promise<Driver[]> => {
 /**
  * Update driver
  */
-export const updateDriver = async (id: number, driver: Driver): Promise<Driver> => {
-  const { name, phone, license_number } = driver;
+export const updateDriver = async (id: number, driver: Partial<Driver>): Promise<Driver> => {
+  const { license_number, vehicle_id } = driver;
 
   const query = `
     UPDATE drivers
-    SET name = $1,
-        phone = $2,
-        license_number = $3
-    WHERE id = $4
+    SET license_number = COALESCE($1, license_number),
+        vehicle_id = COALESCE($2, vehicle_id)
+    WHERE id = $3
     RETURNING *;
   `;
 
-  const values = [name, phone, license_number, id];
+  const values = [license_number, vehicle_id, id];
 
   const result = await db.query(query, values);
   return result.rows[0];

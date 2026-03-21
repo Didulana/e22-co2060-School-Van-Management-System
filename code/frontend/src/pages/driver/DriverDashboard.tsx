@@ -11,7 +11,9 @@ import {
   StudentStatus,
 } from "../../services/driverService";
 import { getRoutes, Route } from "../../services/route.service";
+import { getOnboardingStatus } from "../../services/driverService";
 import { useAuth } from "../../features/auth/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   pickup_started: { label: "Picking Up Students", color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
@@ -29,6 +31,7 @@ const NEXT_ACTION: Record<string, { label: string; action: string; color: string
 
 export default function DriverDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const driverId = user?.id || 0;
 
   const [journey, setJourney] = useState<Journey | null>(null);
@@ -39,6 +42,21 @@ export default function DriverDashboard() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    checkOnboarding();
+  }, []);
+
+  const checkOnboarding = async () => {
+    try {
+      const status = await getOnboardingStatus();
+      if (!status.completed) {
+        navigate("/driver/onboarding");
+      }
+    } catch (err) {
+      console.error("Failed to check onboarding status", err);
+    }
+  };
 
   const refresh = useCallback(async () => {
     if (!driverId) return;
