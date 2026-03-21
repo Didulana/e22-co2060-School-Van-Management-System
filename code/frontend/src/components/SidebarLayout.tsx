@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
-import { LayoutDashboard, MapPin, Navigation, BusFront, Truck, ClipboardList, Megaphone, LogOut } from "lucide-react";
+import { LayoutDashboard, MapPin, Navigation, BusFront, Truck, ClipboardList, Megaphone, LogOut, Users, History } from "lucide-react";
 import { useAuth } from "../features/auth/AuthContext";
 
 export default function SidebarLayout() {
@@ -40,7 +40,10 @@ export default function SidebarLayout() {
           {user?.role === "parent" && (
             <>
               <SectionLabel label="Parent" />
+              <NavItem to="/parent" icon={<LayoutDashboard size={20} />} label="Dashboard" />
+              <NavItem to="/parent/children" icon={<Users size={20} />} label="Children" />
               <NavItem to="/tracking" icon={<MapPin size={20} />} label="Live Tracking" />
+              <NavItem to="/parent/history" icon={<History size={20} />} label="Journey History" />
             </>
           )}
         </nav>

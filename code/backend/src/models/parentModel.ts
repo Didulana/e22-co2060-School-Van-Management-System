@@ -3,12 +3,127 @@ import { pool } from "../config/db";
 export async function getChildrenByParentId(parentId: number) {
   const query = `
     SELECT
-      student_id
-    FROM parent_students
-    WHERE parent_id = $1
-    ORDER BY student_id ASC
+      s.id,
+      s.name,
+      s.school,
+      s.pickup_stop_id,
+      s.dropoff_stop_id,
+      s.status,
+      ps.relationship_type
+    FROM parent_students ps
+    JOIN students s ON ps.student_id = s.id
+    WHERE ps.parent_id = $1
+    ORDER BY s.name ASC
   `;
 
+  const result = await pool.query(query, [parentId]);
+  return result.rows;
+}
+
+export async function createChild(parentId: number, name: string, school?: string, pickupStopId?: number, dropoffStopId?: number) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    
+    const studentRes = await client.query(
+      `INSERT INTO students (name, school, pickup_stop_id, dropoff_stop_id) 
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [name, school, pickupStopId, dropoffStopId]
+    );
+    const studentId = studentRes.rows[0].id;
+
+    await client.query(
+      `INSERT INTO parent_students (parent_id, student_id) VALUES ($1, $2)`,
+      [parentId, studentId]
+    );
+
+    await client.query("COMMIT");
+    return studentRes.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function updateChild(studentId: number, name: string, school?: string, pickupStopId?: number, dropoffStopId?: number) {
+  const query = `
+    UPDATE students 
+    SET name = $1, school = $2, pickup_stop_id = $3, dropoff_stop_id = $4
+    WHERE id = $5
+    RETURNING *
+  `;
+  const result = await pool.query(query, [name, school, pickupStopId, dropoffStopId, studentId]);
+  return result.rows[0];
+}
+
+export async function getChildById(studentId: number) {
+  const result = await pool.query("SELECT * FROM students WHERE id = $1", [studentId]);
+  return result.rows[0];
+}
+
+export async function markChildAbsent(studentId: number, date: string, reason?: string) {
+  const query = `
+    INSERT INTO student_absences (student_id, absence_date, reason)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (student_id, absence_date) DO UPDATE SET reason = EXCLUDED.reason
+    RETURNING *
+  `;
+  const result = await pool.query(query, [studentId, date, reason]);
+  return result.rows[0];
+}
+
+export async function getJourneyHistory(parentId: number) {
+  const query = `
+    SELECT 
+      sb.id as event_id,
+      'boarding' as type,
+      sb.boarded_at as event_time,
+      s.name as student_name,
+      j.id as journey_id,
+      r.name as route_name
+    FROM parent_students ps
+    JOIN students s ON ps.student_id = s.id
+    JOIN student_boarding sb ON s.id = sb.student_id
+    JOIN journeys j ON sb.journey_id = j.id
+    JOIN routes r ON j.route_id = r.id
+    WHERE ps.parent_id = $1
+    UNION ALL
+    SELECT 
+      sd.id as event_id,
+      'dropoff' as type,
+      sd.dropped_at as event_time,
+      s.name as student_name,
+      j.id as journey_id,
+      r.name as route_name
+    FROM parent_students ps
+    JOIN students s ON ps.student_id = s.id
+    JOIN student_dropoff sd ON s.id = sd.student_id
+    JOIN journeys j ON sd.journey_id = j.id
+    JOIN routes r ON j.route_id = r.id
+    WHERE ps.parent_id = $1
+    ORDER BY event_time DESC
+  `;
+  const result = await pool.query(query, [parentId]);
+  return result.rows;
+}
+
+export async function getEmergencyContacts(parentId: number) {
+  const query = `
+    SELECT DISTINCT
+      u.name as driver_name,
+      u.phone as driver_phone,
+      r.name as route_name,
+      s.name as student_name
+    FROM parent_students ps
+    JOIN students s ON ps.student_id = s.id
+    JOIN routes r ON (s.pickup_stop_id IN (SELECT id FROM route_stops WHERE route_id = r.id) 
+                   OR s.dropoff_stop_id IN (SELECT id FROM route_stops WHERE route_id = r.id))
+    JOIN drivers d ON r.driver_id = d.id
+    JOIN users u ON d.user_id = u.id
+    WHERE ps.parent_id = $1
+  `;
   const result = await pool.query(query, [parentId]);
   return result.rows;
 }
@@ -82,4 +197,44 @@ export async function getNotificationsByStudentId(studentId: number) {
 
   const result = await pool.query(query, [studentId]);
   return result.rows;
+}
+
+export async function getAvailableRoutes() {
+  const query = `
+    SELECT 
+      r.id as route_id,
+      r.name as route_name,
+      u.name as driver_name,
+      u.phone as driver_phone,
+      rs.id as stop_id,
+      rs.stop_name,
+      rs.stop_order
+    FROM routes r
+    JOIN drivers d ON r.driver_id = d.id
+    JOIN users u ON d.user_id = u.id
+    JOIN route_stops rs ON r.id = rs.route_id
+    ORDER BY r.id, rs.stop_order
+  `;
+  const result = await pool.query(query);
+  
+  // Group by route
+  const routesMap: { [key: number]: any } = {};
+  result.rows.forEach(row => {
+    if (!routesMap[row.route_id]) {
+      routesMap[row.route_id] = {
+        id: row.route_id,
+        name: row.route_name,
+        driver_name: row.driver_name,
+        driver_phone: row.driver_phone,
+        stops: []
+      };
+    }
+    routesMap[row.route_id].stops.push({
+      id: row.stop_id,
+      name: row.stop_name,
+      order: row.stop_order
+    });
+  });
+  
+  return Object.values(routesMap);
 }

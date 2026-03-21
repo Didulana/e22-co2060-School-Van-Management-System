@@ -7,6 +7,9 @@ import TrackingPage from "./pages/parent/TrackingPage";
 import DriverDashboard from "./pages/driver/DriverDashboard";
 import AttendancePage from "./pages/driver/AttendancePage";
 import AnnouncementPage from "./pages/driver/AnnouncementPage";
+import ParentDashboard from "./pages/parent/ParentDashboard";
+import ChildManagement from "./pages/parent/ChildManagement";
+import ParentHistory from "./pages/parent/ParentHistory";
 import SidebarLayout from "./components/SidebarLayout";
 import { AuthProvider } from "./features/auth/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -43,7 +46,22 @@ export default function App() {
               </ProtectedRoute>
             } />
             
-            {/* parental tracking page */}
+            {/* parent pages */}
+            <Route path="/parent" element={
+              <ProtectedRoute allowedRoles={["parent"]}>
+                <ParentDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/parent/children" element={
+              <ProtectedRoute allowedRoles={["parent"]}>
+                <ChildManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/parent/history" element={
+              <ProtectedRoute allowedRoles={["parent"]}>
+                <ParentHistory />
+              </ProtectedRoute>
+            } />
             <Route path="/tracking" element={
               <ProtectedRoute allowedRoles={["parent"]}>
                 <TrackingPage />
