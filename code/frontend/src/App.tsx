@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage";
+import RegisterPage from "./pages/auth/RegisterPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import RoutesPage from "./pages/Routes";
 import TrackingPage from "./pages/parent/TrackingPage";
@@ -17,6 +18,7 @@ export default function App() {
         <Routes>
           {/* auth login page (no sidebar) */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
           {/* pages wrapped in sidebar layout */}
           <Route element={

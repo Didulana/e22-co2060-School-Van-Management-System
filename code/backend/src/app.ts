@@ -19,6 +19,7 @@ import studentDropoffRoutes from "./routes/studentDropoffRoutes";
 import journeyStatusRoutes from "./routes/journeyStatusRoutes";
 import journeyTimelineRoutes from "./routes/journeyTimelineRoutes";
 import parentRoutes from "./routes/parentRoutes";
+import { authenticateToken, requireRole } from "./middleware/authMiddleware";
 
 const app = express();
 
@@ -52,22 +53,25 @@ app.get("/api/system/status", (_req, res) => {
 // Routes from feature/auth-frontend
 app.use("/api/auth", authRoutes);
 
-// Routes from feature/driver-route (mounts /api/drivers, /api/vehicles, etc.)
-app.use("/api", routes);
+// General API routes (Driver, Vehicle, Route info)
+app.use("/api", authenticateToken, routes);
 
 // Driver journey lifecycle & announcements
+app.use("/api/driver", authenticateToken, requireRole("driver"));
 app.use("/api/driver/journey", driverJourneyRoutes);
 app.use("/api/driver/announce", driverAnnounceRoutes);
 
-// Routes from develop
-app.use("/api/tracking", trackingRoutes);
+// Parent routes
+app.use("/api/tracking", authenticateToken, requireRole("parent"), trackingRoutes);
+app.use("/api/parent", authenticateToken, requireRole("parent"), parentRoutes);
+
+// Other protected routes
 app.use("/api/dev-auth", devAuthRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/journey-events", journeyEventRoutes);
-app.use("/api/boarding", studentBoardingRoutes);
-app.use("/api/dropoff", studentDropoffRoutes);
-app.use("/api/journey", journeyStatusRoutes);
-app.use("/api/journey", journeyTimelineRoutes);
-app.use("/api/parent", parentRoutes);
+app.use("/api/notifications", authenticateToken, notificationRoutes);
+app.use("/api/journey-events", authenticateToken, journeyEventRoutes);
+app.use("/api/boarding", authenticateToken, requireRole("driver"), studentBoardingRoutes);
+app.use("/api/dropoff", authenticateToken, requireRole("driver"), studentDropoffRoutes);
+app.use("/api/journey", authenticateToken, journeyStatusRoutes);
+app.use("/api/journey", authenticateToken, journeyTimelineRoutes);
 
 export default app;
