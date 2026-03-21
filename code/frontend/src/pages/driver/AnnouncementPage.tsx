@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { sendAnnouncement } from "../../services/driverService";
-
-const DEMO_DRIVER_ID = 1;
+import { useAuth } from "../../features/auth/AuthContext";
 
 export default function AnnouncementPage() {
+  const { user } = useAuth();
+  const driverId = user?.id || 0;
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSend = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !driverId) return;
     setSending(true);
     setSuccess(null);
     setError(null);
     try {
-      const result = await sendAnnouncement(DEMO_DRIVER_ID, message.trim());
+      const result = await sendAnnouncement(driverId, message.trim());
       setSuccess(`Announcement sent to ${result.recipientCount} parent(s)`);
       setMessage("");
     } catch (err: any) {

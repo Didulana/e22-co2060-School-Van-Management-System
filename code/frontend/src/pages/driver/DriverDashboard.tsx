@@ -11,9 +11,7 @@ import {
   StudentStatus,
 } from "../../services/driverService";
 import { getRoutes, Route } from "../../services/route.service";
-
-// Hardcoded driver ID for demo (will be replaced by auth context later)
-const DEMO_DRIVER_ID = 1;
+import { useAuth } from "../../features/auth/AuthContext";
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   pickup_started: { label: "Picking Up Students", color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
@@ -30,6 +28,9 @@ const NEXT_ACTION: Record<string, { label: string; action: string; color: string
 };
 
 export default function DriverDashboard() {
+  const { user } = useAuth();
+  const driverId = user?.id || 0;
+
   const [journey, setJourney] = useState<Journey | null>(null);
   const [students, setStudents] = useState<StudentStatus[]>([]);
   const [routes, setRoutes] = useState<Route[]>([]);
@@ -40,8 +41,9 @@ export default function DriverDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
+    if (!driverId) return;
     try {
-      const data = await getActiveJourney(DEMO_DRIVER_ID);
+      const data = await getActiveJourney(driverId);
       setIsActive(data.active);
       setJourney(data.journey);
       setStudents(data.students || []);
@@ -59,11 +61,11 @@ export default function DriverDashboard() {
   }, [refresh]);
 
   const handleStart = async () => {
-    if (!selectedRoute) return;
+    if (!selectedRoute || !driverId) return;
     setActionLoading(true);
     setError(null);
     try {
-      await startJourney(DEMO_DRIVER_ID, selectedRoute);
+      await startJourney(driverId, selectedRoute);
       await refresh();
     } catch (err: any) {
       setError(err.message);

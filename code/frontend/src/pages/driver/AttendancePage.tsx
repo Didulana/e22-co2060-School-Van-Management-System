@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { getAttendance, AttendanceRecord } from "../../services/driverService";
-
-const DEMO_DRIVER_ID = 1;
+import { useAuth } from "../../features/auth/AuthContext";
 
 export default function AttendancePage() {
+  const { user } = useAuth();
+  const driverId = user?.id || 0;
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAttendance(DEMO_DRIVER_ID)
+    if (!driverId) return;
+    getAttendance(driverId)
       .then(setRecords)
       .catch(() => {})
       .finally(() => setLoading(false));
