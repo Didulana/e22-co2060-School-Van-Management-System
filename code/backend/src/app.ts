@@ -62,8 +62,7 @@ app.use("/api/driver/journey", driverJourneyRoutes);
 app.use("/api/driver/announce", driverAnnounceRoutes);
 
 // Parent routes
-app.use("/api/tracking", authenticateToken, requireRole("parent"), trackingRoutes);
-app.use("/api/parent", authenticateToken, requireRole("parent"), parentRoutes);
+app.use("/api/parent", parentRoutes);
 
 // Other protected routes
 app.use("/api/dev-auth", devAuthRoutes);

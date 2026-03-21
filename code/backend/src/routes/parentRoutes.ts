@@ -1,13 +1,19 @@
 import { Router } from "express";
-import { authenticateToken } from "../middleware/authMiddleware";
-import {
-  getParentChildren,
-  getChildStatus,
-} from "../controllers/parentController";
+import { authenticateToken, requireRole } from "../middleware/authMiddleware";
+import * as parentController from "../controllers/parentController";
 
 const router = Router();
 
-router.get("/children", authenticateToken, getParentChildren);
-router.get("/children/:studentId/status", authenticateToken, getChildStatus);
+// All routes here require parent role
+router.use(authenticateToken);
+router.use(requireRole("parent"));
+
+router.get("/children", parentController.getChildren);
+router.post("/children", parentController.registerChild);
+router.put("/children/:id", parentController.updateChild);
+router.post("/children/:id/absent", parentController.markAbsent);
+router.get("/journey-history", parentController.getHistory);
+router.get("/emergency-contacts", parentController.getEmergencyContacts);
+router.get("/available-routes", parentController.getAvailableRoutes);
 
 export default router;
