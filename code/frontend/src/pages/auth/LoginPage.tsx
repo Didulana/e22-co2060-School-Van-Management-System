@@ -22,6 +22,12 @@ const passwordHints: Record<string, string> = {
   parent: "Parent@123",
 };
 
+const roleDescriptions: Record<string, string> = {
+  admin: "You have full access to manage drivers, vehicles, routes, and system settings.",
+  driver: "You can view your assigned routes, update journey status, and manage boarding events.",
+  parent: "You can track your children's van in real-time and receive journey notifications.",
+};
+
 function LoginPage() {
   const [credentials, setCredentials] = useState(emptyCredentials);
   const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
