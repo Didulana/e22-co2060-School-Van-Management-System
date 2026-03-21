@@ -63,6 +63,18 @@ function LoginPage() {
     };
   }, []);
 
+  // INSTANT REDIRECT IF ALREADY LOGGED IN
+  useEffect(() => {
+    if (session && !isBootstrapping) {
+      const roleHome: Record<string, string> = {
+        admin: "/admin",
+        driver: "/driver",
+        parent: "/tracking",
+      };
+      navigate(roleHome[session.user.role] || "/login", { replace: true });
+    }
+  }, [session, isBootstrapping, navigate]);
+
   const selectedAccount = useMemo(
     () => demoAccounts.find((account) => account.email === selectedAccountEmail) ?? null,
     [demoAccounts, selectedAccountEmail]
