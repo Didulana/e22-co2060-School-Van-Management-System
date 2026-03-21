@@ -13,6 +13,7 @@ import studentBoardingRoutes from "./routes/studentBoardingRoutes";
 import studentDropoffRoutes from "./routes/studentDropoffRoutes";
 import journeyStatusRoutes from "./routes/journeyStatusRoutes";
 import journeyTimelineRoutes from "./routes/journeyTimelineRoutes";
+import parentRoutes from "./routes/parentRoutes";
 
 const app = express();
 
@@ -55,5 +56,6 @@ app.use("/api/boarding", studentBoardingRoutes);
 app.use("/api/dropoff", studentDropoffRoutes);
 app.use("/api/journey", journeyStatusRoutes);
 app.use("/api/journey", journeyTimelineRoutes);
+app.use("/api/parent", parentRoutes);
 
 export default app;
