@@ -20,15 +20,28 @@ export async function getChildrenByParentId(parentId: number) {
   return result.rows;
 }
 
-export async function createChild(parentId: number, name: string, school?: string, pickupStopId?: number, dropoffStopId?: number) {
+export interface Child {
+    id: number;
+    name: string;
+    school: string;
+    pickup_stop_id: number;
+    dropoff_stop_id: number;
+    pickup_lat?: number;
+    pickup_lng?: number;
+    dropoff_lat?: number;
+    dropoff_lng?: number;
+    status: string;
+    current_status?: string;
+}
+export async function createChild(parentId: number, name: string, school?: string, pickupStopId?: number, dropoffStopId?: number, pickupLat?: number, pickupLng?: number, dropoffLat?: number, dropoffLng?: number) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     
     const studentRes = await client.query(
-      `INSERT INTO students (name, school, pickup_stop_id, dropoff_stop_id) 
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [name, school, pickupStopId, dropoffStopId]
+      `INSERT INTO students (name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [name, school, pickupStopId, dropoffStopId, pickupLat, pickupLng, dropoffLat, dropoffLng]
     );
     const studentId = studentRes.rows[0].id;
 
@@ -47,14 +60,15 @@ export async function createChild(parentId: number, name: string, school?: strin
   }
 }
 
-export async function updateChild(studentId: number, name: string, school?: string, pickupStopId?: number, dropoffStopId?: number) {
+export async function updateChild(studentId: number, name: string, school?: string, pickupStopId?: number, dropoffStopId?: number, pickupLat?: number, pickupLng?: number, dropoffLat?: number, dropoffLng?: number) {
   const query = `
     UPDATE students 
-    SET name = $1, school = $2, pickup_stop_id = $3, dropoff_stop_id = $4
-    WHERE id = $5
+    SET name = $1, school = $2, pickup_stop_id = $3, dropoff_stop_id = $4, 
+        pickup_lat = $5, pickup_lng = $6, dropoff_lat = $7, dropoff_lng = $8
+    WHERE id = $9
     RETURNING *
   `;
-  const result = await pool.query(query, [name, school, pickupStopId, dropoffStopId, studentId]);
+  const result = await pool.query(query, [name, school, pickupStopId, dropoffStopId, pickupLat, pickupLng, dropoffLat, dropoffLng, studentId]);
   return result.rows[0];
 }
 
@@ -199,6 +213,11 @@ export async function getNotificationsByStudentId(studentId: number) {
   return result.rows;
 }
 
+export async function getJourneyById(journeyId: number) {
+  const result = await pool.query("SELECT * FROM journeys WHERE id = $1", [journeyId]);
+  return result.rows[0];
+}
+
 export async function getAvailableRoutes() {
   const query = `
     SELECT 
@@ -208,7 +227,9 @@ export async function getAvailableRoutes() {
       u.phone as driver_phone,
       rs.id as stop_id,
       rs.stop_name,
-      rs.stop_order
+      rs.stop_order,
+      rs.latitude,
+      rs.longitude
     FROM routes r
     JOIN drivers d ON r.driver_id = d.id
     JOIN users u ON d.user_id = u.id
@@ -232,7 +253,9 @@ export async function getAvailableRoutes() {
     routesMap[row.route_id].stops.push({
       id: row.stop_id,
       name: row.stop_name,
-      order: row.stop_order
+      order: row.stop_order,
+      latitude: row.latitude,
+      longitude: row.longitude
     });
   });
   

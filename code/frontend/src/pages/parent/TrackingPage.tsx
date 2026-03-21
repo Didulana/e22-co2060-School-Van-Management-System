@@ -6,7 +6,8 @@ import {
   markAbsent,
   getEmergencyContacts,
   EmergencyContact,
-  Child
+  Child,
+  Stop
 } from "../../services/parentService";
 import TrackingMap from "../../components/parent/TrackingMap";
 import { useAuth } from "../../features/auth/AuthContext";
@@ -38,6 +39,7 @@ interface ChildStatus {
   latestDropoff: { dropped_at: string } | null;
   latestLocation: Location | null;
   notifications: NotificationItem[];
+  routeStops?: Stop[];
 }
 
 export default function TrackingPage() {
@@ -216,7 +218,12 @@ export default function TrackingPage() {
                 <div className="overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm p-2 group transition-all hover:shadow-md">
                     {location ? (
                         <div className="h-[500px] w-full overflow-hidden rounded-xl bg-slate-100">
-                            <TrackingMap latitude={Number(location.latitude)} longitude={Number(location.longitude)} lastUpdated={location.recorded_at} />
+                            <TrackingMap 
+                                latitude={Number(location.latitude)} 
+                                longitude={Number(location.longitude)} 
+                                lastUpdated={location.recorded_at} 
+                                routeStops={status?.routeStops}
+                            />
                         </div>
                     ) : (
                         <div className="flex h-[500px] flex-col items-center justify-center rounded-xl bg-slate-50 border border-slate-100 border-dashed">

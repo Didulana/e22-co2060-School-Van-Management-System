@@ -8,6 +8,7 @@ import {
     Route 
 } from "../../services/parentService";
 import { UserPlus, UserCircle, Plus, ChevronRight, Edit3, MapPin } from "lucide-react";
+import StopSelectorMap from "../../components/parent/StopSelectorMap";
 
 export default function ChildManagement() {
     const [children, setChildren] = useState<Child[]>([]);
@@ -21,7 +22,11 @@ export default function ChildManagement() {
         school: "", 
         route_id: "", 
         pickup_stop_id: "", 
-        dropoff_stop_id: "" 
+        dropoff_stop_id: "",
+        pickup_lat: 0,
+        pickup_lng: 0,
+        dropoff_lat: 0,
+        dropoff_lng: 0
     });
 
     const loadData = async () => {
@@ -53,7 +58,11 @@ export default function ChildManagement() {
                 name: formData.name,
                 school: formData.school,
                 pickup_stop_id: parseInt(formData.pickup_stop_id),
-                dropoff_stop_id: parseInt(formData.dropoff_stop_id)
+                dropoff_stop_id: parseInt(formData.dropoff_stop_id),
+                pickup_lat: formData.pickup_lat,
+                pickup_lng: formData.pickup_lng,
+                dropoff_lat: formData.dropoff_lat,
+                dropoff_lng: formData.dropoff_lng
             };
             if (editingChild) {
                 await updateChild(editingChild.id, payload);
@@ -62,7 +71,7 @@ export default function ChildManagement() {
             }
             setShowForm(false);
             setEditingChild(null);
-            setFormData({ name: "", school: "", route_id: "", pickup_stop_id: "", dropoff_stop_id: "" });
+            setFormData({ name: "", school: "", route_id: "", pickup_stop_id: "", dropoff_stop_id: "", pickup_lat: 0, pickup_lng: 0, dropoff_lat: 0, dropoff_lng: 0 });
             loadData();
         } catch (err) {
             alert("Failed to save child profile");
@@ -81,7 +90,11 @@ export default function ChildManagement() {
             school: child.school || "",
             route_id: route?.id.toString() || "",
             pickup_stop_id: child.pickup_stop_id?.toString() || "",
-            dropoff_stop_id: child.dropoff_stop_id?.toString() || ""
+            dropoff_stop_id: child.dropoff_stop_id?.toString() || "",
+            pickup_lat: child.pickup_lat || 0,
+            pickup_lng: child.pickup_lng || 0,
+            dropoff_lat: child.dropoff_lat || 0,
+            dropoff_lng: child.dropoff_lng || 0
         });
         setShowForm(true);
     };
@@ -160,37 +173,37 @@ export default function ChildManagement() {
                                 </div>
 
                                 {selectedRoute && (
-                                    <>
-                                        <div className="space-y-1.5 animate-in fade-in">
-                                            <label className="text-xs font-bold text-slate-500 ml-1">Pickup Point</label>
-                                            <select 
-                                                required
-                                                value={formData.pickup_stop_id}
-                                                onChange={e => setFormData({...formData, pickup_stop_id: e.target.value})}
-                                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-800 font-medium focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 transition-all outline-none"
-                                            >
-                                                <option value="">Select pickup stop...</option>
-                                                {selectedRoute.stops.map(stop => (
-                                                    <option key={stop.id} value={stop.id}>{stop.name}</option>
-                                                ))}
-                                            </select>
+                                    <div className="md:col-span-2 space-y-8 mt-4 animate-in fade-in slide-in-from-top-4">
+                                        <div className="p-1 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                                            <StopSelectorMap 
+                                                label="Set Pickup Location"
+                                                stops={selectedRoute.stops}
+                                                initialLat={formData.pickup_lat}
+                                                initialLng={formData.pickup_lng}
+                                                onPointSelect={(lat, lng, stopId) => setFormData(prev => ({ 
+                                                    ...prev, 
+                                                    pickup_lat: lat, 
+                                                    pickup_lng: lng,
+                                                    pickup_stop_id: stopId.toString()
+                                                }))}
+                                            />
                                         </div>
 
-                                        <div className="space-y-1.5 animate-in fade-in">
-                                            <label className="text-xs font-bold text-slate-500 ml-1">Drop-off Point</label>
-                                            <select 
-                                                required
-                                                value={formData.dropoff_stop_id}
-                                                onChange={e => setFormData({...formData, dropoff_stop_id: e.target.value})}
-                                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-800 font-medium focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 transition-all outline-none"
-                                            >
-                                                <option value="">Select drop-off stop...</option>
-                                                {selectedRoute.stops.map(stop => (
-                                                    <option key={stop.id} value={stop.id}>{stop.name}</option>
-                                                ))}
-                                            </select>
+                                        <div className="p-1 bg-blue-50/50 rounded-2xl border border-blue-100">
+                                            <StopSelectorMap 
+                                                label="Set Drop-off Location"
+                                                stops={selectedRoute.stops}
+                                                initialLat={formData.dropoff_lat}
+                                                initialLng={formData.dropoff_lng}
+                                                onPointSelect={(lat, lng, stopId) => setFormData(prev => ({ 
+                                                    ...prev, 
+                                                    dropoff_lat: lat, 
+                                                    dropoff_lng: lng,
+                                                    dropoff_stop_id: stopId.toString()
+                                                }))}
+                                            />
                                         </div>
-                                    </>
+                                    </div>
                                 )}
                             </div>
 

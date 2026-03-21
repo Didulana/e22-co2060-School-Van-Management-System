@@ -19,6 +19,8 @@ export interface Stop {
     id: number;
     name: string;
     order: number;
+    latitude: number;
+    longitude: number;
 }
 
 export interface Route {
@@ -35,6 +37,10 @@ export interface Child {
     school: string;
     pickup_stop_id: number;
     dropoff_stop_id: number;
+    pickup_lat?: number;
+    pickup_lng?: number;
+    dropoff_lat?: number;
+    dropoff_lng?: number;
     status: string;
     current_status?: string;
 }

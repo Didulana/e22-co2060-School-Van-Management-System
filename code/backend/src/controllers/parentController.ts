@@ -31,13 +31,13 @@ export async function getChildren(req: AuthenticatedRequest, res: Response) {
 export async function registerChild(req: AuthenticatedRequest, res: Response) {
   try {
     const parentId = req.user!.id;
-    const { name, school, pickup_stop_id, dropoff_stop_id } = req.body;
+    const { name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: "Child name is required" });
     }
 
-    const child = await parentModel.createChild(parentId, name, school, pickup_stop_id, dropoff_stop_id);
+    const child = await parentModel.createChild(parentId, name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng);
     res.status(201).json(child);
   } catch (error: any) {
     res.status(500).json({ error: "Failed to register child", details: error.message });
@@ -47,7 +47,7 @@ export async function registerChild(req: AuthenticatedRequest, res: Response) {
 export async function updateChild(req: AuthenticatedRequest, res: Response) {
   try {
     const studentId = parseInt(req.params.id as string, 10);
-    const { name, school, pickup_stop_id, dropoff_stop_id } = req.body;
+    const { name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng } = req.body;
 
     // Verify parent owns this child
     const parentId = req.user!.id;
@@ -56,7 +56,7 @@ export async function updateChild(req: AuthenticatedRequest, res: Response) {
       return res.status(403).json({ error: "Forbidden: Not your child" });
     }
 
-    const updated = await parentModel.updateChild(studentId, name, school, pickup_stop_id, dropoff_stop_id);
+    const updated = await parentModel.updateChild(studentId, name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng);
     res.json(updated);
   } catch (error: any) {
     res.status(500).json({ error: "Failed to update child", details: error.message });
@@ -111,5 +111,54 @@ export async function getAvailableRoutes(req: AuthenticatedRequest, res: Respons
     res.json(routes);
   } catch (error: any) {
     res.status(500).json({ error: "Failed to fetch available routes", details: error.message });
+  }
+}
+
+export async function getChildStatus(req: AuthenticatedRequest, res: Response) {
+  try {
+    const studentId = parseInt(req.params.id as string, 10);
+    const parentId = req.user!.id;
+
+    // Verify ownership
+    const children = await parentModel.getChildrenByParentId(parentId);
+    if (!children.find(c => c.id === studentId)) {
+      return res.status(403).json({ error: "Forbidden: Not your child" });
+    }
+
+    const boarding = await parentModel.getLatestBoardingForStudent(studentId);
+    const dropoff = await parentModel.getLatestDropoffForStudent(studentId);
+    const notifications = await parentModel.getNotificationsByStudentId(studentId);
+
+    let journeyId = null;
+    let latestLocation = null;
+    let routeStops = [];
+
+    if (boarding && (!dropoff || boarding.boarded_at > dropoff.dropped_at)) {
+      journeyId = boarding.journey_id;
+      latestLocation = await parentModel.getLatestLocationByJourneyId(journeyId);
+      
+      // Fetch Route Stops for this journey
+      const journey = await parentModel.getJourneyById(journeyId);
+      if (journey) {
+        const routes = await parentModel.getAvailableRoutes();
+        const routeData = routes.find(r => r.id === journey.route_id);
+        routeStops = routeData?.stops || [];
+      }
+    }
+
+    res.json({
+      parentId,
+      studentId,
+      journeyId,
+      boarded: !!(boarding && (!dropoff || boarding.boarded_at > dropoff.dropped_at)),
+      dropped: !!(dropoff && (!boarding || dropoff.dropped_at > boarding.boarded_at)),
+      latestBoarding: boarding,
+      latestDropoff: dropoff,
+      latestLocation,
+      notifications,
+      routeStops
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: "Failed to fetch child status", details: error.message });
   }
 }

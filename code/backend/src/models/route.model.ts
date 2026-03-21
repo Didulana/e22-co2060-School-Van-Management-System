@@ -3,6 +3,8 @@ import db from "../config/db";
 export interface Stop {
   stop_name: string;
   stop_order: number;
+  latitude: number;
+  longitude: number;
 }
 
 export interface Route {
@@ -62,12 +64,12 @@ export const createRoute = async ({ route_name, driver_id, vehicle_id, schedule,
         const stop = stops[i];
 
         const stopQuery = `
-          INSERT INTO route_stops (route_id, stop_name, stop_order)
-          VALUES ($1, $2, $3)
+          INSERT INTO route_stops (route_id, stop_name, stop_order, latitude, longitude)
+          VALUES ($1, $2, $3, $4, $5)
           RETURNING *;
         `;
 
-        const stopValues = [newRoute.id, stop.stop_name, stop.stop_order];
+        const stopValues = [newRoute.id, stop.stop_name, stop.stop_order, stop.latitude, stop.longitude];
         const stopResult = await client.query(stopQuery, stopValues);
         insertedStops.push(stopResult.rows[0]);
       }
@@ -122,7 +124,7 @@ export const getAllRoutes = async (driverId?: number) => {
   for (const route of routes) {
     const stopsResult = await db.query(
       `
-      SELECT id, route_id, stop_name, stop_order
+      SELECT id, route_id, stop_name, stop_order, latitude, longitude
       FROM route_stops
       WHERE route_id = $1
       ORDER BY stop_order;
