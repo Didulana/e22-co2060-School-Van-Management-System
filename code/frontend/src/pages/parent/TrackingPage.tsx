@@ -7,7 +7,8 @@ import {
   getEmergencyContacts,
   EmergencyContact,
   Child,
-  Stop
+  Stop,
+  startMockJourney
 } from "../../services/parentService";
 import TrackingMap from "../../components/parent/TrackingMap";
 import { useAuth } from "../../features/auth/AuthContext";
@@ -109,6 +110,20 @@ export default function TrackingPage() {
     } catch (err) {
       alert("System error reporting absence.");
     }
+  };
+
+  const handleStartDemo = async () => {
+      if (!selectedChildId) return;
+      try {
+          setRefreshing(true);
+          await startMockJourney(selectedChildId);
+          // Wait a bit for the backend to start and then reload
+          setTimeout(() => loadChildData(selectedChildId, true), 1000);
+      } catch (err) {
+          alert("Failed to start demo journey. Make sure the Colombo Coast Route is available.");
+      } finally {
+          setRefreshing(false);
+      }
   };
 
   useEffect(() => {
@@ -229,7 +244,13 @@ export default function TrackingPage() {
                         <div className="flex h-[500px] flex-col items-center justify-center rounded-xl bg-slate-50 border border-slate-100 border-dashed">
                             <MapPin size={48} className="text-slate-200 mb-4" />
                             <h3 className="text-lg font-bold text-slate-800 leading-none">Awaiting Signal</h3>
-                            <p className="mt-2 text-sm text-slate-400 font-medium">Van signal will appear when journey begins.</p>
+                            <p className="mt-2 text-sm text-slate-400 font-medium mb-6">Van signal will appear when journey begins.</p>
+                            <button 
+                                onClick={handleStartDemo}
+                                className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm"
+                            >
+                                Start Demo Journey
+                            </button>
                         </div>
                     )}
                 </div>

@@ -105,3 +105,8 @@ export const getAvailableRoutes = async (): Promise<Route[]> => {
     const response = await axios.get(`${API_BASE_URL}/available-routes`, { headers: getAuthHeader() });
     return response.data;
 };
+
+export const startMockJourney = async (studentId: number) => {
+    const response = await axios.post(`${API_BASE_URL}/children/${studentId}/mock-journey`, {}, { headers: getAuthHeader() });
+    return response.data;
+};
