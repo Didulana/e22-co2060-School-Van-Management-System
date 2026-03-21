@@ -3,12 +3,24 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
+export const pool = new Pool({
   host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "school_van",
-  password: process.env.DB_PASSWORD || "postgres",
-  port: parseInt(process.env.DB_PORT || "5432", 10),
+  port: Number(process.env.DB_PORT) || 5432,
+  user: process.env.DB_USER || "postgres",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "school_van_db", // Used in develop, ensure your local DB matches
 });
 
+export async function testDbConnection(): Promise<void> {
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query("SELECT NOW()");
+    console.log("PostgreSQL connected:", result.rows[0]);
+  } finally {
+    client.release();
+  }
+}
+
+// Preserve default export for feature/driver-route models
 export default pool;

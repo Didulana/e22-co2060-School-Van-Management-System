@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS student_dropoff (
+    id SERIAL PRIMARY KEY,
+    journey_id INTEGER NOT NULL,
+    student_id INTEGER NOT NULL,
+    driver_id INTEGER NOT NULL,
+    dropped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
