@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  background: #0d1b2a;
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    @apply m-0 bg-gray-50 text-gray-900;
+  }
 }
