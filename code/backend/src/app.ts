@@ -6,6 +6,8 @@ import authRoutes from "./routes/authRoutes";
 
 // --- ROUTES FROM feature/driver-route ---
 import routes from "./routes";
+import driverJourneyRoutes from "./routes/driverJourney.routes";
+import driverAnnounceRoutes from "./routes/driverAnnounce.routes";
 
 // --- ROUTES FROM develop ---
 import trackingRoutes from "./routes/trackingRoutes";
@@ -52,6 +54,10 @@ app.use("/api/auth", authRoutes);
 
 // Routes from feature/driver-route (mounts /api/drivers, /api/vehicles, etc.)
 app.use("/api", routes);
+
+// Driver journey lifecycle & announcements
+app.use("/api/driver/journey", driverJourneyRoutes);
+app.use("/api/driver/announce", driverAnnounceRoutes);
 
 // Routes from develop
 app.use("/api/tracking", trackingRoutes);

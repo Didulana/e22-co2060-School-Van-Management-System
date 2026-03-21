@@ -7,6 +7,7 @@ async function migrate() {
     "drivers.sql",
     "vehicles.sql",
     "routes.sql",
+    "journeys.sql",
     "route_stops.sql",
     "journey_events.sql",
     "notifications.sql",

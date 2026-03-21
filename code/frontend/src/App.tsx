@@ -3,6 +3,9 @@ import LoginPage from "./pages/auth/LoginPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import RoutesPage from "./pages/Routes";
 import TrackingPage from "./pages/parent/TrackingPage";
+import DriverDashboard from "./pages/driver/DriverDashboard";
+import AttendancePage from "./pages/driver/AttendancePage";
+import AnnouncementPage from "./pages/driver/AnnouncementPage";
 import SidebarLayout from "./components/SidebarLayout";
 
 export default function App() {
@@ -22,6 +25,10 @@ export default function App() {
           <Route path="/routes" element={<RoutesPage />} />
           {/* parental tracking page */}
           <Route path="/tracking" element={<TrackingPage />} />
+          {/* driver pages */}
+          <Route path="/driver" element={<DriverDashboard />} />
+          <Route path="/driver/attendance" element={<AttendancePage />} />
+          <Route path="/driver/announce" element={<AnnouncementPage />} />
         </Route>
 
         {/* catch-all fallback to login */}
@@ -30,3 +37,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
