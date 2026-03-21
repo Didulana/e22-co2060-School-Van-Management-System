@@ -22,5 +22,5 @@ export async function testDbConnection(): Promise<void> {
   }
 }
 
-// Preserve default export for feature/driver-route models
+// Preserve default export for models checking for 'import db from ...'
 export default pool;
