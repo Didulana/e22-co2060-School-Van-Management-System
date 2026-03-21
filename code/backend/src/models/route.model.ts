@@ -1,3 +1,4 @@
+import { Pool, PoolClient } from "pg";
 import db from "../config/db";
 
 export interface Stop {
@@ -41,11 +42,17 @@ export const findVehicleById = async (vehicleId: number) => {
 /**
  * Create route and related stops inside one transaction
  */
-export const createRoute = async ({ route_name, driver_id, vehicle_id, schedule, stops }: Route): Promise<Route> => {
-  const client = await db.connect();
+export const createRoute = async (
+  { route_name, driver_id, vehicle_id, schedule, stops }: Route,
+  providedClient?: PoolClient
+): Promise<Route> => {
+  const isInternalTransaction = !providedClient;
+  const client = providedClient || await db.connect();
 
   try {
-    await client.query("BEGIN");
+    if (isInternalTransaction) {
+      await (client as PoolClient).query("BEGIN");
+    }
 
     const routeQuery = `
       INSERT INTO routes (route_name, driver_id, vehicle_id, schedule)
@@ -75,17 +82,23 @@ export const createRoute = async ({ route_name, driver_id, vehicle_id, schedule,
       }
     }
 
-    await client.query("COMMIT");
+    if (isInternalTransaction) {
+      await (client as PoolClient).query("COMMIT");
+    }
 
     return {
       ...newRoute,
       stops: insertedStops,
     };
   } catch (error) {
-    await client.query("ROLLBACK");
+    if (isInternalTransaction) {
+      await (client as PoolClient).query("ROLLBACK");
+    }
     throw error;
   } finally {
-    client.release();
+    if (isInternalTransaction) {
+      (client as PoolClient).release();
+    }
   }
 };
 
@@ -136,4 +149,11 @@ export const getAllRoutes = async (driverId?: number) => {
   }
 
   return routes;
+};
+
+/**
+ * Delete all routes for a driver
+ */
+export const deleteRoutesByDriverId = async (driverId: number, client: Pool | PoolClient = db): Promise<void> => {
+  await client.query("DELETE FROM routes WHERE driver_id = $1", [driverId]);
 };

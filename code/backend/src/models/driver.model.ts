@@ -1,3 +1,4 @@
+import { Pool, PoolClient } from "pg";
 import db from "../config/db";
 
 export interface Driver {
@@ -10,7 +11,7 @@ export interface Driver {
 /**
  * Create a new driver
  */
-export const createDriver = async (driver: Driver): Promise<Driver> => {
+export const createDriver = async (driver: Driver, client: Pool | PoolClient = db): Promise<Driver> => {
   const { user_id, license_number } = driver;
 
   const query = `
@@ -21,12 +22,12 @@ export const createDriver = async (driver: Driver): Promise<Driver> => {
 
   const values = [user_id, license_number];
 
-  const result = await db.query(query, values);
+  const result = await client.query(query, values);
   return result.rows[0];
 };
 
-export const getDriverByUserId = async (userId: number): Promise<Driver | null> => {
-  const result = await db.query("SELECT * FROM drivers WHERE user_id = $1", [userId]);
+export const getDriverByUserId = async (userId: number, client: Pool | PoolClient = db): Promise<Driver | null> => {
+  const result = await client.query("SELECT * FROM drivers WHERE user_id = $1", [userId]);
   return result.rows[0] || null;
 };
 
@@ -41,7 +42,7 @@ export const getAllDrivers = async (): Promise<Driver[]> => {
 /**
  * Update driver
  */
-export const updateDriver = async (id: number, driver: Partial<Driver>): Promise<Driver> => {
+export const updateDriver = async (id: number, driver: Partial<Driver>, client: Pool | PoolClient = db): Promise<Driver> => {
   const { license_number, vehicle_id } = driver;
 
   const query = `
@@ -54,7 +55,7 @@ export const updateDriver = async (id: number, driver: Partial<Driver>): Promise
 
   const values = [license_number, vehicle_id, id];
 
-  const result = await db.query(query, values);
+  const result = await client.query(query, values);
   return result.rows[0];
 };
 

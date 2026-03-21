@@ -64,6 +64,13 @@ export default function DriverOnboarding() {
             alert("Please add at least 2 stops to define a route.");
             return;
         }
+
+        const isIncomplete = routeStops.some(s => !s.name || s.latitude === 0);
+        if (isIncomplete) {
+            alert("Please search and select a specific location for each stop.");
+            return;
+        }
+
         setLoading(true);
         try {
             await submitOnboarding({
@@ -73,8 +80,8 @@ export default function DriverOnboarding() {
             });
             alert("Onboarding completed successfully!");
             navigate("/driver");
-        } catch (err) {
-            alert("Failed to complete onboarding. Please try again.");
+        } catch (err: any) {
+            alert(`Failed: ${err.message || "Please try again."}`);
         } finally {
             setLoading(false);
         }

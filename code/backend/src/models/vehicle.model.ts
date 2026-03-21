@@ -1,3 +1,4 @@
+import { Pool, PoolClient } from "pg";
 import db from "../config/db";
 
 export interface Vehicle {
@@ -11,7 +12,7 @@ export interface Vehicle {
 /**
  * Create vehicle
  */
-export const createVehicle = async (vehicle: Vehicle): Promise<Vehicle> => {
+export const createVehicle = async (vehicle: Vehicle, client: Pool | PoolClient = db): Promise<Vehicle> => {
   const { vehicle_number, type, capacity, is_ac } = vehicle;
 
   const query = `
@@ -22,8 +23,13 @@ export const createVehicle = async (vehicle: Vehicle): Promise<Vehicle> => {
 
   const values = [vehicle_number, type, capacity, is_ac || false];
 
-  const result = await db.query(query, values);
+  const result = await client.query(query, values);
   return result.rows[0];
+};
+
+export const getVehicleByNumber = async (vehicleNumber: string, client: Pool | PoolClient = db): Promise<Vehicle | null> => {
+  const result = await client.query("SELECT * FROM vehicles WHERE vehicle_number = $1", [vehicleNumber]);
+  return result.rows[0] || null;
 };
 
 /**
@@ -37,22 +43,22 @@ export const getAllVehicles = async (): Promise<Vehicle[]> => {
 /**
  * Update vehicle
  */
-export const updateVehicle = async (id: number, vehicle: Vehicle): Promise<Vehicle> => {
+export const updateVehicle = async (id: number, vehicle: Partial<Vehicle>, client: Pool | PoolClient = db): Promise<Vehicle> => {
   const { vehicle_number, type, capacity, is_ac } = vehicle;
 
   const query = `
     UPDATE vehicles
-    SET vehicle_number = $1,
-        type = $2,
-        capacity = $3,
-        is_ac = $4
+    SET vehicle_number = COALESCE($1, vehicle_number),
+        type = COALESCE($2, type),
+        capacity = COALESCE($3, capacity),
+        is_ac = COALESCE($4, is_ac)
     WHERE id = $5
     RETURNING *;
   `;
 
   const values = [vehicle_number, type, capacity, is_ac, id];
 
-  const result = await db.query(query, values);
+  const result = await client.query(query, values);
   return result.rows[0];
 };
 
