@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-    getPredefinedStops, 
     submitOnboarding, 
-    getOnboardingStatus,
-    PredefinedStop 
+    getOnboardingStatus
 } from "../../services/driverService";
+import LocationSearchInput from "../../components/LocationSearchInput";
 import { 
     UserCircle, 
     Truck, 
@@ -13,17 +12,13 @@ import {
     CheckCircle2, 
     ChevronRight, 
     Plus, 
-    Trash2,
-    Search
+    Trash2
 } from "lucide-react";
 
 export default function DriverOnboarding() {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
-    const [stops, setStops] = useState<PredefinedStop[]>([]);
     const [loading, setLoading] = useState(false);
-    const [stopsLoading, setStopsLoading] = useState(true);
-    const [stopsError, setStopsError] = useState("");
 
     // Form State
     const [licenseNumber, setLicenseNumber] = useState("");
@@ -33,33 +28,17 @@ export default function DriverOnboarding() {
         seatCount: 12,
         isAc: false
     });
-    const [routeStops, setRouteStops] = useState<PredefinedStop[]>([]);
+    const [routeStops, setRouteStops] = useState<{name: string, latitude: number, longitude: number}[]>([]);
 
     useEffect(() => {
-        loadStops();
+        loadStatus();
     }, []);
 
-    const loadStops = async () => {
-        setStopsLoading(true);
-        try {
-            const stopsData = await getPredefinedStops();
-            if (Array.isArray(stopsData)) {
-                setStops(stopsData);
-            } else {
-                setStopsError("Invalid data format received for stops.");
-            }
-        } catch (err) {
-            console.error("Failed to load stops", err);
-            setStopsError("Could not connect to stops service.");
-        } finally {
-            setStopsLoading(false);
-        }
-
+    const loadStatus = async () => {
         try {
             const statusData = await getOnboardingStatus();
             if (!statusData.completed && statusData.step) {
                 setStep(statusData.step);
-                // Also pre-fill license if step > 1
             }
         } catch (err) {
             console.error("Failed to load onboarding status", err);
@@ -67,18 +46,13 @@ export default function DriverOnboarding() {
     };
 
     const handleAddStop = () => {
-        if (stops.length > 0) {
-            setRouteStops([...routeStops, stops[0]]);
-        }
+        setRouteStops([...routeStops, { name: "", latitude: 0, longitude: 0 }]);
     };
 
-    const handleStopChange = (index: number, stopId: number) => {
-        const selectedStop = stops.find(s => s.id === stopId);
-        if (selectedStop) {
-            const newStops = [...routeStops];
-            newStops[index] = selectedStop;
-            setRouteStops(newStops);
-        }
+    const handleStopChange = (index: number, name: string, latitude: number, longitude: number) => {
+        const newStops = [...routeStops];
+        newStops[index] = { name, latitude, longitude };
+        setRouteStops(newStops);
     };
 
     const removeStop = (index: number) => {
@@ -255,55 +229,33 @@ export default function DriverOnboarding() {
                         </p>
 
                         <div className="space-y-4 mb-8">
-                            {stopsLoading ? (
-                                <div className="py-10 text-center animate-pulse">
-                                    <div className="h-10 w-full bg-slate-100 rounded-xl mb-4" />
-                                    <div className="h-10 w-full bg-slate-100 rounded-xl" />
-                                </div>
-                            ) : stopsError ? (
-                                <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 flex items-center justify-between">
-                                    <span className="font-medium">{stopsError}</span>
-                                    <button onClick={loadStops} className="px-3 py-1 bg-white border border-red-200 rounded-lg font-bold hover:bg-red-100 transition-colors">Retry</button>
-                                </div>
-                            ) : (
-                                <>
-                                    {routeStops.map((stop, index) => (
-                                        <div key={index} className="flex items-center gap-4 animate-in zoom-in-95 duration-200">
-                                            <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-xs font-bold border border-slate-200 shrink-0">
-                                                {index + 1}
-                                            </div>
-                                            <div className="flex-1 relative">
-                                                <select 
-                                                    value={stop.id}
-                                                    onChange={(e) => handleStopChange(index, parseInt(e.target.value))}
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none appearance-none bg-white font-medium"
-                                                >
-                                                    {stops.map(s => (
-                                                        <option key={s.id} value={s.id}>{s.name}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                                    <Search size={16} />
-                                                </div>
-                                            </div>
-                                            <button 
-                                                onClick={() => removeStop(index)}
-                                                className="p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                                            >
-                                                <Trash2 size={20} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    
+                            {routeStops.map((stop, index) => (
+                                <div key={index} className="flex items-center gap-4 animate-in zoom-in-95 duration-200">
+                                    <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-xs font-bold border border-slate-200 shrink-0">
+                                        {index + 1}
+                                    </div>
+                                    <div className="flex-1">
+                                        <LocationSearchInput 
+                                            placeholder={index === 0 ? "Enter starting location..." : "Enter next stop..."}
+                                            initialValue={stop.name}
+                                            onSelect={(name, lat, lon) => handleStopChange(index, name, lat, lon)}
+                                        />
+                                    </div>
                                     <button 
-                                        onClick={handleAddStop}
-                                        disabled={stops.length === 0}
-                                        className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:border-emerald-300 hover:text-emerald-500 hover:bg-emerald-50/30 transition-all flex items-center justify-center gap-3 font-bold group"
+                                        onClick={() => removeStop(index)}
+                                        className="p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
                                     >
-                                        <Plus size={24} className="group-hover:rotate-90 transition-transform" /> Add a Route Stop
+                                        <Trash2 size={20} />
                                     </button>
-                                </>
-                            )}
+                                </div>
+                            ))}
+                            
+                            <button 
+                                onClick={handleAddStop}
+                                className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:border-emerald-300 hover:text-emerald-500 hover:bg-emerald-50/30 transition-all flex items-center justify-center gap-3 font-bold group"
+                            >
+                                <Plus size={24} className="group-hover:rotate-90 transition-transform" /> Add a Route Stop
+                            </button>
                         </div>
 
                         <div className="flex gap-4">
