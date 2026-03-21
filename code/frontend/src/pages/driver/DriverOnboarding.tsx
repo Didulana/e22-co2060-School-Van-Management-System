@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
     getPredefinedStops, 
     submitOnboarding, 
+    getOnboardingStatus,
     PredefinedStop 
 } from "../../services/driverService";
 import { 
@@ -21,6 +22,8 @@ export default function DriverOnboarding() {
     const [step, setStep] = useState(1);
     const [stops, setStops] = useState<PredefinedStop[]>([]);
     const [loading, setLoading] = useState(false);
+    const [stopsLoading, setStopsLoading] = useState(true);
+    const [stopsError, setStopsError] = useState("");
 
     // Form State
     const [licenseNumber, setLicenseNumber] = useState("");
@@ -37,16 +40,36 @@ export default function DriverOnboarding() {
     }, []);
 
     const loadStops = async () => {
+        setStopsLoading(true);
         try {
-            const data = await getPredefinedStops();
-            setStops(data);
+            const stopsData = await getPredefinedStops();
+            if (Array.isArray(stopsData)) {
+                setStops(stopsData);
+            } else {
+                setStopsError("Invalid data format received for stops.");
+            }
         } catch (err) {
             console.error("Failed to load stops", err);
+            setStopsError("Could not connect to stops service.");
+        } finally {
+            setStopsLoading(false);
+        }
+
+        try {
+            const statusData = await getOnboardingStatus();
+            if (!statusData.completed && statusData.step) {
+                setStep(statusData.step);
+                // Also pre-fill license if step > 1
+            }
+        } catch (err) {
+            console.error("Failed to load onboarding status", err);
         }
     };
 
     const handleAddStop = () => {
-        setRouteStops([...routeStops, stops[0]]);
+        if (stops.length > 0) {
+            setRouteStops([...routeStops, stops[0]]);
+        }
     };
 
     const handleStopChange = (index: number, stopId: number) => {
@@ -232,40 +255,55 @@ export default function DriverOnboarding() {
                         </p>
 
                         <div className="space-y-4 mb-8">
-                            {routeStops.map((stop, index) => (
-                                <div key={index} className="flex items-center gap-4 animate-in zoom-in-95 duration-200">
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-xs font-bold border border-slate-200 shrink-0">
-                                        {index + 1}
-                                    </div>
-                                    <div className="flex-1 relative">
-                                        <select 
-                                            value={stop.id}
-                                            onChange={(e) => handleStopChange(index, parseInt(e.target.value))}
-                                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none appearance-none bg-white font-medium"
-                                        >
-                                            {stops.map(s => (
-                                                <option key={s.id} value={s.id}>{s.name}</option>
-                                            ))}
-                                        </select>
-                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                            <Search size={16} />
-                                        </div>
-                                    </div>
-                                    <button 
-                                        onClick={() => removeStop(index)}
-                                        className="p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                                    >
-                                        <Trash2 size={20} />
-                                    </button>
+                            {stopsLoading ? (
+                                <div className="py-10 text-center animate-pulse">
+                                    <div className="h-10 w-full bg-slate-100 rounded-xl mb-4" />
+                                    <div className="h-10 w-full bg-slate-100 rounded-xl" />
                                 </div>
-                            ))}
-                            
-                            <button 
-                                onClick={handleAddStop}
-                                className="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 hover:border-emerald-300 hover:text-emerald-500 hover:bg-emerald-50/30 transition-all flex items-center justify-center gap-2 font-bold"
-                            >
-                                <Plus size={20} /> Add Stop
-                            </button>
+                            ) : stopsError ? (
+                                <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 flex items-center justify-between">
+                                    <span className="font-medium">{stopsError}</span>
+                                    <button onClick={loadStops} className="px-3 py-1 bg-white border border-red-200 rounded-lg font-bold hover:bg-red-100 transition-colors">Retry</button>
+                                </div>
+                            ) : (
+                                <>
+                                    {routeStops.map((stop, index) => (
+                                        <div key={index} className="flex items-center gap-4 animate-in zoom-in-95 duration-200">
+                                            <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-xs font-bold border border-slate-200 shrink-0">
+                                                {index + 1}
+                                            </div>
+                                            <div className="flex-1 relative">
+                                                <select 
+                                                    value={stop.id}
+                                                    onChange={(e) => handleStopChange(index, parseInt(e.target.value))}
+                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none appearance-none bg-white font-medium"
+                                                >
+                                                    {stops.map(s => (
+                                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                                    <Search size={16} />
+                                                </div>
+                                            </div>
+                                            <button 
+                                                onClick={() => removeStop(index)}
+                                                className="p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                                            >
+                                                <Trash2 size={20} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    
+                                    <button 
+                                        onClick={handleAddStop}
+                                        disabled={stops.length === 0}
+                                        className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:border-emerald-300 hover:text-emerald-500 hover:bg-emerald-50/30 transition-all flex items-center justify-center gap-3 font-bold group"
+                                    >
+                                        <Plus size={24} className="group-hover:rotate-90 transition-transform" /> Add a Route Stop
+                                    </button>
+                                </>
+                            )}
                         </div>
 
                         <div className="flex gap-4">

@@ -45,10 +45,13 @@ export interface OnboardingStatus {
 export async function startJourney(driverId: number, routeId: number): Promise<Journey> {
   const res = await fetch(`${API_BASE}/journey/start`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${getAuthToken()}`
+    },
     body: JSON.stringify({ driver_id: driverId, route_id: routeId }),
   });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Failed to start journey");
   return data;
 }
@@ -56,11 +59,14 @@ export async function startJourney(driverId: number, routeId: number): Promise<J
 export async function boardStudent(journeyId: number, studentId: number): Promise<void> {
   const res = await fetch(`http://localhost:5001/api/boarding`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${getAuthToken()}`
+    },
     body: JSON.stringify({ journeyId, studentId })
   });
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const data = await res.json();
     throw new Error(data.error || "Failed to board student");
   }
 }
@@ -68,8 +74,9 @@ export async function boardStudent(journeyId: number, studentId: number): Promis
 export async function arriveAtSchool(journeyId: number): Promise<Journey> {
   const res = await fetch(`${API_BASE}/journey/${journeyId}/arrive-school`, {
     method: "POST",
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
   });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Failed to update status");
   return data;
 }
@@ -77,8 +84,9 @@ export async function arriveAtSchool(journeyId: number): Promise<Journey> {
 export async function startReturn(journeyId: number): Promise<Journey> {
   const res = await fetch(`${API_BASE}/journey/${journeyId}/start-return`, {
     method: "POST",
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
   });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Failed to update status");
   return data;
 }
@@ -86,11 +94,14 @@ export async function startReturn(journeyId: number): Promise<Journey> {
 export async function dropStudent(journeyId: number, studentId: number): Promise<void> {
   const res = await fetch(`http://localhost:5001/api/dropoff`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${getAuthToken()}`
+    },
     body: JSON.stringify({ journeyId, studentId })
   });
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const data = await res.json();
     throw new Error(data.error || "Failed to drop student");
   }
 }
@@ -98,8 +109,9 @@ export async function dropStudent(journeyId: number, studentId: number): Promise
 export async function completeJourney(journeyId: number): Promise<Journey> {
   const res = await fetch(`${API_BASE}/journey/${journeyId}/complete`, {
     method: "POST",
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
   });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Failed to complete journey");
   return data;
 }
@@ -109,23 +121,31 @@ export async function getActiveJourney(driverId: number): Promise<{
   journey: Journey | null;
   students?: StudentStatus[];
 }> {
-  const res = await fetch(`${API_BASE}/journey/active?driver_id=${driverId}`);
-  return await res.json();
+  const res = await fetch(`${API_BASE}/journey/active?driver_id=${driverId}`, {
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
+  return await res.json().catch(() => ({ active: false, journey: null }));
 }
 
 export async function getJourneyHistory(driverId: number): Promise<Journey[]> {
-  const res = await fetch(`${API_BASE}/journey/history?driver_id=${driverId}`);
-  return await res.json();
+  const res = await fetch(`${API_BASE}/journey/history?driver_id=${driverId}`, {
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
+  return await res.json().catch(() => []);
 }
 
 export async function getJourneyStudents(journeyId: number): Promise<StudentStatus[]> {
-  const res = await fetch(`${API_BASE}/journey/${journeyId}/students`);
-  return await res.json();
+  const res = await fetch(`${API_BASE}/journey/${journeyId}/students`, {
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
+  return await res.json().catch(() => []);
 }
 
 export async function getAttendance(driverId: number): Promise<AttendanceRecord[]> {
-  const res = await fetch(`${API_BASE}/journey/attendance?driver_id=${driverId}`);
-  return await res.json();
+  const res = await fetch(`${API_BASE}/journey/attendance?driver_id=${driverId}`, {
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
+  return await res.json().catch(() => []);
 }
 
 // ---- Announcements ----
@@ -136,10 +156,13 @@ export async function sendAnnouncement(
 ): Promise<{ message: string; recipientCount: number }> {
   const res = await fetch(`${API_BASE}/announce`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${getAuthToken()}`
+    },
     body: JSON.stringify({ driver_id: driverId, message }),
   });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Failed to send announcement");
   return data;
 }
@@ -147,7 +170,7 @@ export async function sendAnnouncement(
 // ---- Onboarding ----
 
 const getAuthToken = () => {
-    const session = JSON.parse(localStorage.getItem("session") || "{}");
+    const session = JSON.parse(localStorage.getItem("school-van-auth-session") || "{}");
     return session.token;
 };
 
@@ -155,14 +178,22 @@ export async function getOnboardingStatus(): Promise<OnboardingStatus> {
   const res = await fetch(`${API_BASE}/onboarding/status`, {
     headers: { "Authorization": `Bearer ${getAuthToken()}` }
   });
-  return await res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || "Failed to fetch onboarding status");
+  }
+  return data;
 }
 
 export async function getPredefinedStops(): Promise<PredefinedStop[]> {
   const res = await fetch(`${API_BASE}/onboarding/stops`, {
     headers: { "Authorization": `Bearer ${getAuthToken()}` }
   });
-  return await res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || "Failed to fetch stops");
+  }
+  return data;
 }
 
 export async function submitOnboarding(data: any): Promise<void> {
@@ -174,8 +205,8 @@ export async function submitOnboarding(data: any): Promise<void> {
     },
     body: JSON.stringify(data),
   });
+  const resData = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const errorData = await res.json();
-    throw new Error(errorData.error || "Failed to submit onboarding");
+    throw new Error(resData.error || "Failed to submit onboarding");
   }
 }

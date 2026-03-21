@@ -12,6 +12,10 @@ import { getRoutes, Route } from "../../services/route.service";
 import { getOnboardingStatus } from "../../services/driverService";
 import { useAuth } from "../../features/auth/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { 
+    Navigation,
+    ChevronRight
+} from "lucide-react";
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   pickup_started: { label: "Picking Up Students", color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
@@ -153,15 +157,21 @@ export default function DriverDashboard() {
       {/* Onboarding Banner */}
       {onboardingPending && (
         <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm flex items-center justify-between">
-            <div>
-                <h2 className="text-xl font-bold text-amber-900">Setup Required</h2>
-                <p className="text-amber-700 text-sm mt-1">Please complete your professional profile, vehicle details, and route setup to start journeys.</p>
+            <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                    <Navigation size={32} />
+                </div>
+                <div>
+                    <h2 className="text-xl font-bold text-amber-900 tracking-tight">Setup Your Route</h2>
+                    <p className="text-amber-700 text-sm mt-1 transition-all">Define your van's path and vehicle details to start accepting students.</p>
+                </div>
             </div>
             <button 
                 onClick={() => navigate("/driver/onboarding")}
-                className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-sm transition-all"
+                style={{ backgroundColor: '#0f172a', color: 'white' }}
+                className="px-8 py-3 rounded-2xl font-bold shadow-xl shadow-slate-200 transition-all flex items-center gap-2 group"
             >
-                Complete Setup
+                Setup Route Now <ChevronRight size={18} className="translate-x-0 group-hover:translate-x-1 transition-transform" />
             </button>
         </div>
       )}
