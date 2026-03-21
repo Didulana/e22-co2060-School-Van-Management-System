@@ -110,3 +110,13 @@ export const startMockJourney = async (studentId: number) => {
     const response = await axios.post(`${API_BASE_URL}/children/${studentId}/mock-journey`, {}, { headers: getAuthHeader() });
     return response.data;
 };
+
+export const boardStudent = async (journeyId: number, studentId: number) => {
+    const response = await axios.post(`http://localhost:5001/api/boarding`, { journeyId, studentId }, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const dropoffStudent = async (journeyId: number, studentId: number) => {
+    const response = await axios.post(`http://localhost:5001/api/dropoff`, { journeyId, studentId }, { headers: getAuthHeader() });
+    return response.data;
+};

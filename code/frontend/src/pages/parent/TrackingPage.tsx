@@ -8,12 +8,14 @@ import {
   EmergencyContact,
   Child,
   Stop,
-  startMockJourney
+  startMockJourney,
+  boardStudent,
+  dropoffStudent
 } from "../../services/parentService";
 import TrackingMap from "../../components/parent/TrackingMap";
 import { useAuth } from "../../features/auth/AuthContext";
 import { getSocket, initSocket, disconnectSocket } from "../../services/socketService";
-import { Bell, Phone, UserX, RefreshCcw, MapPin, Navigation, Clock, ShieldAlert, ArrowUpCircle } from "lucide-react";
+import { Bell, Phone, UserX, RefreshCcw, MapPin, Navigation, Clock, ShieldAlert, ArrowUpCircle, CheckCircle2 } from "lucide-react";
 
 interface Location {
   latitude: number;
@@ -109,6 +111,32 @@ export default function TrackingPage() {
       alert("Absence reported successfully.");
     } catch (err) {
       alert("System error reporting absence.");
+    }
+  };
+
+  const handleBoard = async () => {
+    if (!selectedChildId || !status?.journeyId) return;
+    try {
+      setRefreshing(true);
+      await boardStudent(status.journeyId, selectedChildId);
+      await loadChildData(selectedChildId, true);
+    } catch (err) {
+      alert("Failed to record boarding.");
+    } finally {
+      setRefreshing(true);
+    }
+  };
+
+  const handleDrop = async () => {
+    if (!selectedChildId || !status?.journeyId) return;
+    try {
+      setRefreshing(true);
+      await dropoffStudent(status.journeyId, selectedChildId);
+      await loadChildData(selectedChildId, true);
+    } catch (err) {
+      alert("Failed to record drop-off.");
+    } finally {
+      setRefreshing(true);
     }
   };
 
@@ -269,6 +297,44 @@ export default function TrackingPage() {
                         </div>
                     ))}
                 </div>
+
+                {/* Parent Attendance Marking */}
+                {status?.journeyId && (
+                    <div className="bg-white p-8 rounded-3xl border border-emerald-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className="h-14 w-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <Clock size={32} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-800 tracking-tight">Journey Attendance</h3>
+                                <p className="text-sm text-slate-500 font-medium">Verify your child's status for the current trip</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 w-full sm:w-auto">
+                            {!status.boarded && (
+                                <button 
+                                    onClick={handleBoard}
+                                    className="flex-1 sm:flex-none px-8 py-3 bg-emerald-500 text-white rounded-2xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all"
+                                >
+                                    Confirm Boarding
+                                </button>
+                            )}
+                            {status.boarded && !status.dropped && (
+                                <button 
+                                    onClick={handleDrop}
+                                    className="flex-1 sm:flex-none px-8 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-600 transition-all"
+                                >
+                                    Confirm Drop Off
+                                </button>
+                            )}
+                            {status.dropped && (
+                                <div className="px-8 py-3 bg-slate-100 text-slate-500 rounded-2xl font-bold flex items-center gap-2">
+                                    <CheckCircle2 size={18} className="text-emerald-500" /> Journey Complete
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Direct Contacts */}
                 {emergencyContacts.length > 0 && (

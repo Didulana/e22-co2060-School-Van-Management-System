@@ -84,11 +84,19 @@ export default function DriverOnboarding() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center py-12 px-4">
+        <div className="flex flex-col items-center py-8 px-4 w-full">
             {/* Header */}
-            <div className="w-full max-w-2xl text-center mb-10">
-                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Driver Onboarding</h1>
-                <p className="mt-2 text-slate-500 font-medium">Complete these steps to start your journeys.</p>
+            <div className="w-full max-w-2xl flex justify-between items-start mb-10">
+                <div className="text-left">
+                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Driver Onboarding</h1>
+                    <p className="mt-2 text-slate-500 font-medium">Complete these steps to start your journeys.</p>
+                </div>
+                <button 
+                    onClick={() => navigate("/driver")}
+                    className="px-4 py-2 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                    Cancel
+                </button>
             </div>
 
             {/* Stepper */}

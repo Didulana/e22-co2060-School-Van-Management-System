@@ -54,8 +54,10 @@ export async function startJourney(driverId: number, routeId: number): Promise<J
 }
 
 export async function boardStudent(journeyId: number, studentId: number): Promise<void> {
-  const res = await fetch(`${API_BASE}/journey/${journeyId}/board/${studentId}`, {
+  const res = await fetch(`http://localhost:5001/api/boarding`, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ journeyId, studentId })
   });
   if (!res.ok) {
     const data = await res.json();
@@ -82,8 +84,10 @@ export async function startReturn(journeyId: number): Promise<Journey> {
 }
 
 export async function dropStudent(journeyId: number, studentId: number): Promise<void> {
-  const res = await fetch(`${API_BASE}/journey/${journeyId}/drop/${studentId}`, {
+  const res = await fetch(`http://localhost:5001/api/dropoff`, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ journeyId, studentId })
   });
   if (!res.ok) {
     const data = await res.json();
@@ -99,8 +103,6 @@ export async function completeJourney(journeyId: number): Promise<Journey> {
   if (!res.ok) throw new Error(data.error || "Failed to complete journey");
   return data;
 }
-
-// ---- Query endpoints ----
 
 export async function getActiveJourney(driverId: number): Promise<{
   active: boolean;

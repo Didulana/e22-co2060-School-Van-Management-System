@@ -85,16 +85,13 @@ export default function App() {
                 <AnnouncementPage />
               </ProtectedRoute>
             } />
-            
-            {/* driver onboarding (outside sidebar layout or inside?) */}
-            {/* The user said "a page that ask him to add the route", usually full page without sidebar for focus */}
+            <Route path="/driver/onboarding" element={
+              <ProtectedRoute allowedRoles={["driver"]}>
+                <DriverOnboarding />
+              </ProtectedRoute>
+            } />
           </Route>
 
-          <Route path="/driver/onboarding" element={
-            <ProtectedRoute allowedRoles={["driver"]}>
-              <DriverOnboarding />
-            </ProtectedRoute>
-          } />
 
           {/* catch-all fallback to login */}
           <Route path="*" element={<Navigate to="/login" replace />} />

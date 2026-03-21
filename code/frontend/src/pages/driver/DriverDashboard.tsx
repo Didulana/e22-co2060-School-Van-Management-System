@@ -2,10 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import {
   getActiveJourney,
   startJourney,
-  boardStudent,
   arriveAtSchool,
   startReturn,
-  dropStudent,
   completeJourney,
   Journey,
   StudentStatus,
@@ -42,6 +40,7 @@ export default function DriverDashboard() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [onboardingPending, setOnboardingPending] = useState(false);
 
   useEffect(() => {
     checkOnboarding();
@@ -50,9 +49,7 @@ export default function DriverDashboard() {
   const checkOnboarding = async () => {
     try {
       const status = await getOnboardingStatus();
-      if (!status.completed) {
-        navigate("/driver/onboarding");
-      }
+      setOnboardingPending(!status.completed);
     } catch (err) {
       console.error("Failed to check onboarding status", err);
     }
@@ -79,6 +76,10 @@ export default function DriverDashboard() {
   }, [refresh]);
 
   const handleStart = async () => {
+    if (onboardingPending) {
+        navigate("/driver/onboarding");
+        return;
+    }
     if (!selectedRoute || !driverId) return;
     setActionLoading(true);
     setError(null);
@@ -101,32 +102,6 @@ export default function DriverDashboard() {
       if (action === "arrive") await arriveAtSchool(journey.id);
       else if (action === "return") await startReturn(journey.id);
       else if (action === "complete") await completeJourney(journey.id);
-      await refresh();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleBoard = async (studentId: number) => {
-    if (!journey) return;
-    setActionLoading(true);
-    try {
-      await boardStudent(journey.id, studentId);
-      await refresh();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleDrop = async (studentId: number) => {
-    if (!journey) return;
-    setActionLoading(true);
-    try {
-      await dropStudent(journey.id, studentId);
       await refresh();
     } catch (err: any) {
       setError(err.message);
@@ -172,6 +147,22 @@ export default function DriverDashboard() {
       {error && (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
+        </div>
+      )}
+
+      {/* Onboarding Banner */}
+      {onboardingPending && (
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm flex items-center justify-between">
+            <div>
+                <h2 className="text-xl font-bold text-amber-900">Setup Required</h2>
+                <p className="text-amber-700 text-sm mt-1">Please complete your professional profile, vehicle details, and route setup to start journeys.</p>
+            </div>
+            <button 
+                onClick={() => navigate("/driver/onboarding")}
+                className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-sm transition-all"
+            >
+                Complete Setup
+            </button>
         </div>
       )}
 
@@ -265,34 +256,11 @@ export default function DriverDashboard() {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      {!student.boarded_at && (journey.status === "pickup_started") && (
-                        <button
-                          onClick={() => handleBoard(student.student_id)}
-                          disabled={actionLoading}
-                          className="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 text-sm font-semibold hover:bg-blue-200 transition disabled:opacity-50"
-                        >
-                          Board
-                        </button>
-                      )}
-                      {student.boarded_at && !student.dropped_at && (journey.status === "return_started") && (
-                        <button
-                          onClick={() => handleDrop(student.student_id)}
-                          disabled={actionLoading}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 text-sm font-semibold hover:bg-emerald-200 transition disabled:opacity-50"
-                        >
-                          Drop Off
-                        </button>
-                      )}
-                      {student.boarded_at && (
-                        <span className="px-2 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs font-medium">
-                          ✓ Boarded
-                        </span>
-                      )}
-                      {student.dropped_at && (
-                        <span className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-medium">
-                          ✓ Dropped
-                        </span>
-                      )}
+                      <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${
+                        student.dropped_at ? 'bg-emerald-50 text-emerald-600' : (student.boarded_at ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-400')
+                      }`}>
+                        {student.dropped_at ? 'Dropped' : (student.boarded_at ? 'On Board' : 'Awaiting Parent')}
+                      </span>
                     </div>
                   </li>
                 ))}
