@@ -1,15 +1,8 @@
 import React, { FormEvent, useEffect, useMemo, useState } from "react";
-import {
-  fetchCurrentUser,
-  fetchDemoAccounts,
-  login,
-} from "../../features/auth/api";
-import {
-  clearStoredSession,
-  readStoredSession,
-  storeSession,
-} from "../../features/auth/storage";
-import { AuthSession, DemoAccount } from "../../features/auth/types";
+import { useNavigate } from "react-router-dom";
+import { fetchDemoAccounts, login } from "../../features/auth/api";
+import { DemoAccount } from "../../features/auth/types";
+import { useAuth } from "../../features/auth/AuthContext";
 
 const emptyCredentials = {
   email: "",
@@ -29,10 +22,12 @@ const roleDescriptions: Record<string, string> = {
 };
 
 function LoginPage() {
+  const navigate = useNavigate();
+  const { session, login: contextLogin, logout: contextLogout } = useAuth();
+
   const [credentials, setCredentials] = useState(emptyCredentials);
   const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
   const [selectedAccountEmail, setSelectedAccountEmail] = useState("");
-  const [session, setSession] = useState<AuthSession | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -43,41 +38,13 @@ function LoginPage() {
 
     async function bootstrap() {
       try {
-        const [accounts, storedSession] = await Promise.all([
-          fetchDemoAccounts(),
-          Promise.resolve(readStoredSession()),
-        ]);
+        const accounts = await fetchDemoAccounts();
 
-        if (!active) {
-          return;
-        }
-
+        if (!active) return;
         setDemoAccounts(accounts);
         setSelectedAccountEmail(accounts[0]?.email ?? "");
-
-        if (!storedSession) {
-          setIsBootstrapping(false);
-          return;
-        }
-
-        const currentUser = await fetchCurrentUser(storedSession.token);
-
-        if (!active) {
-          return;
-        }
-
-        const refreshedSession = {
-          token: storedSession.token,
-          user: currentUser,
-        };
-
-        setSession(refreshedSession);
-        storeSession(refreshedSession);
       } catch {
-        clearStoredSession();
-
         if (active) {
-          setSession(null);
           setBootstrapError(
             "Frontend loaded, but the initial auth bootstrap failed. Check that the backend is running on http://localhost:5001."
           );
@@ -96,6 +63,18 @@ function LoginPage() {
     };
   }, []);
 
+  // INSTANT REDIRECT IF ALREADY LOGGED IN
+  useEffect(() => {
+    if (session && !isBootstrapping) {
+      const roleHome: Record<string, string> = {
+        admin: "/admin",
+        driver: "/driver",
+        parent: "/tracking",
+      };
+      navigate(roleHome[session.user.role] || "/login", { replace: true });
+    }
+  }, [session, isBootstrapping, navigate]);
+
   const selectedAccount = useMemo(
     () => demoAccounts.find((account) => account.email === selectedAccountEmail) ?? null,
     [demoAccounts, selectedAccountEmail]
@@ -108,9 +87,15 @@ function LoginPage() {
 
     try {
       const nextSession = await login(credentials.email, credentials.password);
-      setSession(nextSession);
-      storeSession(nextSession);
+      contextLogin(nextSession);
       setCredentials(emptyCredentials);
+      
+      const roleHome: Record<string, string> = {
+        admin: "/admin",
+        driver: "/driver",
+        parent: "/tracking",
+      };
+      navigate(roleHome[nextSession.user.role] || "/login", { replace: true });
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Unable to sign in"
@@ -124,21 +109,13 @@ function LoginPage() {
     setSelectedAccountEmail(email);
     const account = demoAccounts.find((item) => item.email === email);
 
-    if (!account) {
-      return;
-    }
+    if (!account) return;
 
     setCredentials({
       email: account.email,
       password: passwordHints[account.role] ?? "",
     });
     setErrorMessage(null);
-  }
-
-  function handleLogout() {
-    clearStoredSession();
-    setSession(null);
-    setCredentials(emptyCredentials);
   }
 
   if (isBootstrapping) {
@@ -191,18 +168,10 @@ function LoginPage() {
                 </div>
 
                 <nav className="flex flex-wrap items-center gap-6 text-lg text-white/90">
-                  <a className="transition hover:text-white" href="#home">
-                    Home
-                  </a>
-                  <a className="transition hover:text-white" href="#why-us">
-                    Why us
-                  </a>
-                  <a className="transition hover:text-white" href="#how-it-works">
-                    How it works
-                  </a>
-                  <a className="transition hover:text-white" href="#contact">
-                    Contact
-                  </a>
+                  <a className="transition hover:text-white" href="#home">Home</a>
+                  <a className="transition hover:text-white" href="#why-us">Why us</a>
+                  <a className="transition hover:text-white" href="#how-it-works">How it works</a>
+                  <a className="transition hover:text-white" href="#contact">Contact</a>
                 </nav>
               </header>
 
@@ -211,17 +180,11 @@ function LoginPage() {
                   <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/70">
                     School transport portal
                   </p>
-                  <h1
-                    id="home"
-                    className="max-w-[12ch] text-5xl font-light leading-[0.98] tracking-tight text-white sm:text-6xl lg:text-7xl"
-                  >
-                    Your school transport
-                    {" "}
-                    <span className="font-extrabold">management system</span>
+                  <h1 id="home" className="max-w-[12ch] text-5xl font-light leading-[0.98] tracking-tight text-white sm:text-6xl lg:text-7xl">
+                    Your school transport <span className="font-extrabold">management system</span>
                   </h1>
                   <p className="mt-5 max-w-2xl text-xl leading-9 text-white/90">
-                    One place to manage school vans, routes, parent communication, and real-time
-                    journey visibility.
+                    One place to manage school vans, routes, parent communication, and real-time journey visibility.
                   </p>
                 </div>
 
@@ -248,12 +211,6 @@ function LoginPage() {
                             {session.user.role}
                           </div>
                         </div>
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                          <div className="text-sm text-slate-400">Email</div>
-                          <div className="mt-1 break-all text-sm font-medium text-slate-700">
-                            {session.user.email}
-                          </div>
-                        </div>
                       </div>
 
                       <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -262,7 +219,21 @@ function LoginPage() {
 
                       <button
                         className="w-full rounded-2xl bg-emerald-500 px-4 py-4 text-xl font-semibold text-white transition hover:bg-emerald-600"
-                        onClick={handleLogout}
+                        onClick={() => {
+                          const roleHome: Record<string, string> = {
+                            admin: "/admin",
+                            driver: "/driver",
+                            parent: "/tracking",
+                          };
+                          navigate(roleHome[session.user.role] || "/login");
+                        }}
+                        type="button"
+                      >
+                        Go to Dashboard
+                      </button>
+                      <button
+                        className="w-full rounded-2xl bg-slate-200 px-4 py-4 text-xl font-semibold text-slate-700 transition hover:bg-slate-300"
+                        onClick={contextLogout}
                         type="button"
                       >
                         Log out
@@ -271,10 +242,7 @@ function LoginPage() {
                   ) : (
                     <form className="space-y-5" onSubmit={handleSubmit}>
                       <div>
-                        <label
-                          className="mb-3 block text-2xl font-medium tracking-tight text-slate-800"
-                          htmlFor="user-select"
-                        >
+                        <label className="mb-3 block text-2xl font-medium tracking-tight text-slate-800" htmlFor="user-select">
                           Select user
                         </label>
                         <select
@@ -295,12 +263,7 @@ function LoginPage() {
                         <input
                           autoComplete="email"
                           className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-5 text-xl text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
-                          onChange={(event) =>
-                            setCredentials((current) => ({
-                              ...current,
-                              email: event.target.value,
-                            }))
-                          }
+                          onChange={(event) => setCredentials((current) => ({ ...current, email: event.target.value }))}
                           placeholder="Username"
                           type="email"
                           value={credentials.email}
@@ -311,27 +274,18 @@ function LoginPage() {
                         <input
                           autoComplete="current-password"
                           className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-5 text-xl text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
-                          onChange={(event) =>
-                            setCredentials((current) => ({
-                              ...current,
-                              password: event.target.value,
-                            }))
-                          }
+                          onChange={(event) => setCredentials((current) => ({ ...current, password: event.target.value }))}
                           placeholder="Password"
                           type="password"
                           value={credentials.password}
                         />
                       </div>
 
-                      <div className="text-sm text-slate-400 underline underline-offset-4">
-                        Forgot password?
-                      </div>
-
-                      {errorMessage ? (
+                      {errorMessage && (
                         <div className="rounded-2xl border-l-4 border-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
                           {errorMessage}
                         </div>
-                      ) : null}
+                      )}
 
                       <button
                         className="w-full rounded-2xl bg-emerald-500 px-4 py-4 text-2xl font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-wait disabled:opacity-70"
@@ -341,93 +295,14 @@ function LoginPage() {
                         {isSubmitting ? "Signing in..." : "Log in"}
                       </button>
 
-                      <div className="text-center text-sm text-slate-500">
-                        Demo account:
-                        {" "}
-                        <span className="font-medium text-slate-700">
-                          {selectedAccount?.email ?? "Not selected"}
-                        </span>
-                      </div>
+                      {bootstrapError && (
+                        <div className="text-center text-xs text-red-500 mt-2">{bootstrapError}</div>
+                      )}
                     </form>
                   )}
                 </aside>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section id="why-us" className="px-2 py-12 sm:px-4">
-          <div className="mb-10">
-            <h2 className="text-3xl font-light tracking-tight text-slate-700 sm:text-4xl">
-              Why use
-              {" "}
-              <span className="font-extrabold text-slate-800">SchoolVan?</span>
-            </h2>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            <article className="flex gap-5 rounded-[2rem] bg-white px-6 py-7 shadow-[0_16px_40px_rgba(15,23,42,0.05)]">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-500">
-                <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.8}
-                    d="M9 12h6m-6 4h6M8 4h8l1 2h2a1 1 0 011 1v11a2 2 0 01-2 2H6a2 2 0 01-2-2V7a1 1 0 011-1h2l1-2z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-2xl font-medium leading-tight text-slate-800">
-                  Better transport control
-                </h3>
-                <p className="mt-4 text-lg leading-8 text-slate-400">
-                  Manage vans, routes, and school transport operations from one connected system.
-                </p>
-              </div>
-            </article>
-
-            <article id="how-it-works" className="flex gap-5 rounded-[2rem] bg-white px-6 py-7 shadow-[0_16px_40px_rgba(15,23,42,0.05)]">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-500">
-                <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.8}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-2xl font-medium leading-tight text-slate-800">
-                  Real-time visibility
-                </h3>
-                <p className="mt-4 text-lg leading-8 text-slate-400">
-                  View journey progress, live location updates, and key route events as they happen.
-                </p>
-              </div>
-            </article>
-
-            <article id="contact" className="flex gap-5 rounded-[2rem] bg-white px-6 py-7 shadow-[0_16px_40px_rgba(15,23,42,0.05)]">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-500">
-                <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.8}
-                    d="M9 17l3 3 7-7M5 12l3 3L19 4"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-2xl font-medium leading-tight text-slate-800">
-                  Faster parent updates
-                </h3>
-                <p className="mt-4 text-lg leading-8 text-slate-400">
-                  Reduce uncertainty with clear communication around boarding, drop-off, and delays.
-                </p>
-              </div>
-            </article>
           </div>
         </section>
       </div>
