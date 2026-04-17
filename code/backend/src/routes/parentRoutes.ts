@@ -18,5 +18,6 @@ router.get("/emergency-contacts", parentController.getEmergencyContacts);
 router.get("/children/:id/status", parentController.getChildStatus);
 router.post("/children/:id/mock-journey", startMockJourney);
 router.get("/available-routes", parentController.getAvailableRoutes);
+router.get("/route-by-driver/:driverId", parentController.getRouteByDriverId);
 
 export default router;

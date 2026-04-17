@@ -90,19 +90,20 @@ export async function getJourneysByDriver(driverId: number): Promise<Journey[]> 
  * Returns boarding/dropoff status for the given journey
  */
 export async function getStudentsForJourney(journeyId: number): Promise<any[]> {
-  // Get all students linked to the journey's route via parent_students
   const result = await pool.query(
-    `SELECT
-       ps.student_id,
-       ps.student_name,
+    `SELECT DISTINCT
+       s.id AS student_id,
+       s.name AS student_name,
        sb.boarded_at,
        sd.dropped_at
      FROM journeys j
-     JOIN parent_students ps ON ps.driver_id = j.driver_id
-     LEFT JOIN student_boarding sb ON sb.journey_id = j.id AND sb.student_id = ps.student_id
-     LEFT JOIN student_dropoff sd ON sd.journey_id = j.id AND sd.student_id = ps.student_id
+     JOIN routes r ON r.id = j.route_id
+     JOIN route_stops rs ON rs.route_id = r.id
+     JOIN students s ON (s.pickup_stop_id = rs.id OR s.dropoff_stop_id = rs.id)
+     LEFT JOIN student_boarding sb ON sb.journey_id = j.id AND sb.student_id = s.id
+     LEFT JOIN student_dropoff sd ON sd.journey_id = j.id AND sd.student_id = s.id
      WHERE j.id = $1
-     ORDER BY ps.student_name`,
+     ORDER BY s.name`,
     [journeyId]
   );
   return result.rows;

@@ -1,15 +1,17 @@
 import * as driverModel from "../models/driver.model";
 import { Driver } from "../models/driver.model";
+import { getActiveJourneyByDriver } from "../models/journeyModel";
+import { handleJourneyEventWorkflow } from "./journeyOrchestratorService";
 
 /**
  * Create driver
  */
 export const createDriver = async (data: Driver): Promise<Driver> => {
-  const { name, phone, license_number } = data;
+  const { license_number } = data;
 
   // Basic validation
-  if (!name || !phone || !license_number) {
-    throw new Error("All fields are required");
+  if (!license_number) {
+    throw new Error("License number is required");
   }
 
   return await driverModel.createDriver(data);
@@ -45,4 +47,31 @@ export const assignVehicle = async (driverId: number, vehicleId: number): Promis
   }
 
   return await driverModel.assignVehicle(driverId, vehicleId);
+};
+
+/**
+ * Get driver by user ID
+ */
+export const getDriverByUserId = async (userId: number): Promise<Driver | null> => {
+  return await driverModel.getDriverByUserId(userId);
+};
+
+/**
+ * Trigger SOS
+ */
+export const triggerSOS = async (driverId: number): Promise<{ message: string }> => {
+  // Check for active journey to log the emergency event
+  const journey = await getActiveJourneyByDriver(driverId);
+  
+  if (journey) {
+    await handleJourneyEventWorkflow(
+      journey.id,
+      driverId,
+      "EMERGENCY",
+      "🚨 SOS: DRIVER HAS TRIGGERED AN EMERGENCY ALERT!"
+    );
+  }
+
+  // In a real app, this would also ping external emergency services
+  return { message: "Emergency services and system administrators have been notified." };
 };

@@ -114,6 +114,24 @@ export async function getAvailableRoutes(req: AuthenticatedRequest, res: Respons
   }
 }
 
+export async function getRouteByDriverId(req: AuthenticatedRequest, res: Response) {
+  try {
+    const driverId = parseInt(req.params.driverId as string, 10);
+    if (isNaN(driverId)) {
+      return res.status(400).json({ error: "Invalid driver ID" });
+    }
+
+    const route = await parentModel.getRouteByDriverId(driverId);
+    if (!route) {
+      return res.status(404).json({ error: "No route found for this driver" });
+    }
+
+    res.json(route);
+  } catch (error: any) {
+    res.status(500).json({ error: "Failed to fetch route for driver", details: error.message });
+  }
+}
+
 export async function getChildStatus(req: AuthenticatedRequest, res: Response) {
   try {
     const studentId = parseInt(req.params.id as string, 10);

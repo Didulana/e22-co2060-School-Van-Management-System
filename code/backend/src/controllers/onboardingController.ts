@@ -84,10 +84,10 @@ export async function submitOnboarding(req: AuthenticatedRequest, res: Response)
 
     // 5. Create Route
     await routeModel.createRoute({
-      route_name: `Route for Driver ${driver.id}`,
+      route_name: `Standard Daily Route`,
       driver_id: driver.id!,
       vehicle_id: vehicle.id!,
-      schedule: "Morning: 6:30 AM, Afternoon: 1:30 PM",
+      schedule: "Morning & Afternoon Service",
       stops: routeStops.map((stop: any, index: number) => ({
         stop_name: stop.name,
         stop_order: index + 1,

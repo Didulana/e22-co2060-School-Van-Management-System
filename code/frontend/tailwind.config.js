@@ -16,8 +16,9 @@ export default {
         panel: "0 24px 80px rgba(0, 0, 0, 0.28)",
       },
       fontFamily: {
-        display: ['Georgia', '"Times New Roman"', "serif"],
-        body: ['"Segoe UI"', "Tahoma", "Geneva", "Verdana", "sans-serif"],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif'],
+        display: ['Inter', 'Georgia', '"Times New Roman"', "serif"],
+        body: ['Inter', '"Segoe UI"', "Tahoma", "Geneva", "Verdana", "sans-serif"],
       },
     },
   },

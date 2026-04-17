@@ -12,9 +12,14 @@ export const sendAnnouncement = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "driver_id and message are required" });
     }
 
-    // Find all parent IDs linked to this driver via parent_students
+    // Find all parent IDs linked to this driver via their assigned routes and students
     const parentsResult = await pool.query(
-      `SELECT DISTINCT parent_id FROM parent_students WHERE driver_id = $1`,
+      `SELECT DISTINCT ps.parent_id 
+       FROM routes r
+       JOIN route_stops rs ON r.id = rs.route_id
+       JOIN students s ON (s.pickup_stop_id = rs.stop_id OR s.dropoff_stop_id = rs.stop_id)
+       JOIN parent_students ps ON s.id = ps.student_id
+       WHERE r.driver_id = $1`,
       [driver_id]
     );
 

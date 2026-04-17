@@ -43,6 +43,10 @@ export interface Child {
     dropoff_lng?: number;
     status: string;
     current_status?: string;
+    driver_id?: number;
+    pickup_stop_name?: string;
+    dropoff_stop_name?: string;
+    route_name?: string;
 }
 
 export interface JourneyHistoryItem {
@@ -103,6 +107,11 @@ export const markNotificationAsRead = async (notificationId: number) => {
 
 export const getAvailableRoutes = async (): Promise<Route[]> => {
     const response = await axios.get(`${API_BASE_URL}/available-routes`, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const getRouteByDriverId = async (driverId: number): Promise<Route> => {
+    const response = await axios.get(`${API_BASE_URL}/route-by-driver/${driverId}`, { headers: getAuthHeader() });
     return response.data;
 };
 

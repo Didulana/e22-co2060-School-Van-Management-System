@@ -112,12 +112,13 @@ export const getAllRoutes = async (driverId?: number) => {
       r.route_name,
       r.schedule,
       r.driver_id,
-      d.name AS driver_name,
+      u.name AS driver_name,
       r.vehicle_id,
       v.vehicle_number,
       v.type AS vehicle_type
     FROM routes r
     JOIN drivers d ON r.driver_id = d.id
+    JOIN users u ON d.user_id = u.id
     JOIN vehicles v ON r.vehicle_id = v.id
   `;
 

@@ -40,34 +40,76 @@ export interface OnboardingStatus {
   driverId?: number;
 }
 
+// ---- Auth Helper ----
+
+export const getAuthToken = () => {
+    const session = JSON.parse(localStorage.getItem("school-van-auth-session") || "{}");
+    return session.token;
+};
+
 // ---- Journey lifecycle ----
+
+export async function getActiveJourney(driverId: number): Promise<{
+  active: boolean;
+  journey: Journey | null;
+  students: StudentStatus[];
+}> {
+  const res = await fetch(`${API_BASE}/journey/active?driver_id=${driverId}`, {
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to retrieve active journey manifest.");
+  }
+
+  return await res.json();
+}
 
 export async function startJourney(driverId: number, routeId: number): Promise<Journey> {
   const res = await fetch(`${API_BASE}/journey/start`, {
     method: "POST",
-    headers: { 
+    headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${getAuthToken()}`
     },
     body: JSON.stringify({ driver_id: driverId, route_id: routeId }),
   });
+
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Failed to start journey");
+  if (!res.ok) throw new Error(data.error || "Ignition failure: Unable to initiate route.");
   return data;
 }
 
 export async function boardStudent(journeyId: number, studentId: number): Promise<void> {
   const res = await fetch(`http://localhost:5001/api/boarding`, {
     method: "POST",
-    headers: { 
+    headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${getAuthToken()}`
     },
-    body: JSON.stringify({ journeyId, studentId })
+    body: JSON.stringify({ journeyId, studentId }),
   });
-  const data = await res.json().catch(() => ({}));
+
   if (!res.ok) {
-    throw new Error(data.error || "Failed to board student");
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Protocol failure: Student boarding not recorded.");
+  }
+}
+
+export async function dropStudent(journeyId: number, studentId: number): Promise<void> {
+  const res = await fetch(`http://localhost:5001/api/dropoff`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${getAuthToken()}`
+    },
+    body: JSON.stringify({ journeyId, studentId }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Protocol failure: Student drop-off not recorded.");
   }
 }
 
@@ -76,8 +118,9 @@ export async function arriveAtSchool(journeyId: number): Promise<Journey> {
     method: "POST",
     headers: { "Authorization": `Bearer ${getAuthToken()}` }
   });
+
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Failed to update status");
+  if (!res.ok) throw new Error(data.error || "Link failure: School arrival sequence failed.");
   return data;
 }
 
@@ -86,24 +129,10 @@ export async function startReturn(journeyId: number): Promise<Journey> {
     method: "POST",
     headers: { "Authorization": `Bearer ${getAuthToken()}` }
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Failed to update status");
-  return data;
-}
 
-export async function dropStudent(journeyId: number, studentId: number): Promise<void> {
-  const res = await fetch(`http://localhost:5001/api/dropoff`, {
-    method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${getAuthToken()}`
-    },
-    body: JSON.stringify({ journeyId, studentId })
-  });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.error || "Failed to drop student");
-  }
+  if (!res.ok) throw new Error(data.error || "Route shift failure: Afternoon trip initiation failed.");
+  return data;
 }
 
 export async function completeJourney(journeyId: number): Promise<Journey> {
@@ -111,20 +140,10 @@ export async function completeJourney(journeyId: number): Promise<Journey> {
     method: "POST",
     headers: { "Authorization": `Bearer ${getAuthToken()}` }
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || "Failed to complete journey");
-  return data;
-}
 
-export async function getActiveJourney(driverId: number): Promise<{
-  active: boolean;
-  journey: Journey | null;
-  students?: StudentStatus[];
-}> {
-  const res = await fetch(`${API_BASE}/journey/active?driver_id=${driverId}`, {
-    headers: { "Authorization": `Bearer ${getAuthToken()}` }
-  });
-  return await res.json().catch(() => ({ active: false, journey: null }));
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Shutdown failure: Unable to complete mission sequence.");
+  return data;
 }
 
 export async function getJourneyHistory(driverId: number): Promise<Journey[]> {
@@ -148,6 +167,20 @@ export async function getAttendance(driverId: number): Promise<AttendanceRecord[
   return await res.json().catch(() => []);
 }
 
+export async function triggerSOS(): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE}/sos`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Emergency protocol failure: Unable to broadcast SOS.");
+  }
+
+  return await res.json();
+}
+
 // ---- Announcements ----
 
 export async function sendAnnouncement(
@@ -168,11 +201,6 @@ export async function sendAnnouncement(
 }
 
 // ---- Onboarding ----
-
-const getAuthToken = () => {
-    const session = JSON.parse(localStorage.getItem("school-van-auth-session") || "{}");
-    return session.token;
-};
 
 export async function getOnboardingStatus(): Promise<OnboardingStatus> {
   const res = await fetch(`${API_BASE}/onboarding/status`, {

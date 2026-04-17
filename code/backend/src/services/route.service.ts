@@ -23,8 +23,8 @@ export const createRoute = async (data: Route): Promise<Route> => {
     throw new Error("Schedule is required");
   }
 
-  if (!["morning", "evening"].includes(schedule.toLowerCase())) {
-    throw new Error("Schedule must be either morning or evening");
+  if (schedule.length > 100) {
+    throw new Error("Schedule description is too long (max 100 characters)");
   }
 
   if (!Array.isArray(stops) || stops.length === 0) {
@@ -64,6 +64,8 @@ export const createRoute = async (data: Route): Promise<Route> => {
   const normalizedStops = stops.map((stop) => ({
     stop_name: stop.stop_name.trim(),
     stop_order: Number(stop.stop_order),
+    latitude: Number(stop.latitude),
+    longitude: Number(stop.longitude),
   }));
 
   const uniqueOrders = new Set(normalizedStops.map((stop) => stop.stop_order));

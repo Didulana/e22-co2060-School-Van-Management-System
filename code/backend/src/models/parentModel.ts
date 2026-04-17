@@ -8,10 +8,22 @@ export async function getChildrenByParentId(parentId: number) {
       s.school,
       s.pickup_stop_id,
       s.dropoff_stop_id,
+      s.pickup_lat,
+      s.pickup_lng,
+      s.dropoff_lat,
+      s.dropoff_lng,
       s.status,
-      ps.relationship_type
+      ps.relationship_type,
+      rs1.stop_name as pickup_stop_name,
+      rs2.stop_name as dropoff_stop_name,
+      r.id as route_id,
+      r.route_name,
+      r.driver_id
     FROM parent_students ps
     JOIN students s ON ps.student_id = s.id
+    LEFT JOIN route_stops rs1 ON s.pickup_stop_id = rs1.id
+    LEFT JOIN route_stops rs2 ON s.dropoff_stop_id = rs2.id
+    LEFT JOIN routes r ON rs1.route_id = r.id
     WHERE ps.parent_id = $1
     ORDER BY s.name ASC
   `;
@@ -96,7 +108,7 @@ export async function getJourneyHistory(parentId: number) {
       sb.boarded_at as event_time,
       s.name as student_name,
       j.id as journey_id,
-      r.name as route_name
+      r.route_name
     FROM parent_students ps
     JOIN students s ON ps.student_id = s.id
     JOIN student_boarding sb ON s.id = sb.student_id
@@ -110,7 +122,7 @@ export async function getJourneyHistory(parentId: number) {
       sd.dropped_at as event_time,
       s.name as student_name,
       j.id as journey_id,
-      r.name as route_name
+      r.route_name
     FROM parent_students ps
     JOIN students s ON ps.student_id = s.id
     JOIN student_dropoff sd ON s.id = sd.student_id
@@ -128,7 +140,7 @@ export async function getEmergencyContacts(parentId: number) {
     SELECT DISTINCT
       u.name as driver_name,
       u.phone as driver_phone,
-      r.name as route_name,
+      r.route_name,
       s.name as student_name
     FROM parent_students ps
     JOIN students s ON ps.student_id = s.id
@@ -222,7 +234,7 @@ export async function getAvailableRoutes() {
   const query = `
     SELECT 
       r.id as route_id,
-      r.name as route_name,
+      r.route_name,
       u.name as driver_name,
       u.phone as driver_phone,
       rs.id as stop_id,
@@ -233,7 +245,7 @@ export async function getAvailableRoutes() {
     FROM routes r
     JOIN drivers d ON r.driver_id = d.id
     JOIN users u ON d.user_id = u.id
-    JOIN route_stops rs ON r.id = rs.route_id
+    LEFT JOIN route_stops rs ON r.id = rs.route_id
     ORDER BY r.id, rs.stop_order
   `;
   const result = await pool.query(query);
@@ -250,14 +262,57 @@ export async function getAvailableRoutes() {
         stops: []
       };
     }
-    routesMap[row.route_id].stops.push({
+    
+    if (row.stop_id) {
+      routesMap[row.route_id].stops.push({
+        id: row.stop_id,
+        name: row.stop_name,
+        order: row.stop_order,
+        latitude: row.latitude,
+        longitude: row.longitude
+      });
+    }
+  });
+  
+  return Object.values(routesMap);
+}
+
+export async function getRouteByDriverId(driverId: number) {
+  const query = `
+    SELECT 
+      r.id as route_id,
+      r.route_name,
+      u.name as driver_name,
+      u.phone as driver_phone,
+      rs.id as stop_id,
+      rs.stop_name,
+      rs.stop_order,
+      rs.latitude,
+      rs.longitude
+    FROM routes r
+    JOIN drivers d ON r.driver_id = d.id
+    JOIN users u ON d.user_id = u.id
+    JOIN route_stops rs ON r.id = rs.route_id
+    WHERE d.id = $1
+    ORDER BY rs.stop_order
+  `;
+  const result = await pool.query(query, [driverId]);
+  
+  if (result.rows.length === 0) return null;
+
+  const route = {
+    id: result.rows[0].route_id,
+    name: result.rows[0].route_name,
+    driver_name: result.rows[0].driver_name,
+    driver_phone: result.rows[0].driver_phone,
+    stops: result.rows.map(row => ({
       id: row.stop_id,
       name: row.stop_name,
       order: row.stop_order,
       latitude: row.latitude,
       longitude: row.longitude
-    });
-  });
+    }))
+  };
   
-  return Object.values(routesMap);
+  return route;
 }

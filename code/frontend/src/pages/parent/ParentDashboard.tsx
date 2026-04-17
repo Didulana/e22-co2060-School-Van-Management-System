@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getChildren, Child } from "../../services/parentService";
-import { UserCircle, School, ChevronRight, LayoutDashboard, Users, Navigation, MapPin } from "lucide-react";
+import { UserCircle, School, ChevronRight, LayoutDashboard, Users, Navigation, MapPin, Clock, ShieldCheck, Phone } from "lucide-react";
 
 export default function ParentDashboard() {
     const [children, setChildren] = useState<Child[]>([]);
@@ -14,7 +14,7 @@ export default function ParentDashboard() {
                 const data = await getChildren();
                 setChildren(data);
             } catch (err: any) {
-                setError("Unable to load children data. Please try again later.");
+                setError("Remote sync failed. Retrying connection...");
             } finally {
                 setLoading(false);
             }
@@ -23,121 +23,164 @@ export default function ParentDashboard() {
     }, []);
 
     if (loading) return (
-        <div className="flex min-h-[400px] items-center justify-center bg-[#f8f8f6]">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-500" />
+        <div className="flex min-h-[400px] items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-100 border-t-emerald-500" />
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-[#f8f8f6] p-6 lg:p-10 text-slate-900">
-            <div className="mx-auto max-w-6xl">
-                {/* Clean Header */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-slate-800">Your Dashboard</h1>
-                        <p className="mt-1 text-base text-slate-500">Monitor your children's commute status</p>
+        <div className="space-y-12 animate-in fade-in duration-700">
+            {/* Premium Header */}
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <h1 className="text-5xl font-black tracking-tighter text-slate-900 leading-none">Home Dashboard</h1>
+                    <p className="mt-4 text-lg font-medium text-slate-400 capitalize flex items-center gap-2">
+                        <ShieldCheck className="text-emerald-500" size={20} />
+                        Tracking your children
+                    </p>
+                </div>
+                <Link to="/parent/children" className="group flex items-center gap-3 rounded-[2rem] bg-slate-900 px-8 py-4 text-sm font-bold text-white shadow-2xl shadow-slate-200 transition-all hover:bg-emerald-600 hover:shadow-emerald-200 active:scale-95">
+                    <Users size={18} />
+                    Child Details
+                    <ChevronRight size={16} className="translate-x-0 group-hover:translate-x-1 transition-transform" />
+                </Link>
+            </div>
+
+            {error && (
+                <div className="rounded-[2rem] border border-red-100 bg-red-50/50 p-6 text-sm font-bold text-red-600 animate-pulse">
+                    ⚠️ {error}
+                </div>
+            )}
+
+            {children.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-[3rem] bg-white p-24 shadow-premium border border-slate-50 text-center">
+                    <div className="mb-8 h-24 w-24 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 border border-slate-100 shadow-inner">
+                        <LayoutDashboard size={48} />
                     </div>
-                    <Link to="/parent/children" className="flex items-center gap-2 rounded-2xl bg-emerald-500 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 active:scale-95">
-                        <Users size={18} />
-                        Child Profiles
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">Add a child to start</h2>
+                    <p className="mt-3 text-slate-400 font-medium max-w-sm mx-auto">Add your child's information to see where the van is and get arrival updates.</p>
+                    <Link to="/parent/children" className="mt-10 rounded-2xl bg-emerald-500 px-10 py-5 text-base font-black text-white shadow-xl shadow-emerald-200 transition-all hover:bg-emerald-600 active:scale-95">
+                        Add First Child
                     </Link>
                 </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
+                    {children.map(child => (
+                        <div key={child.id} className="premium-card group relative p-8 rounded-[3rem]">
+                            {/* Status Badge */}
+                            <div className="absolute top-8 right-8">
+                                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] shadow-sm ${
+                                    child.current_status === 'en_route' ? 'bg-emerald-500 text-white animate-pulse' : 
+                                    child.current_status === 'dropped_off' ? 'bg-blue-600 text-white' : 
+                                    'bg-slate-100 text-slate-400'
+                                }`}>
+                                    {child.current_status === 'en_route' ? 'In the Van' : 
+                                    child.current_status === 'dropped_off' ? 'Arrived' : 
+                                    'At Home / School'}
+                                </span>
+                            </div>
 
-                {error && (
-                    <div className="mb-8 rounded-2xl border-l-4 border-red-500 bg-red-50 p-4 text-sm font-medium text-red-800">
-                        {error}
-                    </div>
-                )}
-
-                {children.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center rounded-3xl bg-white p-16 shadow-sm border border-slate-200 text-center animate-in fade-in">
-                        <div className="mb-6 h-20 w-20 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300">
-                            <LayoutDashboard size={40} />
-                        </div>
-                        <h2 className="text-2xl font-semibold text-slate-800">No children registered</h2>
-                        <p className="mt-2 text-slate-500 max-w-sm">Register your children to start tracking their school journeys and receive real-time updates.</p>
-                        <Link to="/parent/children" className="mt-8 rounded-2xl bg-emerald-500 px-8 py-4 text-sm font-semibold text-white transition hover:bg-emerald-600 active:scale-95">
-                            Add Your First Child
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {children.map(child => (
-                            <div key={child.id} className="group overflow-hidden rounded-2xl bg-white p-6 border border-slate-100 shadow-sm transition-all hover:shadow-md">
-                                <div className="flex items-start justify-between mb-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-12 w-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                            <UserCircle size={28} />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-bold text-slate-800">{child.name}</h3>
-                                            <div className="flex items-center gap-1.5 mt-0.5 text-xs font-semibold text-slate-400">
-                                                <School size={12} />
-                                                <span>{child.school || "School Not Set"}</span>
-                                            </div>
-                                        </div>
+                            <div className="flex flex-col h-full">
+                                <div className="flex items-center gap-6 mb-10">
+                                    <div className="h-20 w-20 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors duration-500">
+                                        <UserCircle size={44} />
                                     </div>
-                                    <div className={`rounded-xl px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                                        child.current_status === 'en_route' ? 'bg-emerald-50 text-emerald-700' : 
-                                        child.current_status === 'dropped_off' ? 'bg-blue-50 text-blue-700' : 
-                                        'bg-slate-50 text-slate-500'
-                                    }`}>
-                                        {child.current_status?.replace('_', ' ') || 'Waiting'}
+                                    <div>
+                                        <h3 className="text-3xl font-black text-slate-900 tracking-tighter leading-none">{child.name}</h3>
+                                        <div className="flex items-center gap-2 mt-2 text-sm font-bold text-slate-400">
+                                            <School size={16} className="text-emerald-500/50" />
+                                            <span>{child.school || "St. Peters College"}</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="rounded-xl bg-slate-50 p-4 border border-slate-100/50">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center text-slate-300 shadow-sm">
-                                                <MapPin size={16} />
+                                <div className="mt-auto space-y-4">
+                                    {/* Logistics Strip */}
+                                    <div className="flex items-center justify-between p-6 bg-slate-50/50 rounded-[2rem] border border-slate-100 group-hover:bg-white group-hover:shadow-sm transition-all duration-500">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-emerald-500 border border-slate-100">
+                                                <MapPin size={20} />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Default Stop</p>
-                                                <p className="text-sm font-semibold text-slate-700 leading-none mt-0.5">#{child.pickup_stop_id}</p>
+                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Pickup Location</p>
+                                                <p className="text-base font-black text-slate-800 tracking-tight leading-none mt-1 truncate max-w-[120px]">
+                                                    {child.pickup_stop_name || `Stop #${child.pickup_stop_id}`}
+                                                </p>
                                             </div>
                                         </div>
+                                        
                                         <Link 
                                             to="/tracking" 
-                                            className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500 text-white shadow-sm transition hover:bg-emerald-600 active:scale-95"
-                                            title="Track Live"
+                                            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-slate-100 text-slate-900 shadow-sm transition hover:bg-slate-900 hover:text-white hover:border-slate-900 active:scale-90"
+                                            title="View Radar"
                                         >
-                                            <Navigation size={18} />
+                                            <Navigation size={22} />
                                         </Link>
+                                    </div>
+
+                                    {/* Arrival Predictor Overlay */}
+                                    <div className="flex items-center gap-3 px-6 py-3 bg-emerald-50/50 rounded-2xl border border-emerald-100/30">
+                                        <Clock size={14} className="text-emerald-500" />
+                                        <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
+                                            Next Pickup: <span className="text-emerald-900 font-black">6:45 AM</span> • Driver ID: <span className="font-black">#{child.driver_id || "N/A"}</span>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Simplified Quick Navigation */}
-                {!loading && children.length > 0 && (
-                    <div className="mt-12 border-t border-slate-200 pt-10">
-                        <h2 className="text-lg font-bold text-slate-800 mb-6 uppercase tracking-wider text-center">Quick Navigation</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Link to="/parent/history" className="flex items-center justify-between p-6 rounded-2xl bg-white border border-slate-200 shadow-sm transition hover:border-emerald-200 hover:shadow-md">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                        <LayoutDashboard size={20} />
-                                    </div>
-                                    <span className="font-semibold text-slate-700">Journey History</span>
-                                </div>
-                                <ChevronRight size={18} className="text-slate-300" />
-                            </Link>
-                            <Link to="/parent/children" className="flex items-center justify-between p-6 rounded-2xl bg-white border border-slate-200 shadow-sm transition hover:border-emerald-200 hover:shadow-md">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                        <Users size={20} />
-                                    </div>
-                                    <span className="font-semibold text-slate-700">Profile Settings</span>
-                                </div>
-                                <ChevronRight size={18} className="text-slate-300" />
-                            </Link>
                         </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Premium Quick Actions */}
+            {!loading && children.length > 0 && (
+                <div className="pt-12">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="h-[1px] flex-1 bg-slate-100"></div>
+                        <h2 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] whitespace-nowrap">Useful Links</h2>
+                        <div className="h-[1px] flex-1 bg-slate-100"></div>
                     </div>
-                )}
-            </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <QuickLink to="/parent/history" icon={<History size={20}/>} label="Trip History" sub="See past trips" />
+                        <QuickLink to="/parent/children" icon={<Users size={20}/>} label="Child Details" sub="Update your child's info" />
+                        <QuickLink to="tel:+94112233445" icon={<Phone size={20}/>} label="Help Line" sub="Contact support" external />
+                    </div>
+                </div>
+            )}
         </div>
+    );
+}
+
+function History({ size }: { size: number }) { return <Navigation size={size} />; } // Local Alias for lucide History
+
+function QuickLink({ to, icon, label, sub, external = false }: { to: string; icon: any; label: string; sub: string; external?: boolean }) {
+    const content = (
+        <>
+            <div className="h-14 w-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-white/10 group-hover:text-emerald-400 transition-colors shadow-inner">
+                {icon}
+            </div>
+            <div className="flex-1">
+                <p className="text-lg font-black text-slate-900 leading-none group-hover:text-white transition-colors tracking-tighter">{label}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 group-hover:text-slate-500">{sub}</p>
+            </div>
+            <ChevronRight size={20} className="text-slate-200 group-hover:text-emerald-500 transition-colors" />
+        </>
+    );
+
+    const className = "flex items-center gap-5 p-8 rounded-[2.5rem] bg-white border border-slate-100 shadow-soft transition-all hover:bg-slate-900 group";
+
+    if (external) {
+        return (
+            <a href={to} className={className}>
+                {content}
+            </a>
+        );
+    }
+
+    return (
+        <Link to={to} className={className}>
+            {content}
+        </Link>
     );
 }

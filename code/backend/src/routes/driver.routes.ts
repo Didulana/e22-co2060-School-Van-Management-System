@@ -33,8 +33,8 @@ router.put("/:id", driverController.updateDriver);
 router.delete("/:id", driverController.deleteDriver);
 
 /**
- * Assign vehicle to driver
+ * Trigger SOS / Emergency alert
  */
-router.put("/:id/assign-vehicle", driverController.assignVehicle);
+router.post("/sos", driverController.triggerSOS);
 
 export default router;
