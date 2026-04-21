@@ -180,3 +180,13 @@ export async function getChildStatus(req: AuthenticatedRequest, res: Response) {
     res.status(500).json({ error: "Failed to fetch child status", details: error.message });
   }
 }
+
+export async function getNotifications(req: AuthenticatedRequest, res: Response) {
+  try {
+    const parentId = req.user!.id;
+    const notifications = await parentModel.getNotificationsByParentId(parentId);
+    res.json(notifications);
+  } catch (error: any) {
+    res.status(500).json({ error: "Failed to fetch notifications", details: error.message });
+  }
+}

@@ -17,7 +17,7 @@ export const sendAnnouncement = async (req: Request, res: Response) => {
       `SELECT DISTINCT ps.parent_id 
        FROM routes r
        JOIN route_stops rs ON r.id = rs.route_id
-       JOIN students s ON (s.pickup_stop_id = rs.stop_id OR s.dropoff_stop_id = rs.stop_id)
+       JOIN students s ON (s.pickup_stop_id = rs.id OR s.dropoff_stop_id = rs.id)
        JOIN parent_students ps ON s.id = ps.student_id
        WHERE r.driver_id = $1`,
       [driver_id]
@@ -30,9 +30,9 @@ export const sendAnnouncement = async (req: Request, res: Response) => {
     // Create a notification for each parent
     const insertPromises = parentsResult.rows.map((row) =>
       pool.query(
-        `INSERT INTO notifications (parent_id, type, message)
-         VALUES ($1, $2, $3)`,
-        [row.parent_id, "driver_announcement", message]
+        `INSERT INTO notifications (journey_id, user_id, type, message)
+         VALUES ($1, $2, $3, $4)`,
+        [0, row.parent_id, "driver_announcement", message]
       )
     );
 

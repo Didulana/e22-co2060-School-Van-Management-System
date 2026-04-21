@@ -316,3 +316,23 @@ export async function getRouteByDriverId(driverId: number) {
   
   return route;
 }
+
+export async function getNotificationsByParentId(parentId: number) {
+  const query = `
+    SELECT
+      id,
+      journey_id,
+      user_id,
+      student_id,
+      type,
+      message,
+      is_read,
+      created_at
+    FROM notifications
+    WHERE user_id = $1
+    ORDER BY created_at DESC
+  `;
+
+  const result = await pool.query(query, [parentId]);
+  return result.rows;
+}

@@ -129,3 +129,8 @@ export const dropoffStudent = async (journeyId: number, studentId: number) => {
     const response = await axios.post(`http://localhost:5001/api/dropoff`, { journeyId, studentId }, { headers: getAuthHeader() });
     return response.data;
 };
+
+export const getParentNotifications = async (): Promise<any[]> => {
+    const response = await axios.get(`${API_BASE_URL}/notifications`, { headers: getAuthHeader() });
+    return response.data;
+};

@@ -35,7 +35,7 @@
 
 /* Base Styles */
 body {
-  font-family: 'Stack Sans Headline', sans-serif;
+  font-family: 'Inter', sans-serif;
   background-color: var(--background);
   color: var(--slate-800);
 }

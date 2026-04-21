@@ -25,7 +25,9 @@ import {
     MapPin,
     Loader2,
     UserCircle,
-    ArrowRight
+    ArrowRight,
+    Plus,
+    Check
 } from "lucide-react";
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string; icon: any }> = {
@@ -388,16 +390,16 @@ export default function DriverDashboard() {
             ) : (
               <ul className="divide-y divide-slate-50">
                 {students.map((student) => (
-                  <li key={student.student_id} className="group flex items-center justify-between px-12 py-8 hover:bg-slate-50/50 transition-all">
-                    <div className="flex items-center gap-6">
-                        <div className={`h-16 w-16 rounded-[1.5rem] flex items-center justify-center border transition-all duration-500 ${student.dropped_at ? 'bg-emerald-500 text-white border-emerald-500' : (student.boarded_at ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-slate-300 border-slate-100')}`}>
-                            {student.dropped_at ? <CheckCircle2 size={32}/> : <UserCircle size={32}/>}
+                  <li key={student.student_id} className="group flex flex-col sm:flex-row items-center justify-between px-8 py-10 sm:px-12 sm:py-12 hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-0 gap-8 sm:gap-0">
+                    <div className="flex items-center gap-8 w-full sm:w-auto">
+                        <div className={`h-20 w-20 sm:h-24 sm:w-24 rounded-[2rem] flex items-center justify-center border-2 transition-all duration-500 shadow-sm ${student.dropped_at ? 'bg-emerald-500 text-white border-emerald-400' : (student.boarded_at ? 'bg-blue-500 text-white border-blue-400' : 'bg-white text-slate-300 border-slate-100')}`}>
+                            {student.dropped_at ? <CheckCircle2 size={40}/> : <UserCircle size={40}/>}
                         </div>
                         <div>
-                          <p className="text-xl font-black text-slate-900 tracking-tighter leading-none">{student.student_name}</p>
-                          <div className="flex items-center gap-3 mt-2">
-                             <Clock size={12} className="text-slate-300" />
-                             <p className="text-xs font-bold text-slate-400">
+                          <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter leading-none">{student.student_name}</p>
+                          <div className="flex items-center gap-3 mt-4">
+                             <Clock size={16} className="text-slate-300" />
+                             <p className="text-sm sm:text-base font-bold text-slate-400">
                                 {student.boarded_at
                                   ? `Boarded: ${new Date(student.boarded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                                   : "Awaiting Boarding"}
@@ -407,13 +409,14 @@ export default function DriverDashboard() {
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-6 w-full sm:w-auto justify-end">
                         {statusInfo?.label === "Morning Trip" && !student.boarded_at && (
                           <button
                             disabled={studentActionLoading.includes(student.student_id)}
                             onClick={() => handleStudentAction(student.student_id, 'board')}
-                            className="px-6 py-2.5 rounded-2xl bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:bg-blue-600 active:scale-95 transition-all disabled:opacity-30"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-10 py-5 rounded-[2rem] bg-blue-600 text-white text-base font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all disabled:opacity-30"
                           >
+                            {studentActionLoading.includes(student.student_id) ? <Loader2 className="animate-spin" size={24} /> : <Plus size={24} />}
                             {studentActionLoading.includes(student.student_id) ? "Syncing..." : "Pick Up"}
                           </button>
                         )}
@@ -422,15 +425,17 @@ export default function DriverDashboard() {
                           <button
                             disabled={studentActionLoading.includes(student.student_id)}
                             onClick={() => handleStudentAction(student.student_id, 'drop')}
-                            className="px-6 py-2.5 rounded-2xl bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-95 transition-all disabled:opacity-30"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-10 py-5 rounded-[2rem] bg-emerald-500 text-white text-base font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 hover:scale-105 active:scale-95 transition-all disabled:opacity-30"
                           >
+                            {studentActionLoading.includes(student.student_id) ? <Loader2 className="animate-spin" size={24} /> : <Check size={24} />}
                             {studentActionLoading.includes(student.student_id) ? "Syncing..." : "Drop Off"}
                           </button>
                         )}
 
-                        <div className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                        <div className={`px-8 py-5 rounded-[2rem] text-sm font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2 ${
                         student.dropped_at ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : (student.boarded_at ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-100 text-slate-400 border border-transparent')
                         }`}>
+                        {student.dropped_at && <Check size={16} />}
                         {student.dropped_at ? 'Arrived' : (student.boarded_at ? 'On the van' : 'Waiting')}
                         </div>
                     </div>

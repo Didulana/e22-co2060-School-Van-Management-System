@@ -19,5 +19,6 @@ router.get("/children/:id/status", parentController.getChildStatus);
 router.post("/children/:id/mock-journey", startMockJourney);
 router.get("/available-routes", parentController.getAvailableRoutes);
 router.get("/route-by-driver/:driverId", parentController.getRouteByDriverId);
+router.get("/notifications", parentController.getNotifications);
 
 export default router;

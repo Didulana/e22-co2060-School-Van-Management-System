@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getChildren, Child } from "../../services/parentService";
-import { UserCircle, School, ChevronRight, LayoutDashboard, Users, Navigation, MapPin, Clock, ShieldCheck, Phone } from "lucide-react";
+import { getChildren, Child, getParentNotifications } from "../../services/parentService";
+import { UserCircle, School, ChevronRight, LayoutDashboard, Users, Navigation, MapPin, Clock, ShieldCheck, Phone, Bell } from "lucide-react";
 
 export default function ParentDashboard() {
     const [children, setChildren] = useState<Child[]>([]);
+    const [notifications, setNotifications] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                const data = await getChildren();
+                const [data, notifs] = await Promise.all([
+                    getChildren(),
+                    getParentNotifications()
+                ]);
                 setChildren(data);
+                setNotifications(notifs);
             } catch (err: any) {
                 setError("Remote sync failed. Retrying connection...");
             } finally {
@@ -49,6 +54,28 @@ export default function ParentDashboard() {
             {error && (
                 <div className="rounded-[2rem] border border-red-100 bg-red-50/50 p-6 text-sm font-bold text-red-600 animate-pulse">
                     ⚠️ {error}
+                </div>
+            )}
+
+            {notifications.length > 0 && (
+                <div className="bg-slate-900 text-white p-8 rounded-[3rem] shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform duration-700">
+                        <Bell size={120} />
+                    </div>
+                    <div className="flex items-start sm:items-center gap-6 relative z-10 w-full">
+                        <div className="h-16 w-16 shrink-0 rounded-2xl bg-white/10 flex items-center justify-center text-emerald-400 border border-white/10 mt-1 sm:mt-0 shadow-inner">
+                            <Bell size={28} />
+                        </div>
+                        <div className="flex-1">
+                            <h2 className="text-xl font-black tracking-tighter text-white">Latest Announcement</h2>
+                            <p className="mt-2 text-base font-medium text-slate-300 leading-relaxed">
+                                {notifications[0].message}
+                            </p>
+                            <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-emerald-500/80 font-black">
+                                {new Date(notifications[0].created_at).toLocaleDateString()} at {new Date(notifications[0].created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             )}
 

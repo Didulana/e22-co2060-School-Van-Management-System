@@ -151,44 +151,7 @@ function LoginPage() {
 
           {!session ? (
             <form className="space-y-6" onSubmit={handleSubmit}>
-              {demoAccounts.length > 0 && (
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-4">
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <ShieldCheck size={18} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Quick Demo Roles</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {demoAccounts.map((account) => (
-                      <button
-                        key={account.role}
-                        type="button"
-                        onClick={() => handleDemoSelect(account.email)}
-                        className={`text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all duration-500 ${
-                            selectedAccountEmail === account.email 
-                            ? "bg-slate-900 text-white shadow-xl shadow-slate-200 scale-105" 
-                            : "bg-white text-slate-400 border border-slate-100 hover:text-slate-900 hover:bg-slate-50"
-                        }`}
-                      >
-                        {account.role}
-                      </button>
-                    ))}
-                  </div>
 
-                  {/* About your account */}
-                  {selectedAccountEmail && (
-                    <div className="bg-slate-50/50 rounded-[2rem] border border-slate-100 p-8 animate-in fade-in slide-in-from-top-2 duration-500">
-                        <div className="flex items-center gap-3">
-                            <ShieldCheck className="text-emerald-500" size={24} />
-                            <h2 className="text-xl font-black text-slate-800 tracking-tighter uppercase shrink-0">What can I do?</h2>
-                            <div className="h-px w-full bg-slate-100" />
-                        </div>
-                        <p className="mt-4 text-sm font-bold text-slate-500 leading-relaxed italic">
-                            "{roleDescriptions[demoAccounts.find(a => a.email === selectedAccountEmail)?.role || 'parent']}"
-                        </p>
-                    </div>
-                  )}
-                </div>
-              )}
 
               <div className="space-y-4">
                 <div className="relative">
