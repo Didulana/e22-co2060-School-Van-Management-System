@@ -238,3 +238,21 @@ export async function submitOnboarding(data: any): Promise<void> {
     throw new Error(resData.error || "Failed to submit onboarding");
   }
 }
+
+// ---- Tracking ----
+
+export async function updateDriverLocation(journeyId: number, lat: number, lng: number): Promise<void> {
+  // Use absolute URL to match other endpoints
+  const res = await fetch(`http://localhost:5001/api/tracking/location`, {
+    method: "POST",
+    headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${getAuthToken()}` 
+    },
+    body: JSON.stringify({ journeyId, lat, lng }),
+  });
+  const resData = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    console.error("Failed to broadcast location:", resData.error);
+  }
+}

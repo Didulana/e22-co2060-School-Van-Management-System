@@ -151,8 +151,16 @@ export async function getChildStatus(req: AuthenticatedRequest, res: Response) {
     let latestLocation = null;
     let routeStops = [];
 
-    if (boarding && (!dropoff || boarding.boarded_at > dropoff.dropped_at)) {
+    // Prioritize getting journeyId from an active trip for this student's route
+    const activeJourneyId = await parentModel.getActiveJourneyForStudent(studentId);
+    
+    if (activeJourneyId) {
+      journeyId = activeJourneyId;
+    } else if (boarding && (!dropoff || boarding.boarded_at > dropoff.dropped_at)) {
       journeyId = boarding.journey_id;
+    }
+
+    if (journeyId) {
       latestLocation = await parentModel.getLatestLocationByJourneyId(journeyId);
       
       // Fetch Route Stops for this journey

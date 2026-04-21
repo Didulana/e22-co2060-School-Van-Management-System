@@ -8,6 +8,7 @@ import {
   boardStudent,
   dropStudent,
   triggerSOS,
+  updateDriverLocation,
   Journey,
   StudentStatus,
 } from "../../services/driverService";
@@ -108,6 +109,30 @@ export default function DriverDashboard() {
   useEffect(() => {
     // Initial sync is handled by checkOnboarding -> refreshJourney
   }, []);
+
+  useEffect(() => {
+    let watchId: number | null = null;
+    
+    if (isActive && journey?.id) {
+      if ("geolocation" in navigator) {
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            updateDriverLocation(journey.id, position.coords.latitude, position.coords.longitude);
+          },
+          (err) => {
+            console.error("GPS tracking error:", err);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        console.warn("Geolocation is not supported by your browser");
+      }
+    }
+
+    return () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    };
+  }, [isActive, journey?.id]);
 
   const handleStart = async () => {
     if (onboardingPending) {

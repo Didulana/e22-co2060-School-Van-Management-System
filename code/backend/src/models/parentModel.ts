@@ -336,3 +336,17 @@ export async function getNotificationsByParentId(parentId: number) {
   const result = await pool.query(query, [parentId]);
   return result.rows;
 }
+
+export async function getActiveJourneyForStudent(studentId: number) {
+  const query = `
+    SELECT j.id
+    FROM journeys j
+    JOIN routes r ON j.route_id = r.id
+    JOIN route_stops rs ON rs.route_id = r.id
+    JOIN students s ON (s.pickup_stop_id = rs.id OR s.dropoff_stop_id = rs.id)
+    WHERE s.id = $1 AND j.status != 'completed'
+    LIMIT 1
+  `;
+  const result = await pool.query(query, [studentId]);
+  return result.rows[0]?.id || null;
+}

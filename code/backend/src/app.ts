@@ -75,5 +75,6 @@ app.use("/api/boarding", authenticateToken, requireRole("driver", "parent"), stu
 app.use("/api/dropoff", authenticateToken, requireRole("driver", "parent"), studentDropoffRoutes);
 app.use("/api/journey", authenticateToken, journeyStatusRoutes);
 app.use("/api/journey", authenticateToken, journeyTimelineRoutes);
+app.use("/api/tracking", trackingRoutes);
 
 export default app;

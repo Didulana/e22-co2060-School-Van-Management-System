@@ -263,13 +263,26 @@ export default function TrackingPage() {
 
               {/* Map Terminal */}
               <div className="overflow-hidden rounded-[3rem] bg-white border border-slate-50 shadow-premium p-3 h-[600px] relative">
-                  {location ? (
-                      <TrackingMap 
-                          latitude={Number(location.latitude)} 
-                          longitude={Number(location.longitude)} 
-                          lastUpdated={location.recorded_at} 
-                          routeStops={status?.routeStops}
-                      />
+                  {status?.journeyId ? (
+                      location ? (
+                          <TrackingMap 
+                              latitude={Number(location.latitude)} 
+                              longitude={Number(location.longitude)} 
+                              lastUpdated={location.recorded_at} 
+                              routeStops={status?.routeStops}
+                          />
+                      ) : (
+                          <div className="flex h-full flex-col items-center justify-center bg-emerald-50/50 rounded-[2.5rem] border border-emerald-100 border-dashed">
+                              <div className="relative mb-8">
+                                 <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-20" />
+                                 <div className="relative h-20 w-20 rounded-full bg-white shadow-xl flex items-center justify-center text-emerald-500 border border-emerald-100">
+                                    <Zap size={40} className="animate-pulse" />
+                                 </div>
+                              </div>
+                              <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">Acquiring GPS Signal</h3>
+                              <p className="mt-3 text-sm text-slate-400 font-bold max-w-xs text-center leading-relaxed">The driver has started the trip. Waiting for the first verified location ping from the van...</p>
+                          </div>
+                      )
                   ) : (
                       <div className="flex h-full flex-col items-center justify-center bg-slate-50/50 rounded-[2.5rem] border border-slate-100 border-dashed">
                           <div className="relative mb-8">
@@ -314,25 +327,19 @@ export default function TrackingPage() {
                           </div>
                           <div>
                               <h3 className="text-2xl font-black text-white tracking-tighter">Trip Progress</h3>
-                              <p className="text-sm text-slate-400 font-medium">Click when your child gets on or off the van</p>
+                              <p className="text-sm text-slate-400 font-medium">Driver is currently updating status</p>
                           </div>
                       </div>
-                      <div className="flex gap-4 w-full sm:w-auto">
+                      <div className="flex gap-4 w-full sm:w-auto text-center sm:text-left">
                           {!status.boarded && (
-                              <button 
-                                  onClick={handleBoard}
-                                  className="flex-1 sm:flex-none px-12 py-5 bg-emerald-500 text-white rounded-3xl font-black text-lg shadow-xl shadow-emerald-500/20 hover:scale-[1.05] transition-all active:scale-95"
-                              >
-                                  Confirm Boarding
-                              </button>
+                              <div className="px-10 py-5 bg-white/5 text-slate-300 rounded-3xl font-black text-lg border border-white/5 flex items-center gap-3">
+                                  Waiting for Driver boarding scan...
+                              </div>
                           )}
                           {status.boarded && !status.dropped && (
-                              <button 
-                                  onClick={handleDrop}
-                                  className="flex-1 sm:flex-none px-12 py-5 bg-blue-600 text-white rounded-3xl font-black text-lg shadow-xl shadow-blue-500/20 hover:scale-[1.05] transition-all active:scale-95"
-                              >
-                                  Confirm Arrival
-                              </button>
+                              <div className="px-10 py-5 bg-emerald-500/20 text-emerald-400 rounded-3xl font-black text-lg border border-emerald-500/20 flex items-center gap-3">
+                                  En route to Destination
+                              </div>
                           )}
                           {status.dropped && (
                               <div className="px-10 py-5 bg-white/10 text-emerald-400 rounded-3xl font-black text-lg border border-white/5 flex items-center gap-3">
