@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    journey_id INTEGER NOT NULL,
+    user_id INTEGER,
+    student_id INTEGER,
+    type VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_journey
+ON notifications (journey_id);
