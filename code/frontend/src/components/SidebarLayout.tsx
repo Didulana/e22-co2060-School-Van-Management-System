@@ -24,7 +24,7 @@ export default function SidebarLayout() {
           {user?.role === "admin" && (
             <>
               <SectionLabel label="Operations" />
-              <NavItem to="/admin" icon={<LayoutDashboard size={20} />} label="Overview" />
+              <NavItem to="/admin/dashboard" icon={<LayoutDashboard size={20} />} label="Overview" />
               <NavItem to="/routes" icon={<Navigation size={20} />} label="Route Map" />
             </>
           )}
