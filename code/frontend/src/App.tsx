@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import RoutesPage from "./pages/Routes";
 import TrackingPage from "./pages/parent/TrackingPage";
 import DriverDashboard from "./pages/driver/DriverDashboard";
@@ -23,6 +24,9 @@ export default function App() {
           {/* auth login page (no sidebar) */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          
+          {/* admin login page */}
+          <Route path="/admin" element={<AdminLoginPage />} />
 
           {/* pages wrapped in sidebar layout */}
           <Route element={
@@ -34,7 +38,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             
             {/* admin dashboard */}
-            <Route path="/admin" element={
+            <Route path="/admin/dashboard" element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminDashboard />
               </ProtectedRoute>

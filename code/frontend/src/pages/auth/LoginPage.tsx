@@ -11,13 +11,11 @@ const emptyCredentials = {
 };
 
 const passwordHints: Record<string, string> = {
-  admin: "Admin@123",
   driver: "Driver@123",
   parent: "Parent@123",
 };
 
 const roleDescriptions: Record<string, string> = {
-  admin: "Manage the van fleet and overall system.",
   driver: "Manage student pickups and your daily route.",
   parent: "Check where the van is and get safety updates.",
 };
@@ -55,7 +53,7 @@ function LoginPage() {
   useEffect(() => {
     if (session && !isBootstrapping) {
       const roleHome: Record<string, string> = {
-        admin: "/admin",
+        admin: "/admin/dashboard",
         driver: "/driver",
         parent: "/tracking",
       };
@@ -64,16 +62,37 @@ function LoginPage() {
   }, [session, isBootstrapping, navigate]);
 
 
+  function validateForm() {
+    if (!credentials.email.trim()) {
+      return "Email is required.";
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(credentials.email)) {
+      return "Please enter a valid email address.";
+    }
+    if (!credentials.password.trim()) {
+      return "Password is required.";
+    }
+    return null;
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
+
+    const validationError = validateForm();
+    if (validationError) {
+      setErrorMessage(validationError);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const nextSession = await login(credentials.email, credentials.password);
       contextLogin(nextSession);
       const roleHome: Record<string, string> = {
-        admin: "/admin",
+        admin: "/admin/dashboard",
         driver: "/driver",
         parent: "/tracking",
       };
@@ -216,7 +235,7 @@ function LoginPage() {
 
                 <div className="grid gap-3">
                     <button
-                        onClick={() => navigate({admin: "/admin", driver: "/driver", parent: "/tracking"}[session.user.role] || "/login")}
+                        onClick={() => navigate({admin: "/admin/dashboard", driver: "/driver", parent: "/tracking"}[session.user.role] || "/login")}
                         className="w-full bg-emerald-500 text-white py-5 rounded-[2rem] font-black text-xl shadow-2xl shadow-emerald-500/20 hover:scale-[1.02] transition-all"
                     >
                         Resume to Dashboard
