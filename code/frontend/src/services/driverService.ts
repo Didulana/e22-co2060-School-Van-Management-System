@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:5001/api/driver";
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5001") + "/api/driver";
 
 export interface Journey {
   id: number;
@@ -82,7 +82,7 @@ export async function startJourney(driverId: number, routeId: number): Promise<J
 }
 
 export async function boardStudent(journeyId: number, studentId: number): Promise<void> {
-  const res = await fetch(`http://localhost:5001/api/boarding`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/boarding`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -98,7 +98,7 @@ export async function boardStudent(journeyId: number, studentId: number): Promis
 }
 
 export async function dropStudent(journeyId: number, studentId: number): Promise<void> {
-  const res = await fetch(`http://localhost:5001/api/dropoff`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/dropoff`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -243,7 +243,7 @@ export async function submitOnboarding(data: any): Promise<void> {
 
 export async function updateDriverLocation(journeyId: number, lat: number, lng: number): Promise<void> {
   // Use absolute URL to match other endpoints
-  const res = await fetch(`http://localhost:5001/api/tracking/location`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/tracking/location`, {
     method: "POST",
     headers: { 
         "Content-Type": "application/json",
