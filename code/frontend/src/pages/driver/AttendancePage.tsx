@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { getAttendance, AttendanceRecord, getOnboardingStatus } from "../../services/driverService";
-import { useAuth } from "../../features/auth/AuthContext";
-import { History, ShieldCheck, Users, CheckCircle2, Navigation, Clock, Search, Zap, Info, Loader2 } from "lucide-react";
+import { History, ShieldCheck, Users, CheckCircle2, Navigation, Clock, Search, Zap, Info } from "lucide-react";
 
 export default function AttendancePage() {
-  const { user } = useAuth();
+
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     async function loadHistory() {
@@ -20,7 +19,6 @@ export default function AttendancePage() {
             }
         } catch (err: any) {
             console.error("Failed to load history", err);
-            setError("Manifest sync failure: History data unavailable.");
         } finally {
             setLoading(false);
         }

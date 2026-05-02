@@ -1,32 +1,24 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { fetchDemoAccounts, login } from "../../features/auth/api";
-import { DemoAccount } from "../../features/auth/types";
+import { login } from "../../features/auth/api";
 import { useAuth } from "../../features/auth/AuthContext";
-import { BusFront, ArrowRight, ShieldCheck, Mail, Lock, Info } from "lucide-react";
+import { BusFront, ArrowRight, Mail, Lock, Info } from "lucide-react";
 
 const emptyCredentials = {
   email: "",
   password: "",
 };
 
-const passwordHints: Record<string, string> = {
-  driver: "Driver@123",
-  parent: "Parent@123",
-};
 
-const roleDescriptions: Record<string, string> = {
-  driver: "Manage student pickups and your daily route.",
-  parent: "Check where the van is and get safety updates.",
-};
+
 
 function LoginPage() {
   const navigate = useNavigate();
   const { session, login: contextLogin, logout: contextLogout } = useAuth();
 
   const [credentials, setCredentials] = useState(emptyCredentials);
-  const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
-  const [selectedAccountEmail, setSelectedAccountEmail] = useState("");
+
+
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -35,11 +27,8 @@ function LoginPage() {
     let active = true;
     async function bootstrap() {
       try {
-        const accounts = await fetchDemoAccounts();
+        await new Promise((resolve) => setTimeout(resolve, 300));
         if (!active) return;
-        setDemoAccounts(accounts);
-        const firstVisible = accounts.find(a => a.role !== "admin");
-        setSelectedAccountEmail(firstVisible?.email ?? "");
       } catch {
         // Silently fail or log
       } finally {
@@ -104,16 +93,6 @@ function LoginPage() {
     }
   }
 
-  function handleDemoSelect(email: string) {
-    setSelectedAccountEmail(email);
-    const account = demoAccounts.find((item) => item.email === email);
-    if (!account) return;
-    setCredentials({
-      email: account.email,
-      password: passwordHints[account.role] ?? "",
-    });
-    setErrorMessage(null);
-  }
 
   if (isBootstrapping) {
     return (

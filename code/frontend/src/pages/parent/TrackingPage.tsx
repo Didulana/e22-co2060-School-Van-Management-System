@@ -8,9 +8,7 @@ import {
   EmergencyContact,
   Child,
   Stop,
-  startMockJourney,
-  boardStudent,
-  dropoffStudent
+  startMockJourney
 } from "../../services/parentService";
 import TrackingMap from "../../components/parent/TrackingMap";
 import { useAuth } from "../../features/auth/AuthContext";
@@ -111,31 +109,6 @@ export default function TrackingPage() {
     }
   };
 
-  const handleBoard = async () => {
-    if (!selectedChildId || !status?.journeyId) return;
-    try {
-      setRefreshing(true);
-      await boardStudent(status.journeyId, selectedChildId);
-      await loadChildData(selectedChildId, true);
-    } catch (err) {
-      alert("Boarding sync failed.");
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  const handleDrop = async () => {
-    if (!selectedChildId || !status?.journeyId) return;
-    try {
-      setRefreshing(true);
-      await dropoffStudent(status.journeyId, selectedChildId);
-      await loadChildData(selectedChildId, true);
-    } catch (err) {
-      alert("Drop-off sync failed.");
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   const handleStartDemo = async () => {
       if (!selectedChildId) return;
