@@ -7,7 +7,8 @@ async function parseResponse<T>(response: Response): Promise<T> {
   const data = (await response.json()) as T & { error?: string };
 
   if (!response.ok) {
-    throw new Error(data.error || "Request failed");
+    const errorMsg = (data as any).details || data.error || "Request failed";
+    throw new Error(errorMsg);
   }
 
   return data;
