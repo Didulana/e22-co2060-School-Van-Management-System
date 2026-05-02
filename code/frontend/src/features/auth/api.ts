@@ -1,7 +1,7 @@
 import { AuthSession, AuthUser, DemoAccount } from "./types";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5001/api";
+  (import.meta.env.VITE_API_URL || "http://localhost:5001") + "/api";
 
 async function parseResponse<T>(response: Response): Promise<T> {
   const data = (await response.json()) as T & { error?: string };

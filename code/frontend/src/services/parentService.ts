@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5001/api/parent";
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:5001") + "/api/parent";
 
 const getAuthHeader = () => {
     const sessionStr = window.localStorage.getItem("school-van-auth-session");
@@ -101,7 +101,7 @@ export const getChildStatus = async (studentId: number) => {
 };
 
 export const markNotificationAsRead = async (notificationId: number) => {
-    const response = await axios.patch(`http://localhost:5001/api/notifications/${notificationId}/read`, {}, { headers: getAuthHeader() });
+    const response = await axios.patch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/notifications/${notificationId}/read`, {}, { headers: getAuthHeader() });
     return response.data;
 };
 
@@ -121,12 +121,12 @@ export const startMockJourney = async (studentId: number) => {
 };
 
 export const boardStudent = async (journeyId: number, studentId: number) => {
-    const response = await axios.post(`http://localhost:5001/api/boarding`, { journeyId, studentId }, { headers: getAuthHeader() });
+    const response = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/boarding`, { journeyId, studentId }, { headers: getAuthHeader() });
     return response.data;
 };
 
 export const dropoffStudent = async (journeyId: number, studentId: number) => {
-    const response = await axios.post(`http://localhost:5001/api/dropoff`, { journeyId, studentId }, { headers: getAuthHeader() });
+    const response = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/dropoff`, { journeyId, studentId }, { headers: getAuthHeader() });
     return response.data;
 };
 
