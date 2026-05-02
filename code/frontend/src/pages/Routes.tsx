@@ -15,7 +15,7 @@ export default function RoutesPage() {
   const [schedule, setSchedule] = useState("morning");
   const [driverId, setDriverId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
-  const [stops, setStops] = useState<Stop[]>([{ stop_name: "", stop_order: 1 }]);
+  const [stops, setStops] = useState<Stop[]>([{ stop_name: "", stop_order: 1, latitude: 0, longitude: 0 }]);
 
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -52,7 +52,7 @@ export default function RoutesPage() {
 
   const addStop = () => {
     const nextOrder = stops.length + 1;
-    setStops([...stops, { stop_name: "", stop_order: nextOrder }]);
+    setStops([...stops, { stop_name: "", stop_order: nextOrder, latitude: 0, longitude: 0 }]);
   };
 
   const removeStop = (index: number) => {
@@ -60,7 +60,7 @@ export default function RoutesPage() {
     
     // re-calculate order
     const orderedStops = updatedStops.map((s, i) => ({ ...s, stop_order: i + 1 }));
-    setStops(orderedStops.length > 0 ? orderedStops : [{ stop_name: "", stop_order: 1 }]);
+    setStops(orderedStops.length > 0 ? orderedStops : [{ stop_name: "", stop_order: 1, latitude: 0, longitude: 0 }]);
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -96,6 +96,8 @@ export default function RoutesPage() {
       stops: stops.map((stop, index) => ({
         stop_name: stop.stop_name,
         stop_order: index + 1,
+        latitude: stop.latitude || 0,
+        longitude: stop.longitude || 0,
       })),
     };
 
@@ -106,7 +108,7 @@ export default function RoutesPage() {
       setSchedule("morning");
       setDriverId("");
       setVehicleId("");
-      setStops([{ stop_name: "", stop_order: 1 }]);
+      setStops([{ stop_name: "", stop_order: 1, latitude: 0, longitude: 0 }]);
       loadData();
     } catch (err: any) {
       setError(err.message);
