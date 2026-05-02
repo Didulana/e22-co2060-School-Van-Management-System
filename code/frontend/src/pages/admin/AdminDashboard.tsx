@@ -40,7 +40,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const response = await fetch("http://localhost:5001/api/admin/summary");
+        const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/admin/summary`);
         if (!response.ok) {
           throw new Error("Failed to fetch admin summary");
         }
