@@ -10,9 +10,12 @@ const PORT = Number(process.env.PORT) || 5001;
 
 const server = http.createServer(app);
 
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+const trimmedUrl = frontendUrl.endsWith('/') ? frontendUrl.slice(0, -1) : frontendUrl;
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: [trimmedUrl, "http://localhost:5173"],
     credentials: true,
   },
 });

@@ -25,9 +25,12 @@ import { authenticateToken, requireRole } from "./middleware/authMiddleware";
 
 const app = express();
 
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+const trimmedUrl = frontendUrl.endsWith('/') ? frontendUrl.slice(0, -1) : frontendUrl;
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: [trimmedUrl, "http://localhost:5173"],
     credentials: true,
   })
 );
