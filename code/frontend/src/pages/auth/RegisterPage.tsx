@@ -62,7 +62,7 @@ function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to register");
+        throw new Error(data.details || data.error || "Failed to register");
       }
 
       // Automatically login via context
