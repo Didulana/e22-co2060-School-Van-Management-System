@@ -21,13 +21,15 @@ import studentDropoffRoutes from "./routes/studentDropoffRoutes";
 import journeyStatusRoutes from "./routes/journeyStatusRoutes";
 import journeyTimelineRoutes from "./routes/journeyTimelineRoutes";
 import parentRoutes from "./routes/parentRoutes";
+import adminRoutes from "./routes/adminRoutes";
 import { authenticateToken, requireRole } from "./middleware/authMiddleware";
+import { getAllowedOrigins } from "./config/cors";
 
 const app = express();
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: getAllowedOrigins(),
     credentials: true,
   })
 );
@@ -66,9 +68,12 @@ app.use("/api/routes", authenticateToken, routeRoutes);
 
 // Parent routes
 app.use("/api/parent", parentRoutes);
+app.use("/api/admin", authenticateToken, requireRole("admin"), adminRoutes);
 
 // Other protected routes
-app.use("/api/dev-auth", devAuthRoutes);
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api/dev-auth", devAuthRoutes);
+}
 app.use("/api/notifications", authenticateToken, notificationRoutes);
 app.use("/api/journey-events", authenticateToken, journeyEventRoutes);
 app.use("/api/boarding", authenticateToken, requireRole("driver", "parent"), studentBoardingRoutes);

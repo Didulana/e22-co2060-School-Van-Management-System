@@ -1,4 +1,5 @@
 import { useEffect, useState, CSSProperties } from "react";
+import { readStoredSession } from "../../features/auth/storage";
 
 interface AdminSummary {
   totalUsers: number;
@@ -40,7 +41,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/admin/summary`);
+        const session = readStoredSession();
+        const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/admin/summary`, {
+          headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch admin summary");
         }
