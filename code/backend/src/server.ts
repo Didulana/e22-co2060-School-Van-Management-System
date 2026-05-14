@@ -5,7 +5,7 @@ import app from "./app";
 import { initSocket } from "./services/socketService";
 import { registerTrackingSocket } from "./sockets/trackingSocket";
 import { testDbConnection } from "./config/db";
-import { getAllowedOrigins } from "./config/cors";
+import { isOriginAllowed } from "./config/cors";
 
 const PORT = Number(process.env.PORT) || 5001;
 
@@ -13,7 +13,14 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: getAllowedOrigins(),
+    origin(origin, callback) {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Socket CORS blocked origin: ${origin}`));
+    },
     credentials: true,
   },
 });

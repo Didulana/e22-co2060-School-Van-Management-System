@@ -1,5 +1,6 @@
 import { useEffect, useState, CSSProperties } from "react";
 import { readStoredSession } from "../../features/auth/storage";
+import { API_BASE_URL } from "../../config/api";
 
 interface AdminSummary {
   totalUsers: number;
@@ -42,7 +43,7 @@ export default function AdminDashboard() {
     const fetchSummary = async () => {
       try {
         const session = readStoredSession();
-        const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/admin/summary`, {
+        const response = await fetch(`${API_BASE_URL}/admin/summary`, {
           headers: session?.token ? { Authorization: `Bearer ${session.token}` } : {},
         });
         if (!response.ok) {

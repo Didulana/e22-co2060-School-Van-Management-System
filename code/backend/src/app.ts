@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes";
 
 // --- ROUTES FROM feature/driver-route ---
 import driverRoutes from "./routes/driver.routes";
+import adminDriverRoutes from "./routes/adminDriver.routes";
 import driverJourneyRoutes from "./routes/driverJourney.routes";
 import driverAnnounceRoutes from "./routes/driverAnnounce.routes";
 import vehicleRoutes from "./routes/vehicle.routes";
@@ -23,16 +24,11 @@ import journeyTimelineRoutes from "./routes/journeyTimelineRoutes";
 import parentRoutes from "./routes/parentRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import { authenticateToken, requireRole } from "./middleware/authMiddleware";
-import { getAllowedOrigins } from "./config/cors";
+import { getCorsOptions } from "./config/cors";
 
 const app = express();
 
-app.use(
-  cors({
-    origin: getAllowedOrigins(),
-    credentials: true,
-  })
-);
+app.use(cors(getCorsOptions()));
 
 app.use(express.json());
 
@@ -63,11 +59,12 @@ app.use("/api/driver/journey", authenticateToken, requireRole("driver"), driverJ
 app.use("/api/driver/announce", authenticateToken, requireRole("driver"), driverAnnounceRoutes);
 
 // Generic info routes
+app.use("/api/drivers", authenticateToken, requireRole("admin"), adminDriverRoutes);
 app.use("/api/vehicles", authenticateToken, vehicleRoutes);
 app.use("/api/routes", authenticateToken, routeRoutes);
 
 // Parent routes
-app.use("/api/parent", parentRoutes);
+app.use("/api/parent", authenticateToken, requireRole("parent"), parentRoutes);
 app.use("/api/admin", authenticateToken, requireRole("admin"), adminRoutes);
 
 // Other protected routes

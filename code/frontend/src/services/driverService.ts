@@ -1,4 +1,6 @@
-const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:5001") + "/api/driver";
+import { API_BASE_URL } from "../config/api";
+
+const API_BASE = `${API_BASE_URL}/driver`;
 
 export interface Journey {
   id: number;
@@ -82,7 +84,7 @@ export async function startJourney(driverId: number, routeId: number): Promise<J
 }
 
 export async function boardStudent(journeyId: number, studentId: number): Promise<void> {
-  const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/boarding`, {
+  const res = await fetch(`${API_BASE_URL}/boarding`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -98,7 +100,7 @@ export async function boardStudent(journeyId: number, studentId: number): Promis
 }
 
 export async function dropStudent(journeyId: number, studentId: number): Promise<void> {
-  const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/dropoff`, {
+  const res = await fetch(`${API_BASE_URL}/dropoff`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -243,7 +245,7 @@ export async function submitOnboarding(data: any): Promise<void> {
 
 export async function updateDriverLocation(journeyId: number, lat: number, lng: number): Promise<void> {
   // Use absolute URL to match other endpoints
-  const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/tracking/location`, {
+  const res = await fetch(`${API_BASE_URL}/tracking/location`, {
     method: "POST",
     headers: { 
         "Content-Type": "application/json",
