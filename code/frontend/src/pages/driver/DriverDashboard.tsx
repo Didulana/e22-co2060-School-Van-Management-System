@@ -201,7 +201,7 @@ export default function DriverDashboard() {
     }
   };
 
-  if (loading || (driverId && !realDriverId)) {
+  if (loading || (!onboardingPending && driverId && !realDriverId)) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
         <div className="relative mb-8">
