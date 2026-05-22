@@ -9,8 +9,12 @@ const emptyCredentials = {
   password: "",
 };
 
-
-
+const trustedProfiles = [
+  { name: "Asha", tone: "from-emerald-100 via-teal-50 to-amber-100", accent: "bg-emerald-700" },
+  { name: "Ravi", tone: "from-sky-100 via-white to-emerald-100", accent: "bg-sky-700" },
+  { name: "Nila", tone: "from-rose-100 via-white to-amber-100", accent: "bg-rose-700" },
+  { name: "Dev", tone: "from-amber-100 via-white to-lime-100", accent: "bg-amber-700" },
+];
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -108,34 +112,35 @@ function LoginPage() {
   return (
     <div className="min-h-screen bg-[#fdfdfc] text-slate-900 grid lg:grid-cols-2 font-sans">
       {/* Left Panel: Hero */}
-      <div className="hidden lg:flex flex-col justify-between p-16 gradient-bg relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.15),transparent_25%)]" />
+      <div className="hidden lg:flex flex-col justify-between p-16 bg-[linear-gradient(145deg,#10724f_0%,#27a977_56%,#f2bd4d_145%)] relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.2),transparent_28%)]" />
         
         <div className="relative z-10 flex items-center gap-3">
           <div className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20">
             <BusFront className="text-white w-6 h-6" />
           </div>
-          <span className="font-black text-2xl text-white tracking-tighter">KidsRoute</span>
+          <span className="font-display font-black text-2xl text-white">KidsRoute</span>
         </div>
 
         <div className="relative z-10">
-          <h1 className="text-6xl font-black text-white leading-tight tracking-tighter max-w-[12ch]">
+          <h1 className="font-display text-5xl xl:text-6xl font-black text-white leading-[1.08] max-w-[13ch]">
             Experience the <span className="text-emerald-300">future</span> of school transport.
           </h1>
-          <p className="mt-6 text-xl text-emerald-50/70 max-w-md font-medium leading-relaxed">
+          <p className="mt-6 text-lg text-emerald-50/80 max-w-md font-medium leading-8">
             Real-time tracking, seamless logistics, and ultimate safety for the children who matter most. 
           </p>
         </div>
 
-        <div className="relative z-10 flex items-center gap-8">
-            <div className="flex -space-x-3">
-                {[1,2,3,4].map(i => (
-                    <div key={i} className="w-10 h-10 rounded-full border-2 border-emerald-600 bg-emerald-400 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
-                        U{i}
-                    </div>
+        <div className="relative z-10 flex items-center gap-6 rounded-[1.75rem] border border-white/15 bg-white/10 p-4 backdrop-blur-md">
+            <div className="flex -space-x-4">
+                {trustedProfiles.map(profile => (
+                    <ProfilePortrait key={profile.name} {...profile} />
                 ))}
             </div>
-            <p className="text-sm font-bold text-emerald-50/60 uppercase tracking-widest">Trusted by 200+ local drivers</p>
+            <div>
+              <p className="text-sm font-black text-white">Trusted by 200+ locals</p>
+              <p className="mt-1 text-xs font-semibold text-emerald-50/70">Parents and drivers using KidsRoute daily</p>
+            </div>
         </div>
       </div>
 
@@ -143,7 +148,7 @@ function LoginPage() {
       <div className="flex flex-col justify-center p-8 md:p-16 lg:p-24 bg-white">
         <div className="max-w-md mx-auto w-full">
           <div className="mb-12">
-            <h2 className="text-4xl font-black text-slate-900 tracking-tighter">Welcome Back</h2>
+            <h2 className="font-display text-4xl font-black text-slate-900">Welcome Back</h2>
             <p className="mt-2 text-slate-500 font-medium">Log in to your account to continue.</p>
           </div>
 
@@ -185,7 +190,7 @@ function LoginPage() {
 
               <button
                 disabled={isSubmitting}
-                className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-slate-200 hover:bg-emerald-600 hover:shadow-emerald-200 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+                className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:shadow-emerald-200 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
                 type="submit"
               >
                 {isSubmitting ? "Signing in..." : <>Access Dashboard <ArrowRight size={20} /></>}
@@ -235,3 +240,15 @@ function LoginPage() {
 }
 
 export default LoginPage;
+
+function ProfilePortrait({ tone, accent, name }: { tone: string; accent: string; name: string }) {
+  return (
+    <div className={`relative h-12 w-12 overflow-hidden rounded-full border-2 border-white/80 bg-gradient-to-br ${tone} shadow-lg`} title={name}>
+      <div className={`absolute left-1/2 top-2 h-5 w-5 -translate-x-1/2 rounded-full ${accent}`} />
+      <div className="absolute bottom-1 left-1/2 h-7 w-8 -translate-x-1/2 rounded-t-full bg-white/90" />
+      <div className="absolute left-1/2 top-4 h-4 w-4 -translate-x-1/2 rounded-full bg-[#f2c6a0]" />
+      <div className="absolute left-[18px] top-[21px] h-1 w-1 rounded-full bg-slate-800" />
+      <div className="absolute right-[18px] top-[21px] h-1 w-1 rounded-full bg-slate-800" />
+    </div>
+  );
+}

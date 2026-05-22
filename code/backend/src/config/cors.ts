@@ -1,6 +1,11 @@
 import { CorsOptions } from "cors";
 
-const DEFAULT_FRONTEND_URLS = ["http://localhost:5173", "http://localhost:5174"];
+const DEFAULT_FRONTEND_URLS = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
+];
 
 function normalizeOrigin(origin: string): string {
   return origin.replace(/\/+$/, "");
@@ -19,7 +24,7 @@ export function getAllowedOrigins(): string[] {
     .map((origin) => normalizeOrigin(origin.trim()))
     .filter(Boolean);
 
-  return origins.length > 0 ? origins : DEFAULT_FRONTEND_URLS;
+  return Array.from(new Set([...DEFAULT_FRONTEND_URLS, ...origins]));
 }
 
 export function isOriginAllowed(origin?: string): boolean {

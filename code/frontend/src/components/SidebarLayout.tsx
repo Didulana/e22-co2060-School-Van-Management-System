@@ -1,110 +1,266 @@
-import React from "react";
-import { Outlet, NavLink } from "react-router-dom";
-import { LayoutDashboard, MapPin, Navigation, BusFront, Truck, ClipboardList, Megaphone, LogOut, Users, History } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Outlet, NavLink, Link } from "react-router-dom";
+import {
+  Bell,
+  BusFront,
+  ChevronDown,
+  ClipboardList,
+  History,
+  LayoutDashboard,
+  LogOut,
+  MapPin,
+  Megaphone,
+  Navigation,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
+  Truck,
+  UserCircle,
+  Users,
+  X,
+} from "lucide-react";
 import { useAuth } from "../features/auth/AuthContext";
+import { getParentNotifications } from "../services/parentService";
 
 export default function SidebarLayout() {
   const { user, logout } = useAuth();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    if (user?.role !== "parent") {
+      setNotifications([]);
+      return;
+    }
+
+    getParentNotifications()
+      .then((items) => mounted && setNotifications(items.slice(0, 6)))
+      .catch(() => mounted && setNotifications([]));
+
+    return () => {
+      mounted = false;
+    };
+  }, [user?.role]);
+
+  const displayName = user?.name || user?.email?.split("@")[0] || "Account";
+  const initials = (user?.name || user?.email || user?.role || "U")
+    .split(/[ @.]/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+  const unreadCount = notifications.filter((item) => !item.is_read).length;
   
   return (
-    <div className="flex h-screen w-screen bg-[#fdfdfc] text-slate-800 overflow-hidden font-sans">
+    <div className="app-surface flex h-screen w-screen text-slate-800 overflow-hidden font-sans">
       {/* Sidebar */}
-      <aside className="w-72 bg-white border-r border-slate-100 shadow-soft flex flex-col transition-all z-20">
-        <div className="p-8 flex items-center gap-4 mb-4">
-          <div className="bg-emerald-500 p-2.5 rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center justify-center">
+      <aside className={`${isSidebarCollapsed ? "w-24" : "w-72"} glass-card border-r border-white/70 shadow-soft flex flex-col transition-all duration-300 z-20`}>
+        <div className={`p-5 flex items-center ${isSidebarCollapsed ? "justify-center" : "gap-4"} mb-2`}>
+          <div className="bg-slate-950 p-2.5 rounded-2xl shadow-lg shadow-slate-300/60 flex items-center justify-center">
             <BusFront className="text-white w-6 h-6" />
           </div>
-          <div>
-            <span className="block font-black text-2xl text-slate-900 tracking-tighter leading-none">KidsRoute</span>
-            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mt-1 block">School Van System</span>
+          <div className={isSidebarCollapsed ? "hidden" : "min-w-0"}>
+            <span className="font-display block font-black text-2xl text-slate-950 leading-none">KidsRoute</span>
+            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mt-1 block">School Van System</span>
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-4 space-y-1.5 scrollbar-hide">
+        <button
+          onClick={() => setIsSidebarCollapsed((value) => !value)}
+          className={`mx-4 mb-4 flex h-11 items-center justify-center gap-3 rounded-2xl border border-white/80 bg-white/60 text-sm font-black text-slate-600 shadow-soft transition hover:bg-white ${isSidebarCollapsed ? "px-0" : "px-4"}`}
+          aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          {!isSidebarCollapsed && <span>Collapse</span>}
+        </button>
+
+        <nav className={`${isSidebarCollapsed ? "px-3" : "px-4"} flex-1 overflow-y-auto space-y-1.5 scrollbar-hide`}>
           {user?.role === "admin" && (
             <>
-              <SectionLabel label="Operations" />
-              <NavItem to="/admin/dashboard" icon={<LayoutDashboard size={20} />} label="Overview" />
-              <NavItem to="/routes" icon={<Navigation size={20} />} label="Route Map" />
+              <SectionLabel label="Operations" collapsed={isSidebarCollapsed} />
+              <NavItem to="/admin/dashboard" icon={<LayoutDashboard size={20} />} label="Overview" collapsed={isSidebarCollapsed} />
+              <NavItem to="/routes" icon={<Navigation size={20} />} label="Route Map" collapsed={isSidebarCollapsed} />
             </>
           )}
 
           {user?.role === "driver" && (
             <>
-              <SectionLabel label="Driver Menu" />
-              <NavItem to="/driver" icon={<Truck size={20} />} label="Home Dashboard" />
-              <NavItem to="/driver/attendance" icon={<ClipboardList size={20} />} label="Attendance History" />
-              <NavItem to="/driver/announce" icon={<Megaphone size={20} />} label="Announcements" />
+              <SectionLabel label="Driver Menu" collapsed={isSidebarCollapsed} />
+              <NavItem to="/driver" icon={<Truck size={20} />} label="Home Dashboard" collapsed={isSidebarCollapsed} />
+              <NavItem to="/driver/attendance" icon={<ClipboardList size={20} />} label="Attendance History" collapsed={isSidebarCollapsed} />
+              <NavItem to="/driver/announce" icon={<Megaphone size={20} />} label="Announcements" collapsed={isSidebarCollapsed} />
             </>
           )}
 
           {user?.role === "parent" && (
             <>
-              <SectionLabel label="Parent Menu" />
-              <NavItem to="/parent" icon={<LayoutDashboard size={20} />} label="Home" />
-              <NavItem to="/parent/children" icon={<Users size={20} />} label="My Children" />
-              <NavItem to="/tracking" icon={<MapPin size={20} />} label="Track Van" />
-              <NavItem to="/parent/history" icon={<History size={20} />} label="Trip History" />
+              <SectionLabel label="Parent Menu" collapsed={isSidebarCollapsed} />
+              <NavItem to="/parent" icon={<LayoutDashboard size={20} />} label="Home" collapsed={isSidebarCollapsed} />
+              <NavItem to="/parent/children" icon={<Users size={20} />} label="My Children" collapsed={isSidebarCollapsed} />
+              <NavItem to="/tracking" icon={<MapPin size={20} />} label="Track Van" collapsed={isSidebarCollapsed} />
+              <NavItem to="/parent/history" icon={<History size={20} />} label="Trip History" collapsed={isSidebarCollapsed} />
             </>
           )}
         </nav>
         
-        <div className="p-6 border-t border-slate-50 mt-auto">
-          <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-2xl border border-slate-100/50 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-white shadow-sm text-emerald-600 font-black flex items-center justify-center shrink-0 border border-slate-100">
-              {user?.name?.charAt(0) || user?.email?.charAt(0) || user?.role?.charAt(0).toUpperCase()}
+        <div className={`${isSidebarCollapsed ? "p-4" : "p-6"} border-t border-white/70 mt-auto`}>
+          <div className={`flex items-center ${isSidebarCollapsed ? "justify-center p-2" : "gap-3 p-3"} bg-white/55 rounded-2xl border border-white/80 mb-3 shadow-soft`}>
+            <div className="w-10 h-10 rounded-xl bg-slate-950 shadow-sm text-white font-black flex items-center justify-center shrink-0">
+              {initials}
             </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-bold text-slate-800 truncate">{user?.name || user?.email?.split('@')[0]}</p>
+            <div className={isSidebarCollapsed ? "hidden" : "overflow-hidden min-w-0"}>
+              <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{user?.role}</p>
             </div>
           </div>
           
           <button 
             onClick={logout}
-            className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group"
+            className={`flex items-center ${isSidebarCollapsed ? "justify-center px-0" : "gap-3 px-4"} w-full py-3 text-sm font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group`}
+            title="Sign Out"
           >
             <LogOut size={18} className="group-hover:rotate-12 transition-transform" />
-            <span>Sign Out</span>
+            {!isSidebarCollapsed && <span>Sign Out</span>}
           </button>
         </div>
       </aside>
 
       {/* Main content area */}
-      <main className="flex-1 overflow-y-auto relative bg-[#fdfdfc]">
-        <div className="absolute inset-0 max-w-[1400px] mx-auto w-full p-8 lg:p-12">
-            <Outlet />
+      <main className="flex-1 overflow-y-auto relative">
+        <div className="sticky top-0 z-30 px-6 pt-5 lg:px-10">
+          <div className="liquid-glass mx-auto flex max-w-[1420px] items-center justify-between overflow-visible rounded-[1.5rem] px-4 py-3">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Welcome back</span>
+              <span className="font-display truncate text-lg font-black text-slate-950">{displayName}</span>
+            </div>
+
+            <div className="relative flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setShowNotifications((value) => !value);
+                  setShowProfile(false);
+                }}
+                className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-white/65 text-slate-700 shadow-soft transition hover:bg-white"
+                aria-label="Open notifications"
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-black text-white ring-2 ring-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowProfile((value) => !value);
+                  setShowNotifications(false);
+                }}
+                className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/65 py-1.5 pl-1.5 pr-3 text-left shadow-soft transition hover:bg-white"
+                aria-label="Open profile menu"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-sm font-black text-white">{initials}</span>
+                <span className="hidden min-w-0 sm:block">
+                  <span className="block max-w-36 truncate text-sm font-black text-slate-900">{displayName}</span>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">{user?.role}</span>
+                </span>
+                <ChevronDown size={16} className="text-slate-400" />
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 top-14 z-50 w-[min(92vw,380px)] rounded-[1.75rem] border border-white/80 bg-white p-4 shadow-2xl shadow-slate-300/50">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <h2 className="font-display text-xl font-black text-slate-950">Notifications</h2>
+                      <p className="text-xs font-bold text-slate-400">{unreadCount} unread updates</p>
+                    </div>
+                    <button onClick={() => setShowNotifications(false)} className="rounded-xl bg-slate-100 p-2 text-slate-500">
+                      <X size={16} />
+                    </button>
+                  </div>
+                  <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
+                    {notifications.length > 0 ? (
+                      notifications.map((item) => (
+                        <div key={item.id} className={`rounded-2xl border p-4 ${item.is_read ? "border-slate-100 bg-slate-50/70" : "border-emerald-100 bg-emerald-50/70"}`}>
+                          <p className="text-sm font-bold leading-relaxed text-slate-800">{item.message}</p>
+                          <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            {new Date(item.created_at).toLocaleDateString()} • {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-8 text-center">
+                        <Bell className="mx-auto mb-3 text-slate-300" size={32} />
+                        <p className="text-xs font-black uppercase tracking-widest text-slate-400">No alerts yet</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {showProfile && (
+                <div className="absolute right-0 top-14 z-50 w-[min(92vw,320px)] rounded-[1.75rem] border border-white/80 bg-white p-4 shadow-2xl shadow-slate-300/50">
+                  <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-950 text-lg font-black text-white">{initials}</div>
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-black text-slate-950">{displayName}</p>
+                      <p className="truncate text-xs font-bold text-slate-400">{user?.email}</p>
+                    </div>
+                  </div>
+                  <Link to="#" className="mt-3 flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
+                    <UserCircle size={18} /> View Profile
+                  </Link>
+                  <button className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
+                    <Settings size={18} /> Account Settings
+                  </button>
+                  <button onClick={logout} className="mt-2 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-red-500 transition hover:bg-red-50">
+                    <LogOut size={18} /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto w-full max-w-[1420px] px-6 py-8 lg:px-10 lg:py-10">
+          <Outlet />
         </div>
       </main>
     </div>
   );
 }
 
-function SectionLabel({ label }: { label: string }) {
+function SectionLabel({ label, collapsed }: { label: string; collapsed?: boolean }) {
+  if (collapsed) return <div className="mt-6" />;
+
   return (
-    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mt-8 mb-3 px-4">
+    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-8 mb-3 px-4">
       {label}
     </p>
   );
 }
 
-function NavItem({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) {
+function NavItem({ to, icon, label, collapsed }: { to: string; icon: React.ReactNode; label: string; collapsed?: boolean }) {
   return (
     <NavLink
       to={to}
+      title={label}
       className={({ isActive }) =>
-        `flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-500 font-bold ${
+        `flex items-center ${collapsed ? "justify-center px-0" : "gap-4 px-4"} py-3.5 rounded-2xl transition-all duration-300 font-bold ${
           isActive
-            ? "bg-slate-900 text-white shadow-xl shadow-slate-200 translate-x-1"
-            : "text-slate-400 hover:bg-slate-100/50 hover:text-slate-800"
+            ? "bg-emerald-600 text-white shadow-xl shadow-emerald-200/80 translate-x-1"
+            : "text-slate-500 hover:bg-white/70 hover:text-slate-900"
         }`
       }
     >
       <div className="shrink-0 transition-transform duration-500 group-hover:scale-110">
         {icon}
       </div>
-      <span className="tracking-tight">{label}</span>
+      {!collapsed && <span>{label}</span>}
     </NavLink>
   );
 }
-
