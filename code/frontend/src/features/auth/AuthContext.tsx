@@ -8,7 +8,7 @@ interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   login: (session: AuthSession) => void;
-  updateUser: (updates: Partial<Pick<AuthUser, "name" | "email">>) => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
   logout: () => void;
 }
 
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearStoredSession();
   }, []);
 
-  const handleUpdateUser = useCallback((updates: Partial<Pick<AuthUser, "name" | "email">>) => {
+  const handleUpdateUser = useCallback((updates: Partial<AuthUser>) => {
     setSession((currentSession) => {
       if (!currentSession) {
         return currentSession;
