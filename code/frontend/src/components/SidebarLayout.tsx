@@ -3,7 +3,6 @@ import { Outlet, NavLink, Link } from "react-router-dom";
 import {
   Bell,
   BusFront,
-  ChevronDown,
   ClipboardList,
   History,
   LayoutDashboard,
@@ -20,6 +19,8 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../features/auth/AuthContext";
+import { getHomePath } from "../features/auth/navigation";
+import { APP_SETTINGS_EVENT, applyAppSettings, readAppSettings } from "../features/settings/appSettings";
 import { getParentNotifications } from "../services/parentService";
 
 export default function SidebarLayout() {
@@ -27,7 +28,7 @@ export default function SidebarLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
+  const [settings, setSettings] = useState(() => readAppSettings());
   const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
@@ -45,6 +46,19 @@ export default function SidebarLayout() {
       mounted = false;
     };
   }, [user?.role]);
+
+  useEffect(() => {
+    applyAppSettings(settings);
+
+    const handleSettingsChange = () => setSettings(readAppSettings());
+    window.addEventListener(APP_SETTINGS_EVENT, handleSettingsChange);
+    window.addEventListener("storage", handleSettingsChange);
+
+    return () => {
+      window.removeEventListener(APP_SETTINGS_EVENT, handleSettingsChange);
+      window.removeEventListener("storage", handleSettingsChange);
+    };
+  }, [settings]);
 
   const displayName = user?.name || user?.email?.split("@")[0] || "Account";
   const initials = (user?.name || user?.email || user?.role || "U")
@@ -78,13 +92,20 @@ export default function SidebarLayout() {
       `}>
         <div className={`p-5 flex items-center ${isSidebarCollapsed ? "lg:justify-center" : "gap-4"} mb-2 justify-between lg:justify-start`}>
           <div className="flex items-center gap-4">
-            <div className="bg-slate-950 p-2.5 rounded-2xl shadow-lg shadow-slate-300/60 flex items-center justify-center shrink-0">
-              <BusFront className="text-white w-6 h-6" />
-            </div>
-            <div className={isSidebarCollapsed ? "lg:hidden" : "min-w-0"}>
-              <span className="font-display block font-black text-2xl text-slate-950 leading-none">KidsRoute</span>
-              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mt-1 block">School Van System</span>
-            </div>
+            <Link
+              to={getHomePath(user?.role)}
+              onClick={closeMobileSidebar}
+              className="flex items-center gap-4 rounded-2xl transition hover:opacity-80"
+              aria-label="Go to home dashboard"
+            >
+              <div className="bg-slate-950 p-2.5 rounded-2xl shadow-lg shadow-slate-300/60 flex items-center justify-center shrink-0">
+                <BusFront className="text-white w-6 h-6" />
+              </div>
+              <div className={isSidebarCollapsed ? "lg:hidden" : "min-w-0"}>
+                <span className="font-display block font-black text-2xl text-slate-950 leading-none">KidsRoute</span>
+                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mt-1 block">School Van System</span>
+              </div>
+            </Link>
           </div>
           {/* Close button for mobile drawer */}
           <button
@@ -136,7 +157,12 @@ export default function SidebarLayout() {
         </nav>
         
         <div className={`${isSidebarCollapsed ? "lg:p-4" : "lg:p-6"} p-6 border-t border-white/70 mt-auto`}>
-          <div className={`flex items-center ${isSidebarCollapsed ? "lg:justify-center lg:p-2" : "gap-3 p-3"} p-3 bg-white/55 rounded-2xl border border-white/80 mb-3 shadow-soft`}>
+          <Link
+            to="/profile"
+            onClick={closeMobileSidebar}
+            className={`flex items-center ${isSidebarCollapsed ? "lg:justify-center lg:p-2" : "gap-3 p-3"} p-3 bg-white/55 rounded-2xl border border-white/80 mb-3 shadow-soft transition hover:bg-white`}
+            title="Open profile"
+          >
             <div className="w-10 h-10 rounded-xl bg-slate-950 shadow-sm text-white font-black flex items-center justify-center shrink-0">
               {initials}
             </div>
@@ -144,6 +170,11 @@ export default function SidebarLayout() {
               <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{user?.role}</p>
             </div>
+          </Link>
+
+          <div className="mb-2 space-y-1">
+            <NavItem to="/profile" icon={<UserCircle size={18} />} label="Profile" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
+            <NavItem to="/settings" icon={<Settings size={18} />} label="Settings" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
           </div>
           
           <button 
@@ -181,7 +212,6 @@ export default function SidebarLayout() {
               <button
                 onClick={() => {
                   setShowNotifications((value) => !value);
-                  setShowProfile(false);
                 }}
                 className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-white/65 text-slate-700 shadow-soft transition hover:bg-white"
                 aria-label="Open notifications"
@@ -194,21 +224,20 @@ export default function SidebarLayout() {
                 )}
               </button>
 
-              <button
-                onClick={() => {
-                  setShowProfile((value) => !value);
-                  setShowNotifications(false);
-                }}
+              <Link
+                to="/profile"
+                onClick={() => setShowNotifications(false)}
                 className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/65 py-1.5 pl-1.5 pr-3 text-left shadow-soft transition hover:bg-white"
-                aria-label="Open profile menu"
+                aria-label="Open profile section"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-sm font-black text-white">{initials}</span>
                 <span className="hidden min-w-0 sm:block">
                   <span className="block max-w-36 truncate text-sm font-black text-slate-900">{displayName}</span>
-                  <span className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">{user?.role}</span>
+                  <span className="block text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    {settings.showEmailInProfile ? user?.email || user?.role : user?.role}
+                  </span>
                 </span>
-                <ChevronDown size={16} className="text-slate-400" />
-              </button>
+              </Link>
 
               {showNotifications && (
                 <div className="absolute right-0 top-14 z-50 w-[min(92vw,380px)] rounded-[1.75rem] border border-white/80 bg-white p-4 shadow-2xl shadow-slate-300/50">
@@ -241,26 +270,6 @@ export default function SidebarLayout() {
                 </div>
               )}
 
-              {showProfile && (
-                <div className="absolute right-0 top-14 z-50 w-[min(92vw,320px)] rounded-[1.75rem] border border-white/80 bg-white p-4 shadow-2xl shadow-slate-300/50">
-                  <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-950 text-lg font-black text-white">{initials}</div>
-                    <div className="min-w-0">
-                      <p className="truncate text-base font-black text-slate-950">{displayName}</p>
-                      <p className="truncate text-xs font-bold text-slate-400">{user?.email}</p>
-                    </div>
-                  </div>
-                  <Link to="#" className="mt-3 flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
-                    <UserCircle size={18} /> View Profile
-                  </Link>
-                  <button className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
-                    <Settings size={18} /> Account Settings
-                  </button>
-                  <button onClick={logout} className="mt-2 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-red-500 transition hover:bg-red-50">
-                    <LogOut size={18} /> Sign Out
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
