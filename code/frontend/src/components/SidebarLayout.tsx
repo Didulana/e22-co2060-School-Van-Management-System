@@ -25,6 +25,7 @@ import { getParentNotifications } from "../services/parentService";
 export default function SidebarLayout() {
   const { user, logout } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -54,23 +55,50 @@ export default function SidebarLayout() {
     .join("");
   const unreadCount = notifications.filter((item) => !item.is_read).length;
   
+  const closeMobileSidebar = () => setIsMobileSidebarOpen(false);
+
   return (
-    <div className="app-surface flex h-screen w-screen text-slate-800 overflow-hidden font-sans">
+    <div className="app-surface flex h-screen w-screen text-slate-800 overflow-hidden font-sans relative">
+      {/* Mobile Sidebar backdrop */}
+      {isMobileSidebarOpen && (
+        <div
+          onClick={closeMobileSidebar}
+          className="fixed inset-0 bg-slate-900/40 z-30 lg:hidden backdrop-blur-sm transition-opacity duration-300"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`${isSidebarCollapsed ? "w-24" : "w-72"} glass-card border-r border-white/70 shadow-soft flex flex-col transition-all duration-300 z-20`}>
-        <div className={`p-5 flex items-center ${isSidebarCollapsed ? "justify-center" : "gap-4"} mb-2`}>
-          <div className="bg-slate-950 p-2.5 rounded-2xl shadow-lg shadow-slate-300/60 flex items-center justify-center">
-            <BusFront className="text-white w-6 h-6" />
+      <aside className={`
+        ${isSidebarCollapsed ? "lg:w-24" : "lg:w-72"}
+        fixed inset-y-0 left-0 z-40 lg:static
+        w-72 flex flex-col
+        glass-card border-r border-white/70 shadow-soft
+        transition-all duration-300
+        ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+      `}>
+        <div className={`p-5 flex items-center ${isSidebarCollapsed ? "lg:justify-center" : "gap-4"} mb-2 justify-between lg:justify-start`}>
+          <div className="flex items-center gap-4">
+            <div className="bg-slate-950 p-2.5 rounded-2xl shadow-lg shadow-slate-300/60 flex items-center justify-center shrink-0">
+              <BusFront className="text-white w-6 h-6" />
+            </div>
+            <div className={isSidebarCollapsed ? "lg:hidden" : "min-w-0"}>
+              <span className="font-display block font-black text-2xl text-slate-950 leading-none">KidsRoute</span>
+              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mt-1 block">School Van System</span>
+            </div>
           </div>
-          <div className={isSidebarCollapsed ? "hidden" : "min-w-0"}>
-            <span className="font-display block font-black text-2xl text-slate-950 leading-none">KidsRoute</span>
-            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mt-1 block">School Van System</span>
-          </div>
+          {/* Close button for mobile drawer */}
+          <button
+            onClick={closeMobileSidebar}
+            className="rounded-xl bg-slate-100 p-2 text-slate-500 lg:hidden hover:bg-slate-200 transition-colors"
+            aria-label="Close sidebar"
+          >
+            <X size={16} />
+          </button>
         </div>
 
         <button
           onClick={() => setIsSidebarCollapsed((value) => !value)}
-          className={`mx-4 mb-4 flex h-11 items-center justify-center gap-3 rounded-2xl border border-white/80 bg-white/60 text-sm font-black text-slate-600 shadow-soft transition hover:bg-white ${isSidebarCollapsed ? "px-0" : "px-4"}`}
+          className={`mx-4 mb-4 hidden lg:flex h-11 items-center justify-center gap-3 rounded-2xl border border-white/80 bg-white/65 text-sm font-black text-slate-600 shadow-soft transition hover:bg-white ${isSidebarCollapsed ? "px-0" : "px-4"}`}
           aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -78,41 +106,41 @@ export default function SidebarLayout() {
           {!isSidebarCollapsed && <span>Collapse</span>}
         </button>
 
-        <nav className={`${isSidebarCollapsed ? "px-3" : "px-4"} flex-1 overflow-y-auto space-y-1.5 scrollbar-hide`}>
+        <nav className={`${isSidebarCollapsed ? "lg:px-3" : "lg:px-4"} px-4 flex-1 overflow-y-auto space-y-1.5 scrollbar-hide`}>
           {user?.role === "admin" && (
             <>
               <SectionLabel label="Operations" collapsed={isSidebarCollapsed} />
-              <NavItem to="/admin/dashboard" icon={<LayoutDashboard size={20} />} label="Overview" collapsed={isSidebarCollapsed} />
-              <NavItem to="/routes" icon={<Navigation size={20} />} label="Route Map" collapsed={isSidebarCollapsed} />
+              <NavItem to="/admin/dashboard" icon={<LayoutDashboard size={20} />} label="Overview" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
+              <NavItem to="/routes" icon={<Navigation size={20} />} label="Route Map" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
             </>
           )}
 
           {user?.role === "driver" && (
             <>
               <SectionLabel label="Driver Menu" collapsed={isSidebarCollapsed} />
-              <NavItem to="/driver" icon={<Truck size={20} />} label="Home Dashboard" collapsed={isSidebarCollapsed} />
-              <NavItem to="/driver/attendance" icon={<ClipboardList size={20} />} label="Attendance History" collapsed={isSidebarCollapsed} />
-              <NavItem to="/driver/announce" icon={<Megaphone size={20} />} label="Announcements" collapsed={isSidebarCollapsed} />
+              <NavItem to="/driver" icon={<Truck size={20} />} label="Home Dashboard" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
+              <NavItem to="/driver/attendance" icon={<ClipboardList size={20} />} label="Attendance History" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
+              <NavItem to="/driver/announce" icon={<Megaphone size={20} />} label="Announcements" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
             </>
           )}
 
           {user?.role === "parent" && (
             <>
               <SectionLabel label="Parent Menu" collapsed={isSidebarCollapsed} />
-              <NavItem to="/parent" icon={<LayoutDashboard size={20} />} label="Home" collapsed={isSidebarCollapsed} />
-              <NavItem to="/parent/children" icon={<Users size={20} />} label="My Children" collapsed={isSidebarCollapsed} />
-              <NavItem to="/tracking" icon={<MapPin size={20} />} label="Track Van" collapsed={isSidebarCollapsed} />
-              <NavItem to="/parent/history" icon={<History size={20} />} label="Trip History" collapsed={isSidebarCollapsed} />
+              <NavItem to="/parent" icon={<LayoutDashboard size={20} />} label="Home" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
+              <NavItem to="/parent/children" icon={<Users size={20} />} label="My Children" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
+              <NavItem to="/tracking" icon={<MapPin size={20} />} label="Track Van" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
+              <NavItem to="/parent/history" icon={<History size={20} />} label="Trip History" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
             </>
           )}
         </nav>
         
-        <div className={`${isSidebarCollapsed ? "p-4" : "p-6"} border-t border-white/70 mt-auto`}>
-          <div className={`flex items-center ${isSidebarCollapsed ? "justify-center p-2" : "gap-3 p-3"} bg-white/55 rounded-2xl border border-white/80 mb-3 shadow-soft`}>
+        <div className={`${isSidebarCollapsed ? "lg:p-4" : "lg:p-6"} p-6 border-t border-white/70 mt-auto`}>
+          <div className={`flex items-center ${isSidebarCollapsed ? "lg:justify-center lg:p-2" : "gap-3 p-3"} p-3 bg-white/55 rounded-2xl border border-white/80 mb-3 shadow-soft`}>
             <div className="w-10 h-10 rounded-xl bg-slate-950 shadow-sm text-white font-black flex items-center justify-center shrink-0">
               {initials}
             </div>
-            <div className={isSidebarCollapsed ? "hidden" : "overflow-hidden min-w-0"}>
+            <div className={isSidebarCollapsed ? "lg:hidden" : "overflow-hidden min-w-0"}>
               <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{user?.role}</p>
             </div>
@@ -120,11 +148,11 @@ export default function SidebarLayout() {
           
           <button 
             onClick={logout}
-            className={`flex items-center ${isSidebarCollapsed ? "justify-center px-0" : "gap-3 px-4"} w-full py-3 text-sm font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group`}
+            className={`flex items-center ${isSidebarCollapsed ? "lg:justify-center lg:px-0" : "gap-3 px-4"} gap-3 px-4 w-full py-3 text-sm font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group`}
             title="Sign Out"
           >
             <LogOut size={18} className="group-hover:rotate-12 transition-transform" />
-            {!isSidebarCollapsed && <span>Sign Out</span>}
+            <span className={isSidebarCollapsed ? "lg:hidden" : ""}>Sign Out</span>
           </button>
         </div>
       </aside>
@@ -133,9 +161,20 @@ export default function SidebarLayout() {
       <main className="flex-1 overflow-y-auto relative">
         <div className="sticky top-0 z-30 px-6 pt-5 lg:px-10">
           <div className="liquid-glass mx-auto flex max-w-[1420px] items-center justify-between overflow-visible rounded-[1.5rem] px-4 py-3">
-            <div className="flex min-w-0 flex-col">
-              <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Welcome back</span>
-              <span className="font-display truncate text-lg font-black text-slate-950">{displayName}</span>
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Mobile Hamburger menu */}
+              <button
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/80 bg-white/65 text-slate-700 shadow-soft transition hover:bg-white lg:hidden shrink-0"
+                aria-label="Open sidebar"
+              >
+                <PanelLeftOpen size={20} />
+              </button>
+              
+              <div className="flex min-w-0 flex-col">
+                <span className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Welcome back</span>
+                <span className="font-display truncate text-lg font-black text-slate-950">{displayName}</span>
+              </div>
             </div>
 
             <div className="relative flex items-center gap-3">
@@ -244,13 +283,26 @@ function SectionLabel({ label, collapsed }: { label: string; collapsed?: boolean
   );
 }
 
-function NavItem({ to, icon, label, collapsed }: { to: string; icon: React.ReactNode; label: string; collapsed?: boolean }) {
+function NavItem({
+  to,
+  icon,
+  label,
+  collapsed,
+  onClick,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  collapsed?: boolean;
+  onClick?: () => void;
+}) {
   return (
     <NavLink
       to={to}
       title={label}
+      onClick={onClick}
       className={({ isActive }) =>
-        `flex items-center ${collapsed ? "justify-center px-0" : "gap-4 px-4"} py-3.5 rounded-2xl transition-all duration-300 font-bold ${
+        `flex items-center ${collapsed ? "lg:justify-center lg:px-0" : "gap-4 px-4"} py-3.5 rounded-2xl transition-all duration-300 font-bold ${
           isActive
             ? "bg-emerald-600 text-white shadow-xl shadow-emerald-200/80 translate-x-1"
             : "text-slate-500 hover:bg-white/70 hover:text-slate-900"
@@ -260,7 +312,7 @@ function NavItem({ to, icon, label, collapsed }: { to: string; icon: React.React
       <div className="shrink-0 transition-transform duration-500 group-hover:scale-110">
         {icon}
       </div>
-      {!collapsed && <span>{label}</span>}
+      <span className={collapsed ? "lg:hidden" : ""}>{label}</span>
     </NavLink>
   );
 }
