@@ -308,6 +308,7 @@ function NavItem({
   return (
     <NavLink
       to={to}
+      end
       title={label}
       onClick={onClick}
       className={({ isActive }) =>

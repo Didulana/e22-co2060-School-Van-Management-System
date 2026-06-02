@@ -26,7 +26,7 @@ export function clearStoredSession(): void {
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
-export function readProfileOverride(userId: number): Partial<Pick<AuthUser, "name" | "email">> {
+export function readProfileOverride(userId: number): Partial<AuthUser> {
   const stored = window.localStorage.getItem(PROFILE_OVERRIDES_KEY);
 
   if (!stored) {
@@ -34,7 +34,7 @@ export function readProfileOverride(userId: number): Partial<Pick<AuthUser, "nam
   }
 
   try {
-    const overrides = JSON.parse(stored) as Record<string, Partial<Pick<AuthUser, "name" | "email">>>;
+    const overrides = JSON.parse(stored) as Record<string, Partial<AuthUser>>;
     return overrides[String(userId)] || {};
   } catch {
     window.localStorage.removeItem(PROFILE_OVERRIDES_KEY);
@@ -42,13 +42,13 @@ export function readProfileOverride(userId: number): Partial<Pick<AuthUser, "nam
   }
 }
 
-export function storeProfileOverride(userId: number, updates: Partial<Pick<AuthUser, "name" | "email">>): void {
+export function storeProfileOverride(userId: number, updates: Partial<AuthUser>): void {
   const stored = window.localStorage.getItem(PROFILE_OVERRIDES_KEY);
-  let overrides: Record<string, Partial<Pick<AuthUser, "name" | "email">>> = {};
+  let overrides: Record<string, Partial<AuthUser>> = {};
 
   if (stored) {
     try {
-      overrides = JSON.parse(stored) as Record<string, Partial<Pick<AuthUser, "name" | "email">>>;
+      overrides = JSON.parse(stored) as Record<string, Partial<AuthUser>>;
     } catch {
       overrides = {};
     }
