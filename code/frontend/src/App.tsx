@@ -15,6 +15,8 @@ import DriverOnboarding from "./pages/driver/DriverOnboarding";
 import SidebarLayout from "./components/SidebarLayout";
 import { AuthProvider } from "./features/auth/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ProfilePage from "./pages/account/ProfilePage";
+import SettingsPage from "./pages/account/SettingsPage";
 
 export default function App() {
   return (
@@ -36,6 +38,9 @@ export default function App() {
           }>
             {/* default redirect handled by ProtectedRoute, but keep a fallback */}
             <Route path="/" element={<Navigate to="/login" replace />} />
+
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             
             {/* admin dashboard */}
             <Route path="/admin/dashboard" element={
@@ -104,4 +109,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
