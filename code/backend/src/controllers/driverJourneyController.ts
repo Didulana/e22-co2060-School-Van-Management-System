@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { pool } from "../config/db";
 import {
   createJourney,
   updateJourneyStatus,
@@ -79,6 +80,22 @@ export const arriveAtSchool = async (req: Request, res: Response) => {
     }
 
     const updated = await updateJourneyStatus(journeyId, "arrived_at_school");
+
+    // Automatically drop off all students who boarded during this morning journey
+    const boardedResult = await pool.query(
+      `SELECT student_id FROM student_boarding WHERE journey_id = $1`,
+      [journeyId]
+    );
+
+    for (const row of boardedResult.rows) {
+      const dropCheck = await pool.query(
+        `SELECT 1 FROM student_dropoff WHERE journey_id = $1 AND student_id = $2`,
+        [journeyId, row.student_id]
+      );
+      if (dropCheck.rows.length === 0) {
+        await handleDropoffWorkflow(journeyId, journey.driver_id, row.student_id);
+      }
+    }
 
     await handleJourneyEventWorkflow(
       journeyId,
