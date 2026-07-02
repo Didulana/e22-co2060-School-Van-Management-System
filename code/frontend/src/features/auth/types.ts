@@ -17,7 +17,7 @@ export interface ParentProfileDetails {
 }
 
 export interface AuthUser {
-  id: number;
+  id: string | number;
   email: string;
   name?: string;
   role: UserRole;

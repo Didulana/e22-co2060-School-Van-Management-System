@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { AuthSession, AuthUser } from "./types";
-import { readStoredSession, storeSession, clearStoredSession, readProfileOverride, storeProfileOverride } from "./storage";
-import { fetchCurrentUser } from "./api";
+import { AuthSession, AuthUser, UserRole } from "./types";
+import { supabase } from "../../config/supabase";
 
 interface AuthContextType {
   session: AuthSession | null;
@@ -25,64 +24,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // On mount, try to restore session from localStorage
   useEffect(() => {
-    async function restore() {
-      const stored = readStoredSession();
-      if (!stored) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const user = await fetchCurrentUser(stored.token);
-        const refreshed = {
-          token: stored.token,
-          user: {
-            ...user,
-            ...readProfileOverride(user.id),
-          },
-        };
-        setSession(refreshed);
-        storeSession(refreshed);
-      } catch {
-        clearStoredSession();
-      } finally {
+    // 1. Get initial session
+    supabase.auth.getSession().then(({ data: { session: supabaseSession } }) => {
+      if (supabaseSession) {
+        mapSupabaseSessionToAuthSession(supabaseSession);
+      } else {
         setIsLoading(false);
       }
-    }
+    });
 
-    restore();
+    // 2. Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, supabaseSession) => {
+      if (supabaseSession) {
+        mapSupabaseSessionToAuthSession(supabaseSession);
+      } else {
+        setSession(null);
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const mapSupabaseSessionToAuthSession = (supabaseSession: any) => {
+    const userMetadata = supabaseSession.user.user_metadata;
+    const authSession: AuthSession = {
+      token: supabaseSession.access_token,
+      user: {
+        id: supabaseSession.user.id,
+        email: supabaseSession.user.email,
+        name: userMetadata?.name || "",
+        role: (userMetadata?.role as UserRole) || "parent",
+      },
+    };
+    setSession(authSession);
+    setIsLoading(false);
+  };
 
   const handleLogin = useCallback((newSession: AuthSession) => {
     setSession(newSession);
-    storeSession(newSession);
   }, []);
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
+    await supabase.auth.signOut();
     setSession(null);
-    clearStoredSession();
   }, []);
 
-  const handleUpdateUser = useCallback((updates: Partial<AuthUser>) => {
+  const handleUpdateUser = useCallback(async (updates: Partial<AuthUser>) => {
     setSession((currentSession) => {
-      if (!currentSession) {
-        return currentSession;
-      }
-
-      const updatedSession = {
+      if (!currentSession) return currentSession;
+      return {
         ...currentSession,
-        user: {
-          ...currentSession.user,
-          ...updates,
-        },
+        user: { ...currentSession.user, ...updates },
       };
-
-      storeProfileOverride(currentSession.user.id, updates);
-      storeSession(updatedSession);
-      return updatedSession;
     });
+    // Fire-and-forget update to Supabase user metadata
+    if (updates.name || updates.role) {
+      await supabase.auth.updateUser({
+        data: {
+          name: updates.name || undefined,
+          role: updates.role || undefined,
+        },
+      });
+    }
   }, []);
 
   return (
