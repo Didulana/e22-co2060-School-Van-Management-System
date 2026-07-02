@@ -1,7 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../../features/auth/AuthContext";
-import { API_BASE_URL } from "../../config/api";
+import { supabase } from "../../config/supabase";
 
 const emptyForm = {
   name: "",
@@ -13,7 +12,7 @@ const emptyForm = {
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  // Auth logic handled by context listeners now
   
   const [form, setForm] = useState(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,29 +49,28 @@ function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(form),
+      const { error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            name: form.name,
+            role: form.role,
+            phone: form.phone,
+          }
+        }
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.details || data.error || "Failed to register");
+      if (error) {
+        throw new Error(error.message);
       }
 
-      // Automatically login via context
-      login({ token: data.token, user: data.user });
-      
       const roleHome: Record<string, string> = {
         admin: "/admin/dashboard",
         driver: "/driver",
         parent: "/tracking",
       };
-      navigate(roleHome[data.user.role] || "/login", { replace: true });
+      navigate(roleHome[form.role] || "/login", { replace: true });
 
     } catch (error) {
       setErrorMessage(

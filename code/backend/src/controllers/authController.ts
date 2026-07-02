@@ -125,7 +125,7 @@ export const getCurrentUser = async (req: AuthenticatedRequest, res: Response) =
     }
 
     const result = await pool.query(
-      `SELECT id, name, email, role, phone, is_approved, created_at FROM users WHERE id = $1`,
+      `SELECT id, auth_id, name, email, role, phone, is_approved, created_at FROM users WHERE id = $1`,
       [req.user.id]
     );
 
