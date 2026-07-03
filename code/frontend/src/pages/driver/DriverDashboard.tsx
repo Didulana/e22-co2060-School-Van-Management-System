@@ -15,7 +15,7 @@ import {
 import { getRoutes, Route } from "../../services/route.service";
 import { getOnboardingStatus } from "../../services/driverService";
 import { useAuth } from "../../features/auth/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { 
     Navigation,
     ShieldAlert,
@@ -28,7 +28,10 @@ import {
     UserCircle,
     ArrowRight,
     Plus,
-    Check
+    Check,
+    CreditCard,
+    Settings,
+    History as HistoryIcon
 } from "lucide-react";
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string; icon: any }> = {
@@ -489,6 +492,59 @@ export default function DriverDashboard() {
             )}
           </div>
         </>
+      )}
+
+      {/* Payments & Financials Control Grid */}
+      {!onboardingPending && realDriverId > 0 && (
+        <section className="space-y-6">
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700">Financial Administration</span>
+            <h2 className="font-display text-2xl font-black text-slate-900 tracking-tight">Payments Control Center</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link 
+              to="/driver/payments" 
+              className="group flex items-center gap-4 rounded-[1.5rem] border border-white/80 bg-white/80 p-5 shadow-soft transition hover:bg-white"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 transition group-hover:bg-emerald-500 group-hover:text-white shrink-0">
+                <CreditCard size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-display truncate text-base font-black text-slate-950">Student Dues</p>
+                <p className="mt-1 text-[11px] font-bold text-slate-400 leading-tight">Calculate, track, and verify student fees</p>
+              </div>
+              <ArrowRight size={18} className="text-slate-300 transition group-hover:text-emerald-500 group-hover:translate-x-1 shrink-0" />
+            </Link>
+
+            <Link 
+              to="/driver/payments/history" 
+              className="group flex items-center gap-4 rounded-[1.5rem] border border-white/80 bg-white/80 p-5 shadow-soft transition hover:bg-white"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 border border-slate-100 transition group-hover:bg-slate-900 group-hover:text-white shrink-0">
+                <HistoryIcon size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-display truncate text-base font-black text-slate-950">Payment History</p>
+                <p className="mt-1 text-[11px] font-bold text-slate-400 leading-tight">View previous approvals and records</p>
+              </div>
+              <ArrowRight size={18} className="text-slate-300 transition group-hover:text-slate-900 group-hover:translate-x-1 shrink-0" />
+            </Link>
+
+            <Link 
+              to="/driver/payments/settings" 
+              className="group flex items-center gap-4 rounded-[1.5rem] border border-white/80 bg-white/80 p-5 shadow-soft transition hover:bg-white"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 border border-slate-100 transition group-hover:bg-emerald-500 group-hover:text-white shrink-0">
+                <Settings size={20} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-display truncate text-base font-black text-slate-950">Payment Settings</p>
+                <p className="mt-1 text-[11px] font-bold text-slate-400 leading-tight">Manage fixed rates & calculation modes</p>
+              </div>
+              <ArrowRight size={18} className="text-slate-300 transition group-hover:text-emerald-500 group-hover:translate-x-1 shrink-0" />
+            </Link>
+          </div>
+        </section>
       )}
     </div>
   );
