@@ -21,8 +21,19 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<AuthSession | null>(() => {
+    const stored = window.localStorage.getItem("school-van-auth-session");
+    try {
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  
+  // If we already have a session in localStorage, we can skip the loading screen!
+  const [isLoading, setIsLoading] = useState(() => {
+    return !window.localStorage.getItem("school-van-auth-session");
+  });
 
   useEffect(() => {
     let mounted = true;
