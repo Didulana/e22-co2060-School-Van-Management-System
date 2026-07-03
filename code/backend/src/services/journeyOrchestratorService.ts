@@ -3,6 +3,7 @@ import { recordStudentBoarding } from "../models/studentBoardingModel";
 import { recordStudentDropoff } from "../models/studentDropoffModel";
 import { sendJourneyNotification } from "./notificationService";
 import { emitToRoom, journeyRoom } from "./socketService";
+import { pool } from "../config/db";
 
 export async function handleJourneyEventWorkflow(
   journeyId: number,
@@ -30,7 +31,11 @@ export async function handleBoardingWorkflow(
 ) {
   await recordStudentBoarding(journeyId, studentId, driverId);
 
-  const message = `Student ${studentId} boarded the van`;
+  const res = await pool.query("SELECT name, nickname FROM students WHERE id = $1", [studentId]);
+  const student = res.rows[0];
+  const displayName = student?.nickname || student?.name || `Student ${studentId}`;
+
+  const message = `${displayName} boarded the van`;
   await sendJourneyNotification(
     journeyId,
     "student_boarded",
@@ -54,7 +59,11 @@ export async function handleDropoffWorkflow(
 ) {
   await recordStudentDropoff(journeyId, studentId, driverId);
 
-  const message = `Student ${studentId} dropped off safely`;
+  const res = await pool.query("SELECT name, nickname FROM students WHERE id = $1", [studentId]);
+  const student = res.rows[0];
+  const displayName = student?.nickname || student?.name || `Student ${studentId}`;
+
+  const message = `${displayName} dropped off safely`;
   await sendJourneyNotification(
     journeyId,
     "student_dropped",

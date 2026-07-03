@@ -132,10 +132,14 @@ export const generateMonthlyPayments = async (req: AuthenticatedRequest, res: Re
         // Notify parent
         const parentRes = await pool.query(`SELECT parent_id FROM parent_students WHERE student_id = $1`, [student.id]);
         if (parentRes.rows.length > 0) {
+          const res = await pool.query("SELECT name, nickname FROM students WHERE id = $1", [student.id]);
+          const studentData = res.rows[0];
+          const displayName = studentData?.nickname || studentData?.name || `Student ${student.id}`;
+
           await pool.query(`
             INSERT INTO notifications (user_id, type, message, journey_id)
             VALUES ($1, 'payment_generated', $2, 0)
-          `, [parentRes.rows[0].parent_id, `Payment generated for ${monthStr}. Amount Due: LKR ${amountDue.toFixed(2)}`]);
+          `, [parentRes.rows[0].parent_id, `Payment generated for ${displayName} for ${monthStr}. Amount Due: LKR ${amountDue.toFixed(2)}`]);
         }
       }
     }
@@ -167,7 +171,11 @@ export const verifyPayment = async (req: AuthenticatedRequest, res: Response) =>
     // Notify parent
     const parentRes = await pool.query(`SELECT parent_id FROM parent_students WHERE student_id = $1`, [payment.student_id]);
     if (parentRes.rows.length > 0) {
-      const msg = status === 'paid' ? `Payment for ${payment.month} approved.` : `Payment for ${payment.month} rejected: ${reject_reason}`;
+      const res = await pool.query("SELECT name, nickname FROM students WHERE id = $1", [payment.student_id]);
+      const studentData = res.rows[0];
+      const displayName = studentData?.nickname || studentData?.name || `Student ${payment.student_id}`;
+
+      const msg = status === 'paid' ? `Payment for ${displayName} (${payment.month}) approved.` : `Payment for ${displayName} (${payment.month}) rejected: ${reject_reason}`;
       await pool.query(`
         INSERT INTO notifications (user_id, type, message, journey_id)
         VALUES ($1, 'payment_update', $2, 0)

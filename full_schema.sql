@@ -225,3 +225,5 @@ CREATE TABLE IF NOT EXISTS payments (
         
     UNIQUE (student_id, month)
 );
+
+ALTER TABLE students ADD COLUMN IF NOT EXISTS nickname VARCHAR(255);
