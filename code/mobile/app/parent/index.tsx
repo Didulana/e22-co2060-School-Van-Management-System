@@ -31,6 +31,7 @@ const MapPin = MapPinIcon as any;
 const CheckSquare = CheckSquareIcon as any;
 const ShieldAlert = ShieldAlertIcon as any;
 import MapView, { Marker } from "react-native-maps";
+import io from "socket.io-client";
 
 import { API_BASE_URL } from "../../constants/config";
 
@@ -43,15 +44,52 @@ interface Payment {
   status: string;
 }
 
+interface Child {
+  id: number;
+  name: string;
+  route_id: number | null;
+}
+
 export default function ParentDashboard() {
   const router = useRouter();
   const [parentName, setParentName] = useState("Parent");
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [children, setChildren] = useState<Child[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
+  const [childStatus, setChildStatus] = useState<any>(null);
+  const [vanLocation, setVanLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadPayment, setUploadPayment] = useState<Payment | null>(null);
   const [receiptRef, setReceiptRef] = useState("");
   const [receiptUrl, setReceiptUrl] = useState("");
+
+  const loadChildStatus = async (childId: number) => {
+    try {
+      const sessionStr = await SecureStore.getItemAsync("school-van-auth-session");
+      if (!sessionStr) return;
+      const session = JSON.parse(sessionStr);
+
+      const res = await fetch(`${API_BASE_URL}/parent/children/${childId}/status`, {
+        headers: { Authorization: `Bearer ${session.token}` },
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setChildStatus(data);
+        if (data.latestLocation) {
+          setVanLocation({
+            latitude: Number(data.latestLocation.latitude),
+            longitude: Number(data.latestLocation.longitude),
+          });
+        } else {
+          setVanLocation(null);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load child status details", e);
+    }
+  };
 
   const loadData = async () => {
     setIsLoading(true);
@@ -61,14 +99,23 @@ export default function ParentDashboard() {
       const session = JSON.parse(sessionStr);
       setParentName(session.user?.name || "Parent");
 
-      const res = await fetch(`${API_BASE_URL}/payments/parent/dues`, {
+      // 1. Fetch outstanding monthly dues
+      const duesRes = await fetch(`${API_BASE_URL}/payments/parent/dues`, {
         headers: { Authorization: `Bearer ${session.token}` },
       });
+      const duesData = await duesRes.json().catch(() => []);
+      if (duesRes.ok) setPayments(duesData);
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch");
-
-      setPayments(data);
+      // 2. Fetch parent's children manifest
+      const kidsRes = await fetch(`${API_BASE_URL}/parent/children`, {
+        headers: { Authorization: `Bearer ${session.token}` },
+      });
+      const kidsData = await kidsRes.json().catch(() => []);
+      if (kidsRes.ok && kidsData.length > 0) {
+        setChildren(kidsData);
+        setSelectedChildId(kidsData[0].id);
+        await loadChildStatus(kidsData[0].id);
+      }
     } catch (err: any) {
       Alert.alert("Sync Failure", err.message || "Failed to sync dashboard dues.");
     } finally {
@@ -79,6 +126,44 @@ export default function ParentDashboard() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    let socket: any = null;
+
+    if (selectedChildId !== null && childStatus?.journeyId) {
+      socket = io(API_BASE_URL.replace("/api", ""), {
+        transports: ["websocket"],
+      });
+
+      const room = `journey:${childStatus.journeyId}`;
+      socket.emit("join-room", room);
+
+      socket.on("location_broadcast", (data: any) => {
+        if (data.journeyId === childStatus.journeyId) {
+          setVanLocation({
+            latitude: Number(data.lat),
+            longitude: Number(data.lng),
+          });
+        }
+      });
+
+      socket.on("journey:status_change", () => {
+        loadChildStatus(selectedChildId);
+      });
+
+      socket.on("student:boarded", (data: any) => {
+        if (Number(data.studentId) === selectedChildId) {
+          loadChildStatus(selectedChildId);
+        }
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [selectedChildId, childStatus?.journeyId]);
 
   const handleLogout = async () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -169,22 +254,32 @@ export default function ParentDashboard() {
         <View style={styles.mapContainer}>
           <MapView
             style={styles.map}
-            initialRegion={{
+            region={vanLocation ? {
+              latitude: vanLocation.latitude,
+              longitude: vanLocation.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            } : {
               latitude: 6.9271, // Colombo defaults
               longitude: 79.8612,
               latitudeDelta: 0.05,
               longitudeDelta: 0.05,
             }}
           >
-            <Marker 
-              coordinate={{ latitude: 6.9271, longitude: 79.8612 }}
-              title="School Van"
-              description="Live van tracker telemetry"
-            />
+            {vanLocation && (
+              <Marker 
+                coordinate={vanLocation}
+                title="School Van"
+                description={childStatus?.boarded ? "Your child is boarded" : "Live GPS telemetry stream"}
+                pinColor="#10B981"
+              />
+            )}
           </MapView>
           <View style={styles.mapOverlay}>
             <Navigation size={14} color="#10B981" />
-            <Text style={styles.mapOverlayText}>Active Tracking Stream</Text>
+            <Text style={styles.mapOverlayText}>
+              {childStatus?.journeyId ? "Active Tracking Stream" : "Van is Offline"}
+            </Text>
           </View>
         </View>
 
