@@ -39,6 +39,7 @@ export default function DriverDashboard() {
   const { startTracking, stopTracking } = useGPSBackground();
   const [driverName, setDriverName] = useState("Driver");
   const [driverId, setDriverId] = useState<number | null>(null);
+  const [realDriverId, setRealDriverId] = useState<number | null>(null);
   const [token, setToken] = useState("");
   const [isActive, setIsActive] = useState(false);
   const [activeJourneyId, setActiveJourneyId] = useState<number | null>(null);
@@ -54,8 +55,23 @@ export default function DriverDashboard() {
           setDriverId(session.user?.id);
           setToken(session.token);
 
+          // Get onboarding status to retrieve the real driver profile ID
+          const statusRes = await fetch(`${API_BASE_URL}/drivers/onboarding/status`, {
+            headers: { Authorization: `Bearer ${session.token}` }
+          });
+          const statusData = await statusRes.json().catch(() => ({}));
+          let actualDriverId = session.user?.id; // fallback
+          if (statusData.driverId) {
+            actualDriverId = statusData.driverId;
+            setRealDriverId(statusData.driverId);
+          } else {
+            // Default fallback profile for testing/development
+            setRealDriverId(1);
+            actualDriverId = 1;
+          }
+
           // Sync active journey state from backend
-          const res = await fetch(`${API_BASE_URL}/driver/journey/active?driver_id=${session.user?.id}`, {
+          const res = await fetch(`${API_BASE_URL}/driver/journey/active?driver_id=${actualDriverId}`, {
             headers: { Authorization: `Bearer ${session.token}` }
           });
           if (res.ok) {
@@ -98,6 +114,7 @@ export default function DriverDashboard() {
 
     setIsLoading(true);
     try {
+      const activeDriverId = realDriverId || driverId || 1;
       if (isActive) {
         // Complete current trip
         const stopRes = await fetch(`${API_BASE_URL}/driver/journey/${activeJourneyId}/complete`, {
@@ -117,7 +134,7 @@ export default function DriverDashboard() {
       } else {
         // Fetch assigned routes
         let routeId = 1;
-        const routesRes = await fetch(`${API_BASE_URL}/routes?driver_id=${driverId}`, {
+        const routesRes = await fetch(`${API_BASE_URL}/routes?driver_id=${activeDriverId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const routes = await routesRes.json().catch(() => []);
@@ -146,7 +163,7 @@ export default function DriverDashboard() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}` 
           },
-          body: JSON.stringify({ driver_id: driverId, route_id: routeId }),
+          body: JSON.stringify({ driver_id: activeDriverId, route_id: routeId }),
         });
         const journey = await startRes.json();
         if (!startRes.ok) throw new Error(journey.error || "Ignition failure: Unable to initiate route.");
