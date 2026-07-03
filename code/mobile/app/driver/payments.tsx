@@ -13,7 +13,21 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { ArrowLeft, RefreshCw, FileText, Check, X, ShieldAlert } from "lucide-react-native";
+import { 
+  ArrowLeft as ArrowLeftIcon, 
+  RefreshCw as RefreshCwIcon, 
+  FileText as FileTextIcon, 
+  Check as CheckIcon, 
+  X as XIcon, 
+  ShieldAlert as ShieldAlertIcon 
+} from "lucide-react-native";
+
+const ArrowLeft = ArrowLeftIcon as any;
+const RefreshCw = RefreshCwIcon as any;
+const FileText = FileTextIcon as any;
+const Check = CheckIcon as any;
+const X = XIcon as any;
+const ShieldAlert = ShieldAlertIcon as any;
 
 const API_BASE_URL = "http://127.0.0.1:5001/api";
 

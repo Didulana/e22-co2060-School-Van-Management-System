@@ -11,7 +11,25 @@ import {
 } from "react-native";
 import { useRouter, Link } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { Truck, ShieldAlert, LogOut, CreditCard, ChevronRight, Activity, Users, Settings } from "lucide-react-native";
+import { 
+  Truck as TruckIcon, 
+  ShieldAlert as ShieldAlertIcon, 
+  LogOut as LogOutIcon, 
+  CreditCard as CreditCardIcon, 
+  ChevronRight as ChevronRightIcon, 
+  Activity as ActivityIcon, 
+  Users as UsersIcon, 
+  Settings as SettingsIcon 
+} from "lucide-react-native";
+
+const Truck = TruckIcon as any;
+const ShieldAlert = ShieldAlertIcon as any;
+const LogOut = LogOutIcon as any;
+const CreditCard = CreditCardIcon as any;
+const ChevronRight = ChevronRightIcon as any;
+const Activity = ActivityIcon as any;
+const Users = UsersIcon as any;
+const Settings = SettingsIcon as any;
 
 export default function DriverDashboard() {
   const router = useRouter();

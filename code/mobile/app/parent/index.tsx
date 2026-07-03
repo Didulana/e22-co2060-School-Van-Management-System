@@ -13,7 +13,23 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { LogOut, CreditCard, RefreshCw, Navigation, MapPin, CheckSquare, ShieldAlert } from "lucide-react-native";
+import { 
+  LogOut as LogOutIcon, 
+  CreditCard as CreditCardIcon, 
+  RefreshCw as RefreshCwIcon, 
+  Navigation as NavigationIcon, 
+  MapPin as MapPinIcon, 
+  CheckSquare as CheckSquareIcon, 
+  ShieldAlert as ShieldAlertIcon 
+} from "lucide-react-native";
+
+const LogOut = LogOutIcon as any;
+const CreditCard = CreditCardIcon as any;
+const RefreshCw = RefreshCwIcon as any;
+const Navigation = NavigationIcon as any;
+const MapPin = MapPinIcon as any;
+const CheckSquare = CheckSquareIcon as any;
+const ShieldAlert = ShieldAlertIcon as any;
 import MapView, { Marker } from "react-native-maps";
 
 const API_BASE_URL = "http://127.0.0.1:5001/api";
