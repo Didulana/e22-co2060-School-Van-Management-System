@@ -63,8 +63,8 @@ export function useGPSBackground() {
           await SecureStore.setItemAsync("school-van-active-journey-id", String(journeyId));
           await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
             accuracy: Location.Accuracy.Balanced,
-            timeInterval: 10000, // 10 seconds
-            distanceInterval: 10, // 10 meters
+            timeInterval: 2000, // 2 seconds
+            distanceInterval: 1, // 1 meter
             foregroundService: {
               notificationTitle: "School Van Active",
               notificationBody: "Live journey telemetry is streaming to parents.",
@@ -87,9 +87,9 @@ export function useGPSBackground() {
 
       foregroundSubscription = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.Balanced,
-          timeInterval: 10000,
-          distanceInterval: 10,
+          accuracy: Location.Accuracy.High, // High accuracy for testing walking paths
+          timeInterval: 2000, // 2 seconds
+          distanceInterval: 1, // 1 meter
         },
         async (location) => {
           const { latitude, longitude } = location.coords;
