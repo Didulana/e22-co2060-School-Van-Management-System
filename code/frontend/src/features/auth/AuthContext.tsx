@@ -26,13 +26,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let initialCheckCompleted = false;
 
     // 1. Get initial session
     supabase.auth.getSession().then(({ data: { session: supabaseSession } }) => {
       if (!mounted) return;
+      initialCheckCompleted = true;
       if (supabaseSession) {
         mapSupabaseSessionToAuthSession(supabaseSession);
       } else {
+        setSession(null);
+        window.localStorage.removeItem("school-van-auth-session");
         setIsLoading(false);
       }
     });
@@ -43,11 +47,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange((event, supabaseSession) => {
       if (!mounted) return;
       if (event === "INITIAL_SESSION") return; // Let getSession handle it
+      if (!initialCheckCompleted) return; // Ignore events before initial check completes
 
       if (supabaseSession) {
         mapSupabaseSessionToAuthSession(supabaseSession);
       } else {
         setSession(null);
+        window.localStorage.removeItem("school-van-auth-session");
         setIsLoading(false);
       }
     });
@@ -70,16 +76,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     };
     setSession(authSession);
+    window.localStorage.setItem("school-van-auth-session", JSON.stringify(authSession));
     setIsLoading(false);
   };
 
   const handleLogin = useCallback((newSession: AuthSession) => {
     setSession(newSession);
+    window.localStorage.setItem("school-van-auth-session", JSON.stringify(newSession));
   }, []);
 
   const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
     setSession(null);
+    window.localStorage.removeItem("school-van-auth-session");
   }, []);
 
   const handleUpdateUser = useCallback(async (updates: Partial<AuthUser>) => {

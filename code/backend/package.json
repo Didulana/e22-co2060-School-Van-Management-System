@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "migrate": "npx ts-node migrate.ts",
+    "build": "tsc && cp -r src/sql dist/",
+    "start": "node dist/migrate.js && node dist/server.js",
+    "migrate": "npx ts-node src/migrate.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
