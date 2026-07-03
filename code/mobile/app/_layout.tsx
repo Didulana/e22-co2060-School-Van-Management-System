@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
+import "../hooks/useGPSBackground";
 
 export default function RootLayout() {
   return (

@@ -28,24 +28,51 @@ const LogOut = LogOutIcon as any;
 const CreditCard = CreditCardIcon as any;
 const ChevronRight = ChevronRightIcon as any;
 const Activity = ActivityIcon as any;
+import { API_BASE_URL } from "../../constants/config";
+import { useGPSBackground } from "../../hooks/useGPSBackground";
+
 const Users = UsersIcon as any;
 const Settings = SettingsIcon as any;
 
 export default function DriverDashboard() {
   const router = useRouter();
+  const { startTracking, stopTracking } = useGPSBackground();
   const [driverName, setDriverName] = useState("Driver");
+  const [driverId, setDriverId] = useState<number | null>(null);
+  const [token, setToken] = useState("");
   const [isActive, setIsActive] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [activeJourneyId, setActiveJourneyId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function loadProfile() {
-      const sessionStr = await SecureStore.getItemAsync("school-van-auth-session");
-      if (sessionStr) {
-        const session = JSON.parse(sessionStr);
-        setDriverName(session.user?.name || "Driver");
+    async function initDashboard() {
+      try {
+        const sessionStr = await SecureStore.getItemAsync("school-van-auth-session");
+        if (sessionStr) {
+          const session = JSON.parse(sessionStr);
+          setDriverName(session.user?.name || "Driver");
+          setDriverId(session.user?.id);
+          setToken(session.token);
+
+          // Sync active journey state from backend
+          const res = await fetch(`${API_BASE_URL}/journey/active?driver_id=${session.user?.id}`, {
+            headers: { Authorization: `Bearer ${session.token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.active && data.journey) {
+              setIsActive(true);
+              setActiveJourneyId(data.journey.id);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Initialization failure", err);
+      } finally {
+        setIsLoading(false);
       }
     }
-    loadProfile();
+    initDashboard();
   }, []);
 
   const handleLogout = async () => {
@@ -55,6 +82,7 @@ export default function DriverDashboard() {
         text: "Sign Out",
         style: "destructive",
         onPress: async () => {
+          await stopTracking();
           await SecureStore.deleteItemAsync("school-van-auth-session");
           router.replace("/login");
         }
@@ -62,16 +90,91 @@ export default function DriverDashboard() {
     ]);
   };
 
-  const toggleJourney = () => {
+  const toggleJourney = async () => {
+    if (!driverId || !token) {
+      Alert.alert("Error", "No active credentials session found.");
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
-      setIsActive(!isActive);
+    try {
+      if (isActive) {
+        // Complete current trip
+        const stopRes = await fetch(`${API_BASE_URL}/journey/${activeJourneyId}/complete`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        if (!stopRes.ok) {
+          const err = await stopRes.json().catch(() => ({}));
+          throw new Error(err.error || "Failed to complete active journey.");
+        }
+
+        await stopTracking();
+        setIsActive(false);
+        setActiveJourneyId(null);
+        Alert.alert("Trip Completed", "Good job! Trip logs finalized.");
+      } else {
+        // Fetch assigned routes
+        const routesRes = await fetch(`${API_BASE_URL}/routes?driver_id=${driverId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const routes = await routesRes.json().catch(() => []);
+        if (!routesRes.ok || routes.length === 0) {
+          throw new Error("No routes assigned to your profile.");
+        }
+        const routeId = routes[0].id;
+
+        // Start next trip
+        const startRes = await fetch(`${API_BASE_URL}/journey/start`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}` 
+          },
+          body: JSON.stringify({ driver_id: driverId, route_id: routeId }),
+        });
+        const journey = await startRes.json();
+        if (!startRes.ok) throw new Error(journey.error || "Ignition failure: Unable to initiate route.");
+
+        await startTracking(journey.id);
+        setIsActive(true);
+        setActiveJourneyId(journey.id);
+        Alert.alert("Trip Started", "GPS telemetry active. Safe driving!");
+      }
+    } catch (err: any) {
+      Alert.alert("Action Failed", err.message || "Journey lifecycle sync error.");
+    } finally {
       setIsLoading(false);
-      Alert.alert(
-        isActive ? "Trip Completed" : "Trip Started",
-        isActive ? "Good job! Trip logs finalized." : "GPS telemetry active. Safe driving!"
-      );
-    }, 1000);
+    }
+  };
+
+  const handleSOS = async () => {
+    if (!token) return;
+    
+    Alert.alert("Emergency Broadcast", "Transmit immediate SOS distress payload to parents and administrators?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Send Alert",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const res = await fetch(`${API_BASE_URL}/driver/sos`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+              Alert.alert("SOS Sent", "Emergency beacon has been broadcasted.");
+            } else {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.error || "SOS transmission failed.");
+            }
+          } catch (err: any) {
+            Alert.alert("SOS Failed", err.message || "Failed to contact gateway.");
+          }
+        }
+      }
+    ]);
   };
 
   return (
@@ -89,7 +192,7 @@ export default function DriverDashboard() {
         </View>
 
         {/* SOS Panel */}
-        <TouchableOpacity style={styles.sosCard} onPress={() => Alert.alert("SOS Triggered", "Emergency payload sent to server.")}>
+        <TouchableOpacity style={styles.sosCard} onPress={handleSOS}>
           <ShieldAlert size={28} color="#FFFFFF" />
           <View style={styles.sosTextContainer}>
             <Text style={styles.sosTitle}>EMERGENCY BROADCAST</Text>
