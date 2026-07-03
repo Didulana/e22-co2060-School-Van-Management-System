@@ -32,7 +32,20 @@ export function isOriginAllowed(origin?: string): boolean {
     return true;
   }
 
-  return getAllowedOrigins().includes(normalizeOrigin(origin));
+  const allowed = getAllowedOrigins();
+  const normalized = normalizeOrigin(origin);
+
+  // Match wildcard or exact values
+  if (allowed.includes("*") || allowed.includes(normalized)) {
+    return true;
+  }
+
+  // Support Vercel app subdomains and custom deployments dynamically
+  if (normalized.endsWith(".vercel.app") || normalized.includes("vercel")) {
+    return true;
+  }
+
+  return false;
 }
 
 export function getCorsOptions(): CorsOptions {
@@ -40,10 +53,9 @@ export function getCorsOptions(): CorsOptions {
     origin(origin, callback) {
       if (isOriginAllowed(origin)) {
         callback(null, true);
-        return;
+      } else {
+        callback(null, false); // Decline CORS without throwing a 500 server crash
       }
-
-      callback(new Error(`CORS blocked origin: ${origin}`));
     },
     credentials: true,
   };
