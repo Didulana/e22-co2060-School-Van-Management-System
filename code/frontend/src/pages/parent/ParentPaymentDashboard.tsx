@@ -89,7 +89,7 @@ export default function ParentPaymentDashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Amount</p>
-                    <p className="font-black text-2xl text-emerald-600">LKR {due.amount_due}</p>
+                    <p className="font-black text-2xl text-emerald-600">LKR {Number(due.amount_due).toFixed(2)}</p>
                   </div>
                 </div>
 
@@ -129,7 +129,7 @@ export default function ParentPaymentDashboard() {
                     <div>
                       <p className="font-bold text-slate-900">{h.student_name} <span className="text-slate-400 font-medium">({h.month})</span></p>
                       <p className="text-xs font-bold text-slate-500 mt-1 flex items-center gap-2">
-                        LKR {h.amount_due}
+                        LKR {Number(h.amount_due).toFixed(2)}
                         {h.status === 'paid' ? (
                           <span className="text-[9px] px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full uppercase tracking-wider font-black">Paid</span>
                         ) : (
@@ -165,7 +165,7 @@ export default function ParentPaymentDashboard() {
             
             <form onSubmit={handleUpload} className="p-6 space-y-6">
               <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-sm font-bold text-emerald-800">
-                You are submitting payment for <strong>{selectedPayment.student_name}</strong> ({selectedPayment.month}). Amount due: LKR {selectedPayment.amount_due}
+                You are submitting payment for <strong>{selectedPayment.student_name}</strong> ({selectedPayment.month}). Amount due: LKR {Number(selectedPayment.amount_due).toFixed(2)}
               </div>
 
               <div>

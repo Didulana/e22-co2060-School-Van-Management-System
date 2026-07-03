@@ -10,7 +10,7 @@ export default function StudentPaymentDashboard() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'overdue' | 'receipt_submitted'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'overdue' | 'receipt_submitted' | 'rejected'>('all');
   
   // Verification Dialog State
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
@@ -49,6 +49,10 @@ export default function StudentPaymentDashboard() {
 
   const handleVerify = async (status: 'paid' | 'rejected') => {
     if (!selectedPayment) return;
+    if (status === 'rejected' && !rejectReason.trim()) {
+      alert("Please enter rejection remarks before rejecting the receipt.");
+      return;
+    }
     try {
       await verifyPayment(session!.token, selectedPayment.id, status, status === 'rejected' ? rejectReason : undefined);
       setSelectedPayment(null);
@@ -103,7 +107,7 @@ export default function StudentPaymentDashboard() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2">
-        {['all', 'pending', 'paid', 'overdue', 'receipt_submitted'].map(f => (
+        {['all', 'pending', 'paid', 'overdue', 'receipt_submitted', 'rejected'].map(f => (
           <button
             key={f}
             onClick={() => setFilter(f as any)}
@@ -140,8 +144,8 @@ export default function StudentPaymentDashboard() {
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{payment.parent_name}</p>
                     </td>
                     <td className="p-4 font-bold text-slate-600">{payment.month}</td>
-                    <td className="p-4 font-black text-slate-900">LKR {payment.amount_due}</td>
-                    <td className="p-4 text-xs font-bold text-slate-500">{payment.distance?.toFixed(1)} km</td>
+                    <td className="p-4 font-black text-slate-900">LKR {Number(payment.amount_due).toFixed(2)}</td>
+                    <td className="p-4 text-xs font-bold text-slate-500">{Number(payment.distance || 0).toFixed(1)} km</td>
                     <td className="p-4">{getStatusBadge(payment.status)}</td>
                     <td className="p-4 text-right">
                       {payment.status === 'receipt_submitted' && (
@@ -182,7 +186,7 @@ export default function StudentPaymentDashboard() {
                 </div>
                 <div>
                   <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Amount Due</span>
-                  <span className="font-black text-emerald-600 text-lg">LKR {selectedPayment.amount_due}</span>
+                  <span className="font-black text-emerald-600 text-lg">LKR {Number(selectedPayment.amount_due).toFixed(2)}</span>
                 </div>
                 <div className="col-span-2">
                   <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Reference Number</span>
@@ -201,7 +205,7 @@ export default function StudentPaymentDashboard() {
                 <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Rejection Remarks (Optional)</span>
                 <textarea 
                   className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-emerald-50 outline-none transition-all text-sm font-medium resize-none h-24"
-                  placeholder="Why are you rejecting this?"
+                  placeholder="Required when rejecting"
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                 />

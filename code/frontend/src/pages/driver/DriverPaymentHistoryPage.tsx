@@ -90,7 +90,7 @@ export default function DriverPaymentHistoryPage() {
                   <tr key={payment.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-4 font-bold text-slate-900">{payment.student_name}</td>
                     <td className="p-4 font-bold text-slate-600">{payment.month}</td>
-                    <td className="p-4 font-black text-slate-900">LKR {payment.amount_paid}</td>
+                    <td className="p-4 font-black text-slate-900">LKR {Number(payment.amount_paid).toFixed(2)}</td>
                     <td className="p-4 text-xs font-bold text-slate-500">{payment.approved_at ? new Date(payment.approved_at).toLocaleString() : '-'}</td>
                     <td className="p-4">
                       {payment.status === 'paid' ? (

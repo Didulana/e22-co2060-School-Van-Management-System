@@ -221,9 +221,10 @@ CREATE TABLE IF NOT EXISTS payments (
     CONSTRAINT fk_payments_driver
         FOREIGN KEY (driver_id)
         REFERENCES drivers(id)
-        ON DELETE CASCADE,
-        
-    UNIQUE (student_id, month)
+        ON DELETE CASCADE
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_student_driver_month
+ON payments (student_id, driver_id, month);
 
 ALTER TABLE students ADD COLUMN IF NOT EXISTS nickname VARCHAR(255);

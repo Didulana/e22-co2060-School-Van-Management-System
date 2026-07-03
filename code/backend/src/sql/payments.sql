@@ -40,5 +40,9 @@ CREATE TABLE IF NOT EXISTS payments (
         REFERENCES drivers(id)
         ON DELETE CASCADE,
         
-    UNIQUE (student_id, month)
 );
+
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_student_id_month_key;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_student_driver_month
+ON payments (student_id, driver_id, month);
