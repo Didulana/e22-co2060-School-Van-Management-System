@@ -4,7 +4,6 @@ import {
   Bell,
   BusFront,
   ClipboardList,
-  CreditCard,
   History,
   LayoutDashboard,
   LogOut,
@@ -143,11 +142,6 @@ export default function SidebarLayout() {
               <NavItem to="/driver" icon={<Truck size={20} />} label="Home Dashboard" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
               <NavItem to="/driver/attendance" icon={<ClipboardList size={20} />} label="Attendance History" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
               <NavItem to="/driver/announce" icon={<Megaphone size={20} />} label="Announcements" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
-              
-              <SectionLabel label="Payments" collapsed={isSidebarCollapsed} />
-              <NavItem to="/driver/payments" icon={<CreditCard size={20} />} label="Student Dues" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
-              <NavItem to="/driver/payments/history" icon={<History size={20} />} label="Payment History" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
-              <NavItem to="/driver/payments/settings" icon={<Settings size={20} />} label="Payment Settings" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
             </>
           )}
 
@@ -157,7 +151,6 @@ export default function SidebarLayout() {
               <NavItem to="/parent" icon={<LayoutDashboard size={20} />} label="Home" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
               <NavItem to="/parent/children" icon={<Users size={20} />} label="My Children" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
               <NavItem to="/tracking" icon={<MapPin size={20} />} label="Track Van" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
-              <NavItem to="/parent/payments" icon={<CreditCard size={20} />} label="Fee Management" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
               <NavItem to="/parent/history" icon={<History size={20} />} label="Trip History" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
             </>
           )}

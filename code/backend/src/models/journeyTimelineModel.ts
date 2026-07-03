@@ -16,10 +16,9 @@ export async function getJourneyTimeline(journeyId: number) {
     SELECT
       'boarding' as type,
       NULL as event_type,
-      CONCAT(COALESCE(s.nickname, s.name, 'Student '), ' boarded') as message,
+      CONCAT('Student ', student_id, ' boarded') as message,
       boarded_at as time
-    FROM student_boarding sb
-    LEFT JOIN students s ON sb.student_id = s.id
+    FROM student_boarding
     WHERE journey_id = $1
 
     UNION ALL
@@ -27,10 +26,9 @@ export async function getJourneyTimeline(journeyId: number) {
     SELECT
       'dropoff' as type,
       NULL as event_type,
-      CONCAT(COALESCE(s.nickname, s.name, 'Student '), ' dropped') as message,
+      CONCAT('Student ', student_id, ' dropped') as message,
       dropped_at as time
-    FROM student_dropoff sd
-    LEFT JOIN students s ON sd.student_id = s.id
+    FROM student_dropoff
     WHERE journey_id = $1
 
     UNION ALL

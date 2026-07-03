@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../config/supabase";
+import { login } from "../../features/auth/api";
 import { useAuth } from "../../features/auth/AuthContext";
 import { ShieldCheck, Mail, Lock, Info, ArrowRight } from "lucide-react";
 
@@ -11,7 +11,7 @@ const emptyCredentials = {
 
 function AdminLoginPage() {
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, login: contextLogin } = useAuth();
 
   const [credentials, setCredentials] = useState(emptyCredentials);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,21 +58,11 @@ function AdminLoginPage() {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password,
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const role = data.user?.user_metadata?.role as string;
-      if (role !== "admin") {
-        await supabase.auth.signOut();
+      const nextSession = await login(credentials.email, credentials.password);
+      if (nextSession.user.role !== "admin") {
         throw new Error("Access denied. Admin privileges required.");
       }
-
+      contextLogin(nextSession);
       navigate("/admin/dashboard", { replace: true });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unable to sign in");

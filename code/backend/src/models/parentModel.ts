@@ -5,7 +5,6 @@ export async function getChildrenByParentId(parentId: number) {
     SELECT
       s.id,
       s.name,
-      s.nickname,
       s.school,
       s.pickup_stop_id,
       s.dropoff_stop_id,
@@ -36,7 +35,6 @@ export async function getChildrenByParentId(parentId: number) {
 export interface Child {
     id: number;
     name: string;
-    nickname?: string;
     school: string;
     pickup_stop_id: number;
     dropoff_stop_id: number;
@@ -47,15 +45,15 @@ export interface Child {
     status: string;
     current_status?: string;
 }
-export async function createChild(parentId: number, name: string, nickname?: string, school?: string, pickupStopId?: number, dropoffStopId?: number, pickupLat?: number, pickupLng?: number, dropoffLat?: number, dropoffLng?: number) {
+export async function createChild(parentId: number, name: string, school?: string, pickupStopId?: number, dropoffStopId?: number, pickupLat?: number, pickupLng?: number, dropoffLat?: number, dropoffLng?: number) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     
     const studentRes = await client.query(
-      `INSERT INTO students (name, nickname, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-      [name, nickname, school, pickupStopId, dropoffStopId, pickupLat, pickupLng, dropoffLat, dropoffLng]
+      `INSERT INTO students (name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [name, school, pickupStopId, dropoffStopId, pickupLat, pickupLng, dropoffLat, dropoffLng]
     );
     const studentId = studentRes.rows[0].id;
 
@@ -74,15 +72,15 @@ export async function createChild(parentId: number, name: string, nickname?: str
   }
 }
 
-export async function updateChild(studentId: number, name: string, nickname?: string, school?: string, pickupStopId?: number, dropoffStopId?: number, pickupLat?: number, pickupLng?: number, dropoffLat?: number, dropoffLng?: number) {
+export async function updateChild(studentId: number, name: string, school?: string, pickupStopId?: number, dropoffStopId?: number, pickupLat?: number, pickupLng?: number, dropoffLat?: number, dropoffLng?: number) {
   const query = `
     UPDATE students 
-    SET name = $1, nickname = $2, school = $3, pickup_stop_id = $4, dropoff_stop_id = $5, 
-        pickup_lat = $6, pickup_lng = $7, dropoff_lat = $8, dropoff_lng = $9
-    WHERE id = $10
+    SET name = $1, school = $2, pickup_stop_id = $3, dropoff_stop_id = $4, 
+        pickup_lat = $5, pickup_lng = $6, dropoff_lat = $7, dropoff_lng = $8
+    WHERE id = $9
     RETURNING *
   `;
-  const result = await pool.query(query, [name, nickname, school, pickupStopId, dropoffStopId, pickupLat, pickupLng, dropoffLat, dropoffLng, studentId]);
+  const result = await pool.query(query, [name, school, pickupStopId, dropoffStopId, pickupLat, pickupLng, dropoffLat, dropoffLng, studentId]);
   return result.rows[0];
 }
 

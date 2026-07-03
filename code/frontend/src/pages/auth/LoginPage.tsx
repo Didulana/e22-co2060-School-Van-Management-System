@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "../../config/supabase";
+import { login } from "../../features/auth/api";
 import { useAuth } from "../../features/auth/AuthContext";
 import { BusFront, ArrowRight, Mail, Lock, Info } from "lucide-react";
 
@@ -18,7 +18,7 @@ const trustedProfiles = [
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { session, logout: contextLogout } = useAuth();
+  const { session, login: contextLogin, logout: contextLogout } = useAuth();
 
   const [credentials, setCredentials] = useState(emptyCredentials);
 
@@ -82,23 +82,14 @@ function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password,
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const role = (data.user?.user_metadata?.role as string) || "parent";
-      
+      const nextSession = await login(credentials.email, credentials.password);
+      contextLogin(nextSession);
       const roleHome: Record<string, string> = {
         admin: "/admin/dashboard",
         driver: "/driver",
         parent: "/tracking",
       };
-      navigate(roleHome[role] || "/login", { replace: true });
+      navigate(roleHome[nextSession.user.role] || "/login", { replace: true });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unable to sign in");
     } finally {

@@ -20,7 +20,6 @@ export default function ChildManagement() {
     
     const [formData, setFormData] = useState({ 
         name: "", 
-        nickname: "",
         school: "", 
         driver_id: "", 
         pickup_stop_id: "", 
@@ -62,7 +61,6 @@ export default function ChildManagement() {
         try {
             const payload = {
                 name: formData.name,
-                nickname: formData.nickname,
                 school: formData.school,
                 pickup_stop_id: parseInt(formData.pickup_stop_id),
                 dropoff_stop_id: parseInt(formData.dropoff_stop_id),
@@ -79,7 +77,7 @@ export default function ChildManagement() {
             setShowForm(false);
             setEditingChild(null);
             setFetchedRoute(null);
-            setFormData({ name: "", nickname: "", school: "", driver_id: "", pickup_stop_id: "", dropoff_stop_id: "", pickup_lat: 0, pickup_lng: 0, dropoff_lat: 0, dropoff_lng: 0 });
+            setFormData({ name: "", school: "", driver_id: "", pickup_stop_id: "", dropoff_stop_id: "", pickup_lat: 0, pickup_lng: 0, dropoff_lat: 0, dropoff_lng: 0 });
             loadData();
         } catch (err) {
             alert("Sync Error: Failed to commit student data.");
@@ -92,7 +90,6 @@ export default function ChildManagement() {
         
         setFormData({
             name: child.name,
-            nickname: child.nickname || "",
             school: child.school || "",
             driver_id: dId,
             pickup_stop_id: child.pickup_stop_id?.toString() || "",
@@ -168,16 +165,6 @@ export default function ChildManagement() {
                                     onChange={e => setFormData({...formData, name: e.target.value})}
                                     className="w-full rounded-[2rem] border border-slate-100 bg-slate-50/50 px-8 py-5 text-slate-900 font-black tracking-tight focus:border-emerald-500 focus:bg-white focus:ring-[12px] focus:ring-emerald-500/5 transition-all outline-none text-lg"
                                     placeholder="Enter child's name"
-                                />
-                            </div>
-
-                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-300 ml-4 uppercase tracking-[0.2em]">Nickname (Optional)</label>
-                                <input 
-                                    value={formData.nickname}
-                                    onChange={e => setFormData({...formData, nickname: e.target.value})}
-                                    className="w-full rounded-[2rem] border border-slate-100 bg-slate-50/50 px-8 py-5 text-slate-900 font-black tracking-tight focus:border-emerald-500 focus:bg-white focus:ring-[12px] focus:ring-emerald-500/5 transition-all outline-none text-lg"
-                                    placeholder="Enter a nickname (e.g. Leo)"
                                 />
                             </div>
 
@@ -295,9 +282,7 @@ export default function ChildManagement() {
                                         <UserCircle size={40} />
                                     </div>
                                     <div>
-                                        <h3 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">
-                                            {child.nickname ? `${child.nickname} (${child.name})` : child.name}
-                                        </h3>
+                                        <h3 className="text-2xl font-black text-slate-900 tracking-tighter leading-none">{child.name}</h3>
                                         <div className="flex items-center gap-2 mt-2 text-sm font-bold text-slate-400">
                                             <School size={16} className="text-emerald-500/50" />
                                             <span>{child.school || "St. Peters College"}</span>

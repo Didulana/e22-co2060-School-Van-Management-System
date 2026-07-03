@@ -23,7 +23,6 @@ import journeyStatusRoutes from "./routes/journeyStatusRoutes";
 import journeyTimelineRoutes from "./routes/journeyTimelineRoutes";
 import parentRoutes from "./routes/parentRoutes";
 import adminRoutes from "./routes/adminRoutes";
-import paymentRoutes from "./routes/paymentRoutes";
 import { authenticateToken, requireRole } from "./middleware/authMiddleware";
 import { getCorsOptions } from "./config/cors";
 
@@ -78,7 +77,6 @@ app.use("/api/boarding", authenticateToken, requireRole("driver", "parent"), stu
 app.use("/api/dropoff", authenticateToken, requireRole("driver", "parent"), studentDropoffRoutes);
 app.use("/api/journey", authenticateToken, journeyStatusRoutes);
 app.use("/api/journey", authenticateToken, journeyTimelineRoutes);
-app.use("/api/payments", paymentRoutes);
 app.use("/api/tracking", trackingRoutes);
 
 export default app;

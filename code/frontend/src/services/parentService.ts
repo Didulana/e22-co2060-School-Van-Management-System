@@ -35,7 +35,6 @@ export interface Route {
 export interface Child {
     id: number;
     name: string;
-    nickname?: string;
     school: string;
     pickup_stop_id: number;
     dropoff_stop_id: number;

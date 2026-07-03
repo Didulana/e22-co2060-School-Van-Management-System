@@ -11,11 +11,7 @@ import AnnouncementPage from "./pages/driver/AnnouncementPage";
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import ChildManagement from "./pages/parent/ChildManagement";
 import ParentHistory from "./pages/parent/ParentHistory";
-import ParentPaymentDashboard from "./pages/parent/ParentPaymentDashboard";
 import DriverOnboarding from "./pages/driver/DriverOnboarding";
-import PaymentSettingsPage from "./pages/driver/PaymentSettingsPage";
-import StudentPaymentDashboard from "./pages/driver/StudentPaymentDashboard";
-import DriverPaymentHistoryPage from "./pages/driver/DriverPaymentHistoryPage";
 import SidebarLayout from "./components/SidebarLayout";
 import { AuthProvider } from "./features/auth/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -76,11 +72,6 @@ export default function App() {
                 <ParentHistory />
               </ProtectedRoute>
             } />
-            <Route path="/parent/payments" element={
-              <ProtectedRoute allowedRoles={["parent"]}>
-                <ParentPaymentDashboard />
-              </ProtectedRoute>
-            } />
             <Route path="/tracking" element={
               <ProtectedRoute allowedRoles={["parent"]}>
                 <TrackingPage />
@@ -106,21 +97,6 @@ export default function App() {
             <Route path="/driver/onboarding" element={
               <ProtectedRoute allowedRoles={["driver"]}>
                 <DriverOnboarding />
-              </ProtectedRoute>
-            } />
-            <Route path="/driver/payments" element={
-              <ProtectedRoute allowedRoles={["driver"]}>
-                <StudentPaymentDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/driver/payments/history" element={
-              <ProtectedRoute allowedRoles={["driver"]}>
-                <DriverPaymentHistoryPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/driver/payments/settings" element={
-              <ProtectedRoute allowedRoles={["driver"]}>
-                <PaymentSettingsPage />
               </ProtectedRoute>
             } />
           </Route>
