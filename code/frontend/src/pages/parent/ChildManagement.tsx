@@ -298,23 +298,23 @@ export default function ChildManagement() {
                             </div>
 
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between p-5 bg-slate-50/50 rounded-[2rem] border border-slate-100 group-hover:bg-white group-hover:shadow-soft transition-all duration-500">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-500 border border-slate-100">
+                                <div className="flex items-center justify-between p-5 bg-slate-50/50 rounded-[2rem] border border-slate-100 group-hover:bg-white group-hover:shadow-soft transition-all duration-500 min-w-0">
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-500 border border-slate-100 shrink-0">
                                             <MapPin size={18} />
                                         </div>
-                                         <div className="min-w-0">
+                                         <div className="min-w-0 flex-1">
                                             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">Pickup at</p>
                                             <p className="text-sm font-black text-slate-800 tracking-tight mt-1 truncate">{child.pickup_stop_name || "Not set"}</p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between p-5 bg-slate-50/50 rounded-[2rem] border border-slate-100 group-hover:bg-white group-hover:shadow-soft transition-all duration-500">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-500 border border-slate-100">
+                                <div className="flex items-center justify-between p-5 bg-slate-50/50 rounded-[2rem] border border-slate-100 group-hover:bg-white group-hover:shadow-soft transition-all duration-500 min-w-0">
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-500 border border-slate-100 shrink-0">
                                             <Navigation size={18} />
                                         </div>
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">Drop-off at</p>
                                             <p className="text-sm font-black text-slate-800 tracking-tight mt-1 truncate">{child.dropoff_stop_name || "Not set"}</p>
                                         </div>
