@@ -56,7 +56,7 @@ export default function DriverDashboard() {
           setToken(session.token);
 
           // Get onboarding status to retrieve the real driver profile ID
-          const statusRes = await fetch(`${API_BASE_URL}/drivers/onboarding/status`, {
+          const statusRes = await fetch(`${API_BASE_URL}/driver/onboarding/status`, {
             headers: { Authorization: `Bearer ${session.token}` }
           });
           const statusData = await statusRes.json().catch(() => ({}));
