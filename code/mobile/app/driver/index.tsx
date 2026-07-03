@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useRouter, Link } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import * as Location from "expo-location";
 import { 
   Truck as TruckIcon, 
   ShieldAlert as ShieldAlertIcon, 
@@ -45,18 +46,20 @@ export default function DriverDashboard() {
   const [activeJourneyId, setActiveJourneyId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [simCoords, setSimCoords] = useState<{ latitude: number; longitude: number } | null>(null);
 
   // GPS Simulation Loop
   useEffect(() => {
     let interval: any = null;
-    let simLat = 6.9271; // Starting Colombo defaults
-    let simLng = 79.8612;
 
-    if (isActive && isSimulating && activeJourneyId && token) {
+    if (isActive && isSimulating && activeJourneyId && token && simCoords) {
+      let currentLat = simCoords.latitude;
+      let currentLng = simCoords.longitude;
+
       interval = setInterval(async () => {
         // Slowly walk northeast to simulate movement
-        simLat += 0.00015;
-        simLng += 0.00015;
+        currentLat += 0.00015;
+        currentLng += 0.00015;
 
         try {
           const res = await fetch(`${API_BASE_URL}/tracking/location`, {
@@ -65,7 +68,7 @@ export default function DriverDashboard() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ journeyId: activeJourneyId, lat: simLat, lng: simLng }),
+            body: JSON.stringify({ journeyId: activeJourneyId, lat: currentLat, lng: currentLng }),
           });
           
           if (!res.ok) {
@@ -82,7 +85,7 @@ export default function DriverDashboard() {
         clearInterval(interval);
       }
     };
-  }, [isActive, isSimulating, activeJourneyId, token]);
+  }, [isActive, isSimulating, activeJourneyId, token, simCoords]);
 
   useEffect(() => {
     async function initDashboard() {
@@ -148,13 +151,31 @@ export default function DriverDashboard() {
   const toggleSimulation = async () => {
     if (isSimulating) {
       setIsSimulating(false);
+      setSimCoords(null);
       if (activeJourneyId) {
         await startTracking(activeJourneyId);
       }
     } else {
-      await stopTracking();
-      setIsSimulating(true);
-      Alert.alert("Simulation Active", "GPS Simulator running. Van coordinates are shifting automatically.");
+      setIsLoading(true);
+      try {
+        await stopTracking();
+        // Fetch current physical coordinates to initialize mock simulator
+        const position = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced
+        });
+
+        setSimCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+
+        setIsSimulating(true);
+        Alert.alert("Simulation Active", "GPS Simulator running. Van coordinates are shifting automatically from your actual location.");
+      } catch (err: any) {
+        Alert.alert("Simulator Error", "Failed to retrieve initial location coordinates for simulation: " + err.message);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 

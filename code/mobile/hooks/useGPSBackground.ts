@@ -88,8 +88,8 @@ export function useGPSBackground() {
       foregroundSubscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High, // High accuracy for testing walking paths
-          timeInterval: 2000, // 2 seconds
-          distanceInterval: 1, // 1 meter
+          timeInterval: 1000, // 1 second
+          distanceInterval: 0, // Force updates on every GPS tick
         },
         async (location) => {
           const { latitude, longitude } = location.coords;
