@@ -32,7 +32,7 @@ const CheckSquare = CheckSquareIcon as any;
 const ShieldAlert = ShieldAlertIcon as any;
 import MapView, { Marker } from "react-native-maps";
 
-const API_BASE_URL = "http://127.0.0.1:5001/api";
+import { API_BASE_URL } from "../../constants/config";
 
 interface Payment {
   id: number;

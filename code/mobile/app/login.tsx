@@ -14,8 +14,7 @@ import {
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
-// Centralized API Base URL matching config/api.ts
-const API_BASE_URL = "http://127.0.0.1:5001/api";
+import { API_BASE_URL } from "../constants/config";
 
 export default function LoginScreen() {
   const router = useRouter();
