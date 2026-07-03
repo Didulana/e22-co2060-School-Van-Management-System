@@ -129,36 +129,57 @@ export default function ParentDashboard() {
 
   useEffect(() => {
     let socket: any = null;
+    let active = true;
 
-    if (selectedChildId !== null && childStatus?.journeyId) {
-      socket = io(API_BASE_URL.replace("/api", ""), {
-        transports: ["websocket"],
-      });
+    async function setupSocket() {
+      if (selectedChildId !== null && childStatus?.journeyId) {
+        try {
+          const sessionStr = await SecureStore.getItemAsync("school-van-auth-session");
+          if (!sessionStr || !active) return;
+          const session = JSON.parse(sessionStr);
 
-      const room = `journey:${childStatus.journeyId}`;
-      socket.emit("join-room", room);
-
-      socket.on("location_broadcast", (data: any) => {
-        if (data.journeyId === childStatus.journeyId) {
-          setVanLocation({
-            latitude: Number(data.lat),
-            longitude: Number(data.lng),
+          socket = io(API_BASE_URL.replace("/api", ""), {
+            transports: ["websocket"],
+            auth: {
+              token: session.token,
+            },
           });
-        }
-      });
 
-      socket.on("journey:status_change", () => {
-        loadChildStatus(selectedChildId);
-      });
+          const room = `journey:${childStatus.journeyId}`;
+          socket.emit("join-room", room);
+          socket.emit("tracking:subscribe-journey", { journeyId: childStatus.journeyId });
 
-      socket.on("student:boarded", (data: any) => {
-        if (Number(data.studentId) === selectedChildId) {
-          loadChildStatus(selectedChildId);
+          const handleLocation = (data: any) => {
+            if (data.journeyId === childStatus.journeyId) {
+              setVanLocation({
+                latitude: Number(data.lat),
+                longitude: Number(data.lng),
+              });
+            }
+          };
+
+          socket.on("location_broadcast", handleLocation);
+          socket.on("tracking:location-broadcast", handleLocation);
+
+          socket.on("journey:status_change", () => {
+            if (active) loadChildStatus(selectedChildId);
+          });
+
+          socket.on("student:boarded", (data: any) => {
+            if (Number(data.studentId) === selectedChildId && active) {
+              loadChildStatus(selectedChildId);
+            }
+          });
+        } catch (err) {
+          console.error("Socket connection setup error:", err);
         }
-      });
+      }
     }
 
+    setupSocket();
+
     return () => {
+      active = false;
       if (socket) {
         socket.disconnect();
       }
