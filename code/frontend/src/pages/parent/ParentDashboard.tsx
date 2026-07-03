@@ -221,7 +221,8 @@ export default function ParentDashboard() {
             )}
 
             {children.length > 0 && (
-                <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <QuickLink to="/parent/payments" icon={<CreditCard size={20}/>} label="Fee Management" sub="Track & pay monthly dues" />
                     <QuickLink to="/parent/history" icon={<HistoryIcon size={20}/>} label="Trip History" sub="Past boarding and drop-offs" />
                     <QuickLink to="/parent/children" icon={<Users size={20}/>} label="Child Details" sub="Manage student profiles" />
                     <QuickLink to="tel:+94112233445" icon={<Phone size={20}/>} label="Help Line" sub="Contact support" external />
