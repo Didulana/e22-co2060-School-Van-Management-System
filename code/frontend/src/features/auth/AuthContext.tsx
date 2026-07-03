@@ -25,8 +25,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     // 1. Get initial session
     supabase.auth.getSession().then(({ data: { session: supabaseSession } }) => {
+      if (!mounted) return;
       if (supabaseSession) {
         mapSupabaseSessionToAuthSession(supabaseSession);
       } else {
@@ -38,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, supabaseSession) => {
+      if (!mounted) return;
       if (supabaseSession) {
         mapSupabaseSessionToAuthSession(supabaseSession);
       } else {
@@ -46,7 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const mapSupabaseSessionToAuthSession = (supabaseSession: any) => {
