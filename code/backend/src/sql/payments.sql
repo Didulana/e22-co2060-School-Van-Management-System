@@ -38,8 +38,7 @@ CREATE TABLE IF NOT EXISTS payments (
     CONSTRAINT fk_payments_driver
         FOREIGN KEY (driver_id)
         REFERENCES drivers(id)
-        ON DELETE CASCADE,
-        
+        ON DELETE CASCADE
 );
 
 ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_student_id_month_key;
