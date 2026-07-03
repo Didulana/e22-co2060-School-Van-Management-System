@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../features/auth/AuthContext";
 import { getDriverPayments, generateMonthlyPayments, verifyPayment } from "../../services/paymentApi";
 import { Payment } from "../../types/payment";
-import { CreditCard, Check, X, RefreshCw, FileText } from "lucide-react";
+import { CreditCard, Check, X, RefreshCw, FileText, Settings } from "lucide-react";
 
 export default function StudentPaymentDashboard() {
   const { session } = useAuth();
@@ -82,14 +83,23 @@ export default function StudentPaymentDashboard() {
             Student Payments
           </h1>
         </div>
-        <button 
-          onClick={handleGenerate}
-          disabled={isGenerating}
-          className="bg-slate-900 text-white px-5 py-3 rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2 disabled:opacity-50"
-        >
-          <RefreshCw size={16} className={isGenerating ? "animate-spin" : ""} />
-          Generate This Month's Dues
-        </button>
+        <div className="flex gap-3">
+          <Link 
+            to="/driver/payments/settings"
+            className="bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl text-sm font-black shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"
+          >
+            <Settings size={16} />
+            Payment Settings
+          </Link>
+          <button 
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="bg-slate-900 text-white px-5 py-3 rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2 disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={isGenerating ? "animate-spin" : ""} />
+            Generate This Month's Dues
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2">
