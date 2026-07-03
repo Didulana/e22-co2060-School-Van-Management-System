@@ -40,8 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 2. Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, supabaseSession) => {
+    } = supabase.auth.onAuthStateChange((event, supabaseSession) => {
       if (!mounted) return;
+      if (event === "INITIAL_SESSION") return; // Let getSession handle it
+
       if (supabaseSession) {
         mapSupabaseSessionToAuthSession(supabaseSession);
       } else {
