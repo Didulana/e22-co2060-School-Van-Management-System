@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getChildren, Child, getParentNotifications } from "../../services/parentService";
 import Van3DIcon from "../../components/Van3DIcon";
+import { useAuth } from "../../features/auth/AuthContext";
+import { getParentPayments } from "../../services/paymentApi";
+import { Payment } from "../../types/payment";
 import {
     Bell,
     ChevronRight,
@@ -15,23 +18,29 @@ import {
     ShieldCheck,
     UserCircle,
     Users,
+    CreditCard,
+    ArrowRight,
 } from "lucide-react";
 
 export default function ParentDashboard() {
+    const { session } = useAuth();
     const [children, setChildren] = useState<Child[]>([]);
     const [notifications, setNotifications] = useState<any[]>([]);
+    const [payments, setPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [data, notifs] = await Promise.all([
+                const [data, notifs, paymentData] = await Promise.all([
                     getChildren(),
-                    getParentNotifications()
+                    getParentNotifications(),
+                    session ? getParentPayments(session.token).catch(() => []) : Promise.resolve([])
                 ]);
                 setChildren(data);
                 setNotifications(notifs);
+                setPayments(paymentData);
             } catch (err: any) {
                 setError("Remote sync failed. Retrying connection...");
             } finally {
@@ -39,7 +48,7 @@ export default function ParentDashboard() {
             }
         };
         loadData();
-    }, []);
+    }, [session]);
 
     if (loading) return (
         <div className="flex min-h-[400px] items-center justify-center">
@@ -50,6 +59,7 @@ export default function ParentDashboard() {
     const activeChildren = children.filter(child => child.current_status === "en_route").length;
     const latestNotification = notifications[0];
     const unreadNotifications = notifications.filter(item => !item.is_read).length;
+    const activePayment = payments.find(p => p.status !== 'paid') || payments[0];
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
@@ -121,6 +131,73 @@ export default function ParentDashboard() {
                         </div>
                         <HistoryIcon className="text-slate-400 transition group-hover:text-emerald-500" size={28} />
                     </Link>
+                </section>
+            )}
+
+            {/* Payment Card Section */}
+            {children.length > 0 && (
+                <section>
+                    {activePayment ? (
+                        <div className="rounded-[1.75rem] border border-white/80 bg-white/85 p-6 shadow-soft text-slate-900">
+                            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                        <CreditCard size={24} />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Current Monthly Due</p>
+                                        <p className="font-display mt-1 text-2xl font-black text-slate-950">
+                                            LKR {Number(activePayment.amount_due).toFixed(2)}
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Due Date</p>
+                                    <p className="text-sm font-bold text-slate-700 mt-1">
+                                        {new Date(activePayment.due_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Status</p>
+                                    <span className={`inline-block mt-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                        activePayment.status === 'paid' ? 'bg-emerald-100 text-emerald-800' :
+                                        activePayment.status === 'receipt_submitted' ? 'bg-blue-100 text-blue-800' :
+                                        activePayment.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                                    }`}>
+                                        {activePayment.status === 'receipt_submitted' ? 'Reviewing' : activePayment.status}
+                                    </span>
+                                </div>
+
+                                <div className="flex flex-wrap gap-3">
+                                    <Link to="/parent/payments" className="bg-slate-100 text-slate-700 px-5 py-3 rounded-2xl text-xs font-black hover:bg-slate-200 transition shadow-sm">
+                                        View Details
+                                    </Link>
+                                    {activePayment.status !== 'paid' && activePayment.status !== 'receipt_submitted' && (
+                                        <Link to="/parent/payments" className="bg-emerald-600 text-white px-5 py-3 rounded-2xl text-xs font-black hover:bg-emerald-700 transition shadow-md shadow-emerald-100">
+                                            Upload Receipt
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="rounded-[1.75rem] border border-white/80 bg-white/80 p-6 shadow-soft text-slate-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                    <CreditCard size={24} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Fee Management</p>
+                                    <p className="mt-1 text-sm font-semibold text-slate-500">No outstanding dues generated for this month.</p>
+                                </div>
+                            </div>
+                            <Link to="/parent/payments" className="flex items-center gap-2 text-xs font-black text-emerald-700 hover:underline">
+                                Fee Dashboard <ArrowRight size={16} />
+                            </Link>
+                        </div>
+                    )}
                 </section>
             )}
 

@@ -1,4 +1,4 @@
-import { pool } from "./src/config/db";
+import { pool } from "./config/db";
 import fs from "fs";
 import path from "path";
 
@@ -18,11 +18,13 @@ async function migrate() {
     "journey_locations.sql",
     "student_dropoff.sql",
     "parent_students.sql",
-    "student_absences.sql"
+    "student_absences.sql",
+    "payments.sql",
+    "nickname.sql"
   ];
 
   for (const file of files) {
-    const fullPath = path.join(__dirname, "src/sql", file);
+    const fullPath = path.join(__dirname, "sql", file);
     if (!fs.existsSync(fullPath)) {
       console.warn(`File not found: ${file}`);
       continue;
