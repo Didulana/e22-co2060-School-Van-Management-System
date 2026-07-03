@@ -55,7 +55,7 @@ export default function DriverDashboard() {
           setToken(session.token);
 
           // Sync active journey state from backend
-          const res = await fetch(`${API_BASE_URL}/journey/active?driver_id=${session.user?.id}`, {
+          const res = await fetch(`${API_BASE_URL}/driver/journey/active?driver_id=${session.user?.id}`, {
             headers: { Authorization: `Bearer ${session.token}` }
           });
           if (res.ok) {
@@ -100,7 +100,7 @@ export default function DriverDashboard() {
     try {
       if (isActive) {
         // Complete current trip
-        const stopRes = await fetch(`${API_BASE_URL}/journey/${activeJourneyId}/complete`, {
+        const stopRes = await fetch(`${API_BASE_URL}/driver/journey/${activeJourneyId}/complete`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -140,7 +140,7 @@ export default function DriverDashboard() {
         }
 
         // Start next trip
-        const startRes = await fetch(`${API_BASE_URL}/journey/start`, {
+        const startRes = await fetch(`${API_BASE_URL}/driver/journey/start`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
