@@ -26,28 +26,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    let initialCheckCompleted = false;
+    let subscription: any = null;
 
     // 1. Get initial session
     supabase.auth.getSession().then(({ data: { session: supabaseSession } }) => {
       if (!mounted) return;
-      initialCheckCompleted = true;
-      if (supabaseSession) {
-        mapSupabaseSessionToAuthSession(supabaseSession);
-      } else {
-        setSession(null);
-        window.localStorage.removeItem("school-van-auth-session");
-        setIsLoading(false);
-      }
-    });
-
-    // 2. Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, supabaseSession) => {
-      if (!mounted) return;
-      if (event === "INITIAL_SESSION") return; // Let getSession handle it
-      if (!initialCheckCompleted) return; // Ignore events before initial check completes
 
       if (supabaseSession) {
         mapSupabaseSessionToAuthSession(supabaseSession);
@@ -56,11 +39,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         window.localStorage.removeItem("school-van-auth-session");
         setIsLoading(false);
       }
+
+      // 2. Listen for auth changes ONLY after getSession completes
+      const {
+        data: { subscription: authSub },
+      } = supabase.auth.onAuthStateChange((event, latestSession) => {
+        if (!mounted) return;
+        if (event === "INITIAL_SESSION") return; // Let getSession handle it
+
+        if (latestSession) {
+          mapSupabaseSessionToAuthSession(latestSession);
+        } else {
+          setSession(null);
+          window.localStorage.removeItem("school-van-auth-session");
+          setIsLoading(false);
+        }
+      });
+
+      subscription = authSub;
     });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 
