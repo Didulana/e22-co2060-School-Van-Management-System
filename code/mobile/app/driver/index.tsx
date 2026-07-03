@@ -44,6 +44,45 @@ export default function DriverDashboard() {
   const [isActive, setIsActive] = useState(false);
   const [activeJourneyId, setActiveJourneyId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSimulating, setIsSimulating] = useState(false);
+
+  // GPS Simulation Loop
+  useEffect(() => {
+    let interval: any = null;
+    let simLat = 6.9271; // Starting Colombo defaults
+    let simLng = 79.8612;
+
+    if (isActive && isSimulating && activeJourneyId && token) {
+      interval = setInterval(async () => {
+        // Slowly walk northeast to simulate movement
+        simLat += 0.00015;
+        simLng += 0.00015;
+
+        try {
+          const res = await fetch(`${API_BASE_URL}/tracking/location`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ journeyId: activeJourneyId, lat: simLat, lng: simLng }),
+          });
+          
+          if (!res.ok) {
+            console.error("Simulator API push failure:", await res.text());
+          }
+        } catch (e) {
+          console.error("Simulator broadcast connection error:", e);
+        }
+      }, 2000); // Trigger every 2 seconds
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isActive, isSimulating, activeJourneyId, token]);
 
   useEffect(() => {
     async function initDashboard() {
@@ -106,6 +145,19 @@ export default function DriverDashboard() {
     ]);
   };
 
+  const toggleSimulation = async () => {
+    if (isSimulating) {
+      setIsSimulating(false);
+      if (activeJourneyId) {
+        await startTracking(activeJourneyId);
+      }
+    } else {
+      await stopTracking();
+      setIsSimulating(true);
+      Alert.alert("Simulation Active", "GPS Simulator running. Van coordinates are shifting automatically.");
+    }
+  };
+
   const toggleJourney = async () => {
     if (!driverId || !token) {
       Alert.alert("Error", "No active credentials session found.");
@@ -130,6 +182,7 @@ export default function DriverDashboard() {
         await stopTracking();
         setIsActive(false);
         setActiveJourneyId(null);
+        setIsSimulating(false);
         Alert.alert("Trip Completed", "Good job! Trip logs finalized.");
       } else {
         // Fetch assigned routes
@@ -243,6 +296,17 @@ export default function DriverDashboard() {
               </View>
               <Activity size={18} color={isActive ? "#10B981" : "#64748B"} />
             </View>
+
+            {isActive && (
+              <TouchableOpacity 
+                style={[styles.simBtn, isSimulating && styles.simBtnActive]} 
+                onPress={toggleSimulation}
+              >
+                <Text style={[styles.simBtnText, isSimulating && styles.simBtnTextActive]}>
+                  {isSimulating ? "Stop Simulator Mode" : "Start Simulator Mode"}
+                </Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity 
               style={[styles.actionBtn, isActive ? styles.actionBtnActive : styles.actionBtnInactive]}
@@ -447,5 +511,27 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#64748B",
     marginTop: 2,
+  },
+  simBtn: {
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  simBtnActive: {
+    backgroundColor: "#EFF6FF",
+    borderColor: "#BFDBFE",
+  },
+  simBtnText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#475569",
+  },
+  simBtnTextActive: {
+    color: "#2563EB",
   },
 });
