@@ -20,7 +20,9 @@ import {
   ChevronRight as ChevronRightIcon, 
   Activity as ActivityIcon, 
   Users as UsersIcon, 
-  Settings as SettingsIcon 
+  Settings as SettingsIcon,
+  User as UserIcon,
+  Check as CheckIcon
 } from "lucide-react-native";
 
 const Truck = TruckIcon as any;
@@ -29,6 +31,8 @@ const LogOut = LogOutIcon as any;
 const CreditCard = CreditCardIcon as any;
 const ChevronRight = ChevronRightIcon as any;
 const Activity = ActivityIcon as any;
+const User = UserIcon as any;
+const Check = CheckIcon as any;
 import { API_BASE_URL } from "../../constants/config";
 import { useGPSBackground } from "../../hooks/useGPSBackground";
 
@@ -47,6 +51,75 @@ export default function DriverDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSimulating, setIsSimulating] = useState(false);
   const [simCoords, setSimCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [students, setStudents] = useState<any[]>([]);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+
+  const loadJourneyStudents = async (journeyId: number) => {
+    setIsLoadingStudents(true);
+    try {
+      const sessionStr = await SecureStore.getItemAsync("school-van-auth-session");
+      if (!sessionStr) return;
+      const session = JSON.parse(sessionStr);
+
+      const res = await fetch(`${API_BASE_URL}/driver/journey/${journeyId}/students`, {
+        headers: { Authorization: `Bearer ${session.token}` },
+      });
+      const data = await res.json().catch(() => []);
+      if (res.ok) {
+        setStudents(data);
+      } else {
+        console.error("Failed to load students:", data.error);
+      }
+    } catch (err) {
+      console.error("Load students error:", err);
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
+
+  const handleBoardStudent = async (studentId: number) => {
+    if (!activeJourneyId || !token) return;
+    setIsLoadingStudents(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/driver/journey/${activeJourneyId}/board/${studentId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        Alert.alert("Boarded", "Student has been marked as boarded successfully.");
+        await loadJourneyStudents(activeJourneyId);
+      } else {
+        Alert.alert("Action Failed", data.error || "Failed to mark student as boarded.");
+      }
+    } catch (err: any) {
+      Alert.alert("Action Failed", err.message || "Network request failed.");
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
+
+  const handleDropStudent = async (studentId: number) => {
+    if (!activeJourneyId || !token) return;
+    setIsLoadingStudents(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/driver/journey/${activeJourneyId}/drop/${studentId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        Alert.alert("Dropped Off", "Student has been marked as dropped off successfully.");
+        await loadJourneyStudents(activeJourneyId);
+      } else {
+        Alert.alert("Action Failed", data.error || "Failed to mark student as dropped off.");
+      }
+    } catch (err: any) {
+      Alert.alert("Action Failed", err.message || "Network request failed.");
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
 
   // GPS Simulation Loop
   useEffect(() => {
@@ -121,6 +194,7 @@ export default function DriverDashboard() {
             if (data.active && data.journey) {
               setIsActive(true);
               setActiveJourneyId(data.journey.id);
+              await loadJourneyStudents(data.journey.id);
             }
           }
         }
@@ -204,6 +278,7 @@ export default function DriverDashboard() {
         setIsActive(false);
         setActiveJourneyId(null);
         setIsSimulating(false);
+        setStudents([]);
         Alert.alert("Trip Completed", "Good job! Trip logs finalized.");
       } else {
         // Fetch assigned routes
@@ -245,6 +320,7 @@ export default function DriverDashboard() {
         await startTracking(journey.id);
         setIsActive(true);
         setActiveJourneyId(journey.id);
+        await loadJourneyStudents(journey.id);
         Alert.alert("Trip Started", "GPS telemetry active. Safe driving!");
       }
     } catch (err: any) {
@@ -342,6 +418,70 @@ export default function DriverDashboard() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Passenger Manifest Section */}
+        {isActive && activeJourneyId && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Passenger Manifest</Text>
+            {isLoadingStudents ? (
+              <View style={styles.manifestCard}>
+                <ActivityIndicator size="small" color="#10B981" />
+              </View>
+            ) : students.length === 0 ? (
+              <View style={styles.manifestCard}>
+                <Text style={styles.emptyText}>No students assigned to this route.</Text>
+              </View>
+            ) : (
+              <View style={styles.manifestGrid}>
+                {students.map((student) => {
+                  const isBoarded = !!student.boarded_at;
+                  const isDropped = !!student.dropped_at;
+
+                  return (
+                    <View key={student.student_id} style={styles.studentRow}>
+                      <View style={styles.studentInfo}>
+                        <View style={[
+                          styles.avatarContainer, 
+                          isDropped ? styles.avatarDropped : isBoarded ? styles.avatarBoarded : styles.avatarNotBoarded
+                        ]}>
+                          <User size={18} color={isDropped ? "#64748B" : isBoarded ? "#D97706" : "#10B981"} />
+                        </View>
+                        <View style={styles.studentMeta}>
+                          <Text style={styles.studentName}>{student.student_name}</Text>
+                          <Text style={styles.studentStatus}>
+                            {isDropped ? "Dropped Off" : isBoarded ? "Onboard" : "Absent / Awaiting"}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {!isBoarded ? (
+                        <TouchableOpacity
+                          style={[styles.manifestBtn, styles.boardBtn]}
+                          onPress={() => handleBoardStudent(student.student_id)}
+                          disabled={isLoadingStudents}
+                        >
+                          <Text style={styles.manifestBtnText}>Board</Text>
+                        </TouchableOpacity>
+                      ) : !isDropped ? (
+                        <TouchableOpacity
+                          style={[styles.manifestBtn, styles.dropBtn]}
+                          onPress={() => handleDropStudent(student.student_id)}
+                          disabled={isLoadingStudents}
+                        >
+                          <Text style={styles.manifestBtnText}>Drop</Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <View style={styles.completedBadge}>
+                          <Check size={16} color="#10B981" />
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Payments Control Section */}
         <View style={styles.section}>
@@ -554,5 +694,94 @@ const styles = StyleSheet.create({
   },
   simBtnTextActive: {
     color: "#2563EB",
+  },
+  manifestCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  manifestGrid: {
+    gap: 12,
+  },
+  studentRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  studentInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  avatarContainer: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarNotBoarded: {
+    backgroundColor: "#ECFDF5",
+  },
+  avatarBoarded: {
+    backgroundColor: "#FEF3C7",
+  },
+  avatarDropped: {
+    backgroundColor: "#F1F5F9",
+  },
+  studentMeta: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  studentName: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#0F172A",
+  },
+  studentStatus: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#64748B",
+    marginTop: 2,
+  },
+  manifestBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  boardBtn: {
+    backgroundColor: "#10B981",
+  },
+  dropBtn: {
+    backgroundColor: "#F59E0B",
+  },
+  manifestBtnText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  completedBadge: {
+    height: 32,
+    width: 32,
+    borderRadius: 16,
+    backgroundColor: "#ECFDF5",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#64748B",
   },
 });
