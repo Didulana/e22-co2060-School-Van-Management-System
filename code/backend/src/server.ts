@@ -25,8 +25,11 @@ const io = new Server(server, {
   },
 });
 
+import { initPaymentScheduler } from "./services/paymentScheduler";
+
 initSocket(io);
 registerTrackingSocket(io);
+initPaymentScheduler();
 
 server.listen(PORT, async () => {
   console.log(`Server listening on port ${PORT}`);

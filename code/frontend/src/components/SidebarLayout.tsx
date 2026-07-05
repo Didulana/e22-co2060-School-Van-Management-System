@@ -147,7 +147,6 @@ export default function SidebarLayout() {
               <SectionLabel label="Payments" collapsed={isSidebarCollapsed} />
               <NavItem to="/driver/payments" icon={<CreditCard size={20} />} label="Student Dues" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
               <NavItem to="/driver/payments/history" icon={<History size={20} />} label="Payment History" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
-              <NavItem to="/driver/payments/settings" icon={<Settings size={20} />} label="Payment Settings" collapsed={isSidebarCollapsed} onClick={closeMobileSidebar} />
             </>
           )}
 

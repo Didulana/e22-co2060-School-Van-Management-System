@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS payment_settings (
     base_charge DECIMAL(10, 2) DEFAULT 0,
     charge_per_km DECIMAL(10, 2) DEFAULT 0,
     due_date_day INTEGER DEFAULT 5,
+    auto_generate_day INTEGER DEFAULT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_payment_settings_driver

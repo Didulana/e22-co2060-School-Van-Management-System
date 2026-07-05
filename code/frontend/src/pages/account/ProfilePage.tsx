@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Check, ClipboardCheck, HeartPulse, Home, MapPin, Pencil, ShieldCheck, UserCircle, X } from "lucide-react";
+import { Check, ClipboardCheck, HeartPulse, Home, MapPin, Pencil, Settings, ShieldCheck, UserCircle, X } from "lucide-react";
 import { useAuth } from "../../features/auth/AuthContext";
 import { getHomePath } from "../../features/auth/navigation";
 import { ParentProfileDetails } from "../../features/auth/types";
@@ -264,6 +264,16 @@ export default function ProfilePage() {
               <Detail label="Role" value={user?.role || "User"} />
               <Detail label="Session" value="Signed in" />
               {isParent && <Detail label="Setup Progress" value={`${profileProgress}% complete`} />}
+              {user?.role === "driver" && (
+                <div className="mt-4 pt-4 border-t border-slate-250">
+                  <Link
+                    to="/driver/payments/settings"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-black text-white shadow-soft transition hover:bg-emerald-700"
+                  >
+                    <Settings size={16} /> System Settings
+                  </Link>
+                </div>
+              )}
             </div>
           </aside>
         </form>

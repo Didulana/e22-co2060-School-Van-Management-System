@@ -11,7 +11,8 @@ export default function PaymentSettingsPage() {
     fixed_amount: 0,
     base_charge: 0,
     charge_per_km: 0,
-    due_date_day: 5
+    due_date_day: 5,
+    auto_generate_day: null
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -158,6 +159,20 @@ export default function PaymentSettingsPage() {
             onChange={(e) => setSettings({ ...settings, due_date_day: Number(e.target.value) })}
           />
           <p className="mt-2 text-xs font-semibold text-slate-500 px-1">Payments will be marked due on this day every month.</p>
+        </div>
+
+        <div className="pt-2 border-t border-slate-100">
+          <label className={labelStyles}>Auto-Generate Dues (Day of Month - Optional)</label>
+          <input 
+            type="number" 
+            min="1" 
+            max="28"
+            className={inputStyles} 
+            placeholder="e.g. 1"
+            value={settings.auto_generate_day || ""}
+            onChange={(e) => setSettings({ ...settings, auto_generate_day: e.target.value ? Number(e.target.value) : null })}
+          />
+          <p className="mt-2 text-xs font-semibold text-slate-500 px-1">Dues will be automatically calculated and broadcasted on this day of the month.</p>
         </div>
 
         <button 

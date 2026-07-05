@@ -4,6 +4,7 @@ export interface PaymentSettings {
   base_charge: number;
   charge_per_km: number;
   due_date_day: number;
+  auto_generate_day?: number | null;
 }
 
 export interface Payment {

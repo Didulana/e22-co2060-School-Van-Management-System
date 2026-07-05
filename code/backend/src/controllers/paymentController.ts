@@ -60,7 +60,8 @@ export const getPaymentSettings = async (req: AuthenticatedRequest, res: Respons
         fixed_amount: 0,
         base_charge: 0,
         charge_per_km: 0,
-        due_date_day: 5
+        due_date_day: 5,
+        auto_generate_day: null
       });
     }
     res.json(result.rows[0]);
@@ -71,7 +72,7 @@ export const getPaymentSettings = async (req: AuthenticatedRequest, res: Respons
 
 export const updatePaymentSettings = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { mode, fixed_amount, base_charge, charge_per_km, due_date_day } = req.body;
+    const { mode, fixed_amount, base_charge, charge_per_km, due_date_day, auto_generate_day } = req.body;
 
     if (!VALID_PAYMENT_MODES.has(mode)) {
       return res.status(400).json({ error: "Invalid payment mode" });
@@ -79,6 +80,11 @@ export const updatePaymentSettings = async (req: AuthenticatedRequest, res: Resp
 
     if (!isValidDayOfMonth(due_date_day)) {
       return res.status(400).json({ error: "Due date day must be between 1 and 28" });
+    }
+
+    const autoGenDay = auto_generate_day ? Number(auto_generate_day) : null;
+    if (autoGenDay !== null && (autoGenDay < 1 || autoGenDay > 28)) {
+      return res.status(400).json({ error: "Auto generate day must be between 1 and 28" });
     }
 
     const fixedAmount = asNumber(fixed_amount);
@@ -96,13 +102,13 @@ export const updatePaymentSettings = async (req: AuthenticatedRequest, res: Resp
 
     if (existing.rows.length > 0) {
       await pool.query(
-        `UPDATE payment_settings SET mode = $1, fixed_amount = $2, base_charge = $3, charge_per_km = $4, due_date_day = $5, updated_at = NOW() WHERE driver_id = $6`,
-        [mode, fixedAmount, baseCharge, chargePerKm, Number(due_date_day), driverId]
+        `UPDATE payment_settings SET mode = $1, fixed_amount = $2, base_charge = $3, charge_per_km = $4, due_date_day = $5, auto_generate_day = $6, updated_at = NOW() WHERE driver_id = $7`,
+        [mode, fixedAmount, baseCharge, chargePerKm, Number(due_date_day), autoGenDay, driverId]
       );
     } else {
       await pool.query(
-        `INSERT INTO payment_settings (driver_id, mode, fixed_amount, base_charge, charge_per_km, due_date_day) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [driverId, mode, fixedAmount, baseCharge, chargePerKm, Number(due_date_day)]
+        `INSERT INTO payment_settings (driver_id, mode, fixed_amount, base_charge, charge_per_km, due_date_day, auto_generate_day) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [driverId, mode, fixedAmount, baseCharge, chargePerKm, Number(due_date_day), autoGenDay]
       );
     }
     res.json({ success: true });
@@ -147,72 +153,78 @@ export const getDriverPayments = async (req: AuthenticatedRequest, res: Response
   }
 };
 
+export const generatePaymentsForDriver = async (driverId: number): Promise<number> => {
+  const settingsRes = await pool.query("SELECT * FROM payment_settings WHERE driver_id = $1", [driverId]);
+  if (settingsRes.rows.length === 0) return 0;
+  const settings = settingsRes.rows[0] as PaymentSettings;
+
+  const studentsRes = await pool.query(`
+    SELECT DISTINCT s.id, s.pickup_lat, s.pickup_lng, s.dropoff_lat, s.dropoff_lng
+    FROM students s
+    JOIN parent_students ps ON s.id = ps.student_id
+    JOIN route_stops rs ON s.pickup_stop_id = rs.id OR s.dropoff_stop_id = rs.id
+    JOIN routes r ON rs.route_id = r.id
+    WHERE r.driver_id = $1
+  `, [driverId]);
+
+  const monthStr = new Date().toISOString().slice(0, 7); // YYYY-MM
+  let generated = 0;
+
+  for (const student of studentsRes.rows) {
+    const exist = await pool.query(
+      `SELECT id FROM payments WHERE student_id = $1 AND driver_id = $2 AND month = $3`,
+      [student.id, driverId, monthStr]
+    );
+    if (exist.rows.length === 0) {
+      let amountDue = asNumber(settings.fixed_amount);
+      
+      if (settings.mode === 'dynamic') {
+        const distance = calculateDistanceKm(
+          student.pickup_lat,
+          student.pickup_lng,
+          student.dropoff_lat,
+          student.dropoff_lng
+        );
+        amountDue = asNumber(settings.base_charge) + (distance * asNumber(settings.charge_per_km));
+      }
+
+      const dueDate = new Date();
+      dueDate.setDate(settings.due_date_day);
+      if (dueDate < new Date()) {
+        dueDate.setMonth(dueDate.getMonth() + 1);
+      }
+
+      await pool.query(`
+        INSERT INTO payments (student_id, driver_id, month, amount_due, due_date, status)
+        VALUES ($1, $2, $3, $4, $5, 'pending')
+      `, [student.id, driverId, monthStr, amountDue, dueDate]);
+      generated++;
+
+      // Notify parent
+      const parentRes = await pool.query(`SELECT parent_id FROM parent_students WHERE student_id = $1`, [student.id]);
+      if (parentRes.rows.length > 0) {
+        const res = await pool.query("SELECT name, nickname FROM students WHERE id = $1", [student.id]);
+        const studentData = res.rows[0];
+        const displayName = studentData?.nickname || studentData?.name || `Student ${student.id}`;
+
+        await pool.query(`
+          INSERT INTO notifications (user_id, type, message, journey_id)
+          VALUES ($1, 'payment_generated', $2, 0)
+        `, [parentRes.rows[0].parent_id, `Payment generated for ${displayName} for ${monthStr}. Amount Due: LKR ${amountDue.toFixed(2)}`]);
+      }
+    }
+  }
+  return generated;
+};
+
 export const generateMonthlyPayments = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const driverId = await getDriverIdForUser(req.user!.id);
     if (!driverId) return res.status(404).json({ error: "Driver not found" });
 
-    const settingsRes = await pool.query("SELECT * FROM payment_settings WHERE driver_id = $1", [driverId]);
-    if (settingsRes.rows.length === 0) return res.status(400).json({ error: "Payment settings not configured" });
-    const settings = settingsRes.rows[0] as PaymentSettings;
-
-    const studentsRes = await pool.query(`
-      SELECT DISTINCT s.id, s.pickup_lat, s.pickup_lng, s.dropoff_lat, s.dropoff_lng
-      FROM students s
-      JOIN parent_students ps ON s.id = ps.student_id
-      JOIN route_stops rs ON s.pickup_stop_id = rs.id OR s.dropoff_stop_id = rs.id
-      JOIN routes r ON rs.route_id = r.id
-      WHERE r.driver_id = $1
-    `, [driverId]);
-
-    const monthStr = new Date().toISOString().slice(0, 7); // YYYY-MM
-    let generated = 0;
-
-    for (const student of studentsRes.rows) {
-      const exist = await pool.query(
-        `SELECT id FROM payments WHERE student_id = $1 AND driver_id = $2 AND month = $3`,
-        [student.id, driverId, monthStr]
-      );
-      if (exist.rows.length === 0) {
-        let amountDue = asNumber(settings.fixed_amount);
-        
-        if (settings.mode === 'dynamic') {
-          const distance = calculateDistanceKm(
-            student.pickup_lat,
-            student.pickup_lng,
-            student.dropoff_lat,
-            student.dropoff_lng
-          );
-          amountDue = asNumber(settings.base_charge) + (distance * asNumber(settings.charge_per_km));
-        }
-
-        const dueDate = new Date();
-        dueDate.setDate(settings.due_date_day);
-        if (dueDate < new Date()) {
-          dueDate.setMonth(dueDate.getMonth() + 1);
-        }
-
-        await pool.query(`
-          INSERT INTO payments (student_id, driver_id, month, amount_due, due_date, status)
-          VALUES ($1, $2, $3, $4, $5, 'pending')
-        `, [student.id, driverId, monthStr, amountDue, dueDate]);
-        generated++;
-
-        // Notify parent
-        const parentRes = await pool.query(`SELECT parent_id FROM parent_students WHERE student_id = $1`, [student.id]);
-        if (parentRes.rows.length > 0) {
-          const res = await pool.query("SELECT name, nickname FROM students WHERE id = $1", [student.id]);
-          const studentData = res.rows[0];
-          const displayName = studentData?.nickname || studentData?.name || `Student ${student.id}`;
-
-          await pool.query(`
-            INSERT INTO notifications (user_id, type, message, journey_id)
-            VALUES ($1, 'payment_generated', $2, 0)
-          `, [parentRes.rows[0].parent_id, `Payment generated for ${displayName} for ${monthStr}. Amount Due: LKR ${amountDue.toFixed(2)}`]);
-        }
-      }
-    }
-
+    const monthStr = new Date().toISOString().slice(0, 7);
+    const generated = await generatePaymentsForDriver(driverId);
+    
     res.json({ message: `Generated ${generated} payments for ${monthStr}` });
   } catch (error: any) {
     res.status(500).json({ error: "Failed to generate payments" });

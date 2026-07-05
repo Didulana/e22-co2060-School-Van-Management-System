@@ -92,7 +92,7 @@ export default function ParentDashboard() {
   const router = useRouter();
   
   // Navigation Tabs state
-  const [activeTab, setActiveTab] = useState<"home" | "children" | "payments" | "notifications" | "settings">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "children" | "payments" | "notifications" | "profile">("home");
 
   // Core Parent Session
   const [parentName, setParentName] = useState("Parent");
@@ -720,13 +720,29 @@ export default function ParentDashboard() {
           </View>
         )}
 
-        {/* TABS 5: Settings / Profile */}
-        {activeTab === "settings" && (
+        {/* TABS 5: Profile / Settings */}
+        {activeTab === "profile" && (
           <View style={styles.tabContent}>
             
+            {/* Profile Overview (Parent Identity Card) */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Parent Identity</Text>
+              <View style={styles.card}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+                  <View style={{ height: 48, width: 48, borderRadius: 16, backgroundColor: "#ECFDF5", justifyContent: "center", alignItems: "center" }}>
+                    <User size={22} color="#10B981" />
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 16, fontWeight: "900", color: "#0F172A" }}>{parentName}</Text>
+                    <Text style={{ fontSize: 12, color: "#64748B" }}>Parent account profile</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
             {/* Profiles settings */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Security Settings</Text>
+              <Text style={styles.sectionTitle}>Change Password</Text>
               <View style={styles.card}>
                 <Text style={styles.label}>Email Address</Text>
                 <TextInput style={[styles.textInput, { backgroundColor: "#F1F5F9" }]} value={parentEmail} editable={false} />
@@ -768,9 +784,9 @@ export default function ParentDashboard() {
           <Text style={[styles.tabItemText, activeTab === "notifications" && styles.tabItemTextActive]}>Alerts</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.tabItem, activeTab === "settings" && styles.tabItemActive]} onPress={() => setActiveTab("settings")}>
-          <Settings size={20} color={activeTab === "settings" ? "#10B981" : "#64748B"} />
-          <Text style={[styles.tabItemText, activeTab === "settings" && styles.tabItemTextActive]}>Settings</Text>
+        <TouchableOpacity style={[styles.tabItem, activeTab === "profile" && styles.tabItemActive]} onPress={() => setActiveTab("profile")}>
+          <User size={20} color={activeTab === "profile" ? "#10B981" : "#64748B"} />
+          <Text style={[styles.tabItemText, activeTab === "profile" && styles.tabItemTextActive]}>Profile</Text>
         </TouchableOpacity>
       </View>
 
