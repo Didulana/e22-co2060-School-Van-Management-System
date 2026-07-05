@@ -150,7 +150,7 @@ export default function DriverDashboard() {
         } catch (e) {
           console.error("Simulator broadcast connection error:", e);
         }
-      }, 2000); // Trigger every 2 seconds
+      }, 10000); // Trigger every 10 seconds to respect rate limiter
     }
 
     return () => {

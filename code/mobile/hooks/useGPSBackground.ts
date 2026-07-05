@@ -46,6 +46,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
 });
 
 let foregroundSubscription: Location.LocationSubscription | null = null;
+let lastSentTime = 0;
 
 export function useGPSBackground() {
   const startTracking = async (journeyId: number) => {
@@ -85,6 +86,8 @@ export function useGPSBackground() {
         foregroundSubscription = null;
       }
 
+      lastSentTime = 0; // Reset timer on startup
+
       foregroundSubscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High, // High accuracy for testing walking paths
@@ -92,6 +95,13 @@ export function useGPSBackground() {
           distanceInterval: 0, // Force updates on every GPS tick
         },
         async (location) => {
+          const now = Date.now();
+          // Throttle updates: send at most once every 10 seconds to respect rate limiter
+          if (now - lastSentTime < 10000) {
+            return;
+          }
+          lastSentTime = now;
+
           const { latitude, longitude } = location.coords;
           try {
             const sessionStr = await SecureStore.getItemAsync("school-van-auth-session");
