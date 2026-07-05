@@ -67,6 +67,7 @@ interface Payment {
   month: string;
   receipt_ref?: string;
   receipt_url?: string;
+  student_name?: string;
 }
 
 interface AlertLog {
@@ -98,6 +99,19 @@ export default function ParentDashboard() {
   const [parentName, setParentName] = useState("Parent");
   const [parentEmail, setParentEmail] = useState("");
   const [token, setToken] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
+  const [parentAddress, setParentAddress] = useState("123, Galle Road, Colombo");
+  const [emergencyName, setEmergencyName] = useState("Amali Perera");
+  const [emergencyPhone, setEmergencyPhone] = useState("+94 77 123 4567");
+
+  // Sub-view options for profile: "view" | "edit" | "settings"
+  const [profileSubView, setProfileSubView] = useState<"view" | "edit" | "settings">("view");
+
+  // UI settings state togglers
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
+  const [trackingFrequency, setTrackingFrequency] = useState("high");
+
   const [socket, setSocket] = useState<any>(null);
 
   // States: Home (Live Tracking & Map)
@@ -150,6 +164,16 @@ export default function ParentDashboard() {
         setToken(session.token);
         setParentName(session.user?.name || "Parent");
         setParentEmail(session.user?.email || "");
+        setParentPhone(session.user?.phone || "");
+
+        const savedPhone = await SecureStore.getItemAsync("parent-profile-phone");
+        if (savedPhone) setParentPhone(savedPhone);
+        const savedAddress = await SecureStore.getItemAsync("parent-profile-address");
+        if (savedAddress) setParentAddress(savedAddress);
+        const savedEmergName = await SecureStore.getItemAsync("parent-profile-emerg-name");
+        if (savedEmergName) setEmergencyName(savedEmergName);
+        const savedEmergPhone = await SecureStore.getItemAsync("parent-profile-emerg-phone");
+        if (savedEmergPhone) setEmergencyPhone(savedEmergPhone);
 
         // WebSocket Setup
         const socketCon = io(API_BASE_URL.replace("/api", ""), {
@@ -439,6 +463,49 @@ export default function ParentDashboard() {
     }, 1000);
   };
 
+  const handleSaveParentProfile = async () => {
+    try {
+      await SecureStore.setItemAsync("parent-profile-phone", parentPhone);
+      await SecureStore.setItemAsync("parent-profile-address", parentAddress);
+      await SecureStore.setItemAsync("parent-profile-emerg-name", emergencyName);
+      await SecureStore.setItemAsync("parent-profile-emerg-phone", emergencyPhone);
+      Alert.alert("Success", "Profile details saved successfully!");
+      setProfileSubView("view");
+    } catch {
+      Alert.alert("Failed", "Unable to save profile details.");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you absolutely sure you want to permanently delete your account? This action is irreversible.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete Account", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const res = await fetch(`${API_BASE_URL}/auth/me`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              if (res.ok) {
+                Alert.alert("Deleted", "Your account has been successfully deleted.");
+                handleLogout();
+              } else {
+                Alert.alert("Error", "Failed to delete account from server.");
+              }
+            } catch (err) {
+              Alert.alert("Error", "Network connection failure.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleLogout = async () => {
     if (socket) socket.disconnect();
     await SecureStore.deleteItemAsync("school-van-auth-session");
@@ -516,6 +583,50 @@ export default function ParentDashboard() {
                 </View>
                 <Text style={styles.actionGridText}>Alert Logs Feed</Text>
               </TouchableOpacity>
+            </View>
+
+            {/* Transit Status Board */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Today's Transit Status Board</Text>
+              {children.length === 0 ? (
+                <View style={styles.card}>
+                  <Text style={{ color: "#64748B", textAlign: "center", fontSize: 13 }}>No student profiles added yet.</Text>
+                </View>
+              ) : (
+                children.map(child => {
+                  let statusText = "Waiting for Pickup";
+                  let statusBg = "#FEF3C7";
+                  let statusColor = "#D97706";
+
+                  if (child.absent_today) {
+                    statusText = "Absent Today";
+                    statusBg = "#FEE2E2";
+                    statusColor = "#EF4444";
+                  } else if (childStatus && childStatus.studentId === child.id) {
+                    if (childStatus.boarded) {
+                      statusText = "Boarded & In Transit";
+                      statusBg = "#D1FAE5";
+                      statusColor = "#059669";
+                    } else if (childStatus.dropped) {
+                      statusText = "Arrived Safely";
+                      statusBg = "#DBEAFE";
+                      statusColor = "#2563EB";
+                    }
+                  }
+
+                  return (
+                    <View key={child.id} style={[styles.card, { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12, marginBottom: 8 }]}>
+                      <View>
+                        <Text style={{ fontSize: 14, fontWeight: "800", color: "#0F172A" }}>{child.name}</Text>
+                        <Text style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>{child.school}</Text>
+                      </View>
+                      <View style={{ backgroundColor: statusBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
+                        <Text style={{ fontSize: 11, fontWeight: "800", color: statusColor }}>{statusText}</Text>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
             </View>
 
             {/* Map View */}
@@ -614,6 +725,11 @@ export default function ParentDashboard() {
                     </View>
                     <View style={styles.dueTitleWrapper}>
                       <Text style={styles.dueCardTitle}>Current Monthly Due</Text>
+                      {activePayment.student_name && (
+                        <Text style={{ fontSize: 13, fontWeight: "800", color: "#10B981", marginTop: 2 }}>
+                          Child: {activePayment.student_name}
+                        </Text>
+                      )}
                       <Text style={styles.dueCardAmount}>LKR {Number(activePayment.amount_due).toFixed(2)}</Text>
                     </View>
                     <View style={[styles.dueBadge, { backgroundColor: getStatusColor(activePayment.status) + "20" }]}>
@@ -660,6 +776,11 @@ export default function ParentDashboard() {
                   <View style={styles.paymentCard} key={item.id}>
                     <View>
                       <Text style={{ fontWeight: "800", color: "#0F172A" }}>Month: {item.month}</Text>
+                      {item.student_name && (
+                        <Text style={{ fontSize: 12, fontWeight: "800", color: "#3B82F6", marginTop: 2, marginBottom: 2 }}>
+                          Child: {item.student_name}
+                        </Text>
+                      )}
                       <Text style={{ fontSize: 12, color: "#64748B" }}>Paid: LKR {Number(item.amount_due).toFixed(2)}</Text>
                     </View>
                     <View style={styles.checkIcon}>
@@ -720,44 +841,194 @@ export default function ParentDashboard() {
           </View>
         )}
 
-        {/* TABS 5: Profile / Settings */}
+        {/* TABS 5: Profile & Settings Nested Options */}
         {activeTab === "profile" && (
           <View style={styles.tabContent}>
             
-            {/* Profile Overview (Parent Identity Card) */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Parent Identity</Text>
-              <View style={styles.card}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-                  <View style={{ height: 48, width: 48, borderRadius: 16, backgroundColor: "#ECFDF5", justifyContent: "center", alignItems: "center" }}>
-                    <User size={22} color="#10B981" />
-                  </View>
-                  <View>
-                    <Text style={{ fontSize: 16, fontWeight: "900", color: "#0F172A" }}>{parentName}</Text>
-                    <Text style={{ fontSize: 12, color: "#64748B" }}>Parent account profile</Text>
+            {/* 5A. VIEW PROFILE MODE */}
+            {profileSubView === "view" && (
+              <>
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>My Profile Details</Text>
+                  <View style={styles.card}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 16 }}>
+                      <View style={{ height: 48, width: 48, borderRadius: 16, backgroundColor: "#ECFDF5", justifyContent: "center", alignItems: "center" }}>
+                        <User size={22} color="#10B981" />
+                      </View>
+                      <View>
+                        <Text style={{ fontSize: 16, fontWeight: "900", color: "#0F172A" }}>{parentName}</Text>
+                        <Text style={{ fontSize: 12, color: "#64748B" }}>Parent account profile</Text>
+                      </View>
+                    </View>
+
+                    <Text style={{ fontSize: 11, fontWeight: "900", color: "#94A3B8", textTransform: "uppercase", marginTop: 8 }}>Email Address</Text>
+                    <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700", marginTop: 2 }}>{parentEmail}</Text>
+
+                    <Text style={{ fontSize: 11, fontWeight: "900", color: "#94A3B8", textTransform: "uppercase", marginTop: 12 }}>Phone Number</Text>
+                    <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700", marginTop: 2 }}>{parentPhone || "Not set"}</Text>
                   </View>
                 </View>
+
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Home Address</Text>
+                  <View style={styles.card}>
+                    <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700" }}>{parentAddress}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Emergency Contact Info</Text>
+                  <View style={styles.card}>
+                    <Text style={{ fontSize: 11, fontWeight: "900", color: "#94A3B8", textTransform: "uppercase" }}>Emergency Contact Name</Text>
+                    <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700", marginTop: 2 }}>{emergencyName}</Text>
+
+                    <Text style={{ fontSize: 11, fontWeight: "900", color: "#94A3B8", textTransform: "uppercase", marginTop: 12 }}>Emergency Contact Phone</Text>
+                    <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700", marginTop: 2 }}>{emergencyPhone}</Text>
+                  </View>
+                </View>
+
+                <View style={{ flexDirection: "row", gap: 12, marginHorizontal: 16, marginTop: 12 }}>
+                  <TouchableOpacity style={[styles.actionBtn, { flex: 1, backgroundColor: "#10B981" }]} onPress={() => setProfileSubView("edit")}>
+                    <Text style={styles.actionBtnText}>Edit Profile</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionBtn, { flex: 1, backgroundColor: "#64748B" }]} onPress={() => setProfileSubView("settings")}>
+                    <Text style={styles.actionBtnText}>Settings</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+
+            {/* 5B. EDIT PROFILE MODE */}
+            {profileSubView === "edit" && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Edit Profile details</Text>
+                <View style={styles.card}>
+                  <Text style={styles.label}>Full Name</Text>
+                  <TextInput style={styles.textInput} value={parentName} onChangeText={setParentName} />
+
+                  <Text style={styles.label}>Email (read-only)</Text>
+                  <TextInput style={[styles.textInput, { backgroundColor: "#F1F5F9" }]} value={parentEmail} editable={false} />
+
+                  <Text style={styles.label}>Mobile Number</Text>
+                  <TextInput style={styles.textInput} value={parentPhone} onChangeText={setParentPhone} keyboardType="phone-pad" />
+
+                  <Text style={styles.label}>Home Address</Text>
+                  <TextInput style={styles.textInput} value={parentAddress} onChangeText={setParentAddress} />
+
+                  <Text style={styles.label}>Emergency Contact Name</Text>
+                  <TextInput style={styles.textInput} value={emergencyName} onChangeText={setEmergencyName} />
+
+                  <Text style={styles.label}>Emergency Contact Phone</Text>
+                  <TextInput style={styles.textInput} value={emergencyPhone} onChangeText={setEmergencyPhone} keyboardType="phone-pad" />
+
+                  <TouchableOpacity style={[styles.actionBtn, { marginTop: 16 }]} onPress={handleSaveParentProfile}>
+                    <Text style={styles.actionBtnText}>Save Changes</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#64748B", marginTop: 8 }]} onPress={() => setProfileSubView("view")}>
+                    <Text style={styles.actionBtnText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            )}
 
-            {/* Profiles settings */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Change Password</Text>
-              <View style={styles.card}>
-                <Text style={styles.label}>Email Address</Text>
-                <TextInput style={[styles.textInput, { backgroundColor: "#F1F5F9" }]} value={parentEmail} editable={false} />
+            {/* 5C. SETTINGS MODE */}
+            {profileSubView === "settings" && (
+              <>
+                {/* Basic Security Settings */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Security Settings</Text>
+                  <View style={styles.card}>
+                    <Text style={styles.label}>Old Password</Text>
+                    <TextInput style={styles.textInput} secureTextEntry value={oldPassword} onChangeText={setOldPassword} placeholder="••••••••" placeholderTextColor="#94A3B8" />
 
-                <Text style={styles.label}>Old Password</Text>
-                <TextInput style={styles.textInput} secureTextEntry value={oldPassword} onChangeText={setOldPassword} placeholder="••••••••" placeholderTextColor="#94A3B8" />
+                    <Text style={styles.label}>New Password</Text>
+                    <TextInput style={styles.textInput} secureTextEntry value={newPassword} onChangeText={setNewPassword} placeholder="••••••••" placeholderTextColor="#94A3B8" />
 
-                <Text style={styles.label}>New Password</Text>
-                <TextInput style={styles.textInput} secureTextEntry value={newPassword} onChangeText={setNewPassword} placeholder="••••••••" placeholderTextColor="#94A3B8" />
+                    <TouchableOpacity style={styles.actionBtn} onPress={handleUpdatePassword} disabled={isSubmittingPassword}>
+                      {isSubmittingPassword ? <ActivityIndicator color="#FFF" /> : <Text style={styles.actionBtnText}>Update Password</Text>}
+                    </TouchableOpacity>
+                  </View>
+                </View>
 
-                <TouchableOpacity style={styles.actionBtn} onPress={handleUpdatePassword} disabled={isSubmittingPassword}>
-                  {isSubmittingPassword ? <ActivityIndicator color="#FFF" /> : <Text style={styles.actionBtnText}>Update Password</Text>}
+                {/* Appearance Settings */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Appearance & Theme</Text>
+                  <View style={[styles.card, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
+                    <Text style={{ fontSize: 13, fontWeight: "700", color: "#334155" }}>Dark Mode Options</Text>
+                    <Switch
+                      value={isDarkMode}
+                      onValueChange={setIsDarkMode}
+                      trackColor={{ false: "#E2E8F0", true: "#A7F3D0" }}
+                      thumbColor={isDarkMode ? "#10B981" : "#94A3B8"}
+                    />
+                  </View>
+                </View>
+
+                {/* Notification Settings */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Notifications Config</Text>
+                  <View style={[styles.card, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
+                    <Text style={{ fontSize: 13, fontWeight: "700", color: "#334155" }}>Enable Push Alerts</Text>
+                    <Switch
+                      value={isNotificationsEnabled}
+                      onValueChange={setIsNotificationsEnabled}
+                      trackColor={{ false: "#E2E8F0", true: "#A7F3D0" }}
+                      thumbColor={isNotificationsEnabled ? "#10B981" : "#94A3B8"}
+                    />
+                  </View>
+                </View>
+
+                {/* Tracking Settings */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Live Tracking Frequencies</Text>
+                  <View style={styles.card}>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      {["low", "medium", "high"].map((freq) => (
+                        <TouchableOpacity
+                          key={freq}
+                          style={[styles.roleBtn, { flex: 1 }, trackingFrequency === freq && styles.roleBtnActive]}
+                          onPress={() => setTrackingFrequency(freq)}
+                        >
+                          <Text style={[styles.roleBtnText, trackingFrequency === freq && styles.roleBtnTextActive, { textTransform: "capitalize" }]}>
+                            {freq}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+
+                {/* Reset Settings */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>System Reset</Text>
+                  <View style={[styles.card, { flexDirection: "row", gap: 12 }]}>
+                    <TouchableOpacity style={[styles.actionBtn, { flex: 1, backgroundColor: "#E2E8F0" }]} onPress={() => Alert.alert("Cache Cleared", "Temporary logs cache cleared successfully.")}>
+                      <Text style={[styles.actionBtnText, { color: "#475569" }]}>Clear Cache</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.actionBtn, { flex: 1, backgroundColor: "#EF4444" }]} onPress={() => Alert.alert("Reset Completed", "All onboarding flows have been reset.")}>
+                      <Text style={styles.actionBtnText}>Reset Apps</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Profile Account Deletion (Basic Section Settings) */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Delete Profile Account</Text>
+                  <View style={styles.card}>
+                    <Text style={{ fontSize: 11, color: "#EF4444", fontWeight: "700", marginBottom: 12 }}>
+                      Permanently wipe all records, student enrollments, maps history, and billing references from our system.
+                    </Text>
+                    <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#EF4444" }]} onPress={handleDeleteAccount}>
+                      <Text style={styles.actionBtnText}>Delete Account & Data</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#64748B", marginHorizontal: 16, marginBottom: 20 }]} onPress={() => setProfileSubView("view")}>
+                  <Text style={styles.actionBtnText}>Back to Profile</Text>
                 </TouchableOpacity>
-              </View>
-            </View>
+              </>
+            )}
           </View>
         )}
       </ScrollView>
@@ -1204,6 +1475,28 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   routeSelectorTextActive: {
+    color: "#2563EB",
+  },
+  roleBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  roleBtnActive: {
+    backgroundColor: "#EFF6FF",
+    borderColor: "#3B82F6",
+  },
+  roleBtnText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+  roleBtnTextActive: {
     color: "#2563EB",
   },
   tabBar: {

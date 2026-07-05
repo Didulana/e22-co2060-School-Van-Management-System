@@ -10,7 +10,8 @@ import {
   SafeAreaView,
   TextInput,
   Modal,
-  FlatList
+  FlatList,
+  Switch
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -116,6 +117,14 @@ export default function DriverDashboard() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // Tab 4: Profile / Settings states
+  const [profileSubView, setProfileSubView] = useState<"view" | "edit" | "settings">("view");
+  const [driverPhone, setDriverPhone] = useState("");
+  
+  // UI settings state togglers
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
+  const [trackingFrequency, setTrackingFrequency] = useState("high");
+
   // Payment Config Settings
   const [paymentMode, setPaymentMode] = useState<"fixed" | "distance_based" | "hybrid">("fixed");
   const [fixedAmount, setFixedAmount] = useState("0");
@@ -153,6 +162,25 @@ export default function DriverDashboard() {
         setDriverName(session.user?.name || "Driver");
         setDriverEmail(session.user?.email || "");
         setDriverId(session.user?.id);
+        setDriverPhone(session.user?.phone || "");
+
+        // Fetch onboarding details to populate view fields
+        try {
+          const obRes = await fetch(`${API_BASE_URL}/driver/onboarding/status`, {
+            headers: { Authorization: `Bearer ${session.token}` }
+          });
+          const obData = await obRes.json();
+          if (obRes.ok && obData.completed) {
+            setLicenseNumber(obData.licenseNumber || "");
+            setVehicleNumber(obData.vehicleDetails?.registrationNumber || "");
+            setVehicleType(obData.vehicleDetails?.type || "van");
+            setVehicleCapacity(String(obData.vehicleDetails?.capacity || "12"));
+            setRouteName(obData.routeName || "");
+            setOnboardingCompleted(true);
+          } else {
+            setOnboardingCompleted(false);
+          }
+        } catch {}
 
         // Fetch driver record ID mappings
         const profileRes = await fetch(`${API_BASE_URL}/auth/me`, {
@@ -655,6 +683,66 @@ export default function DriverDashboard() {
     }, 1000);
   };
 
+  const handleSaveDriverProfile = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/driver/onboarding/submit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          licenseNumber,
+          vehicleDetails: {
+            registrationNumber: vehicleNumber,
+            type: vehicleType,
+            capacity: Number(vehicleCapacity)
+          },
+          routeName
+        })
+      });
+      if (res.ok) {
+        Alert.alert("Success", "Driver profile details updated!");
+        setProfileSubView("view");
+      } else {
+        const data = await res.json();
+        Alert.alert("Error", data.error || "Failed to update profile.");
+      }
+    } catch {
+      Alert.alert("Error", "Failed network request.");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you absolutely sure you want to permanently delete your account? This action is irreversible.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete Account", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const res = await fetch(`${API_BASE_URL}/auth/me`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              if (res.ok) {
+                Alert.alert("Deleted", "Your account has been successfully deleted.");
+                handleLogout();
+              } else {
+                Alert.alert("Error", "Failed to delete account from server.");
+              }
+            } catch (err) {
+              Alert.alert("Error", "Network connection failure.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleLogout = async () => {
     await stopTracking();
     await SecureStore.deleteItemAsync("school-van-auth-session");
@@ -692,6 +780,18 @@ export default function DriverDashboard() {
         {activeTab === "home" && (
           <View style={styles.tabContent}>
             
+            {/* Quick Metrics Grid Summary */}
+            <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, marginTop: 10, marginBottom: 6 }}>
+              <View style={{ flex: 1, backgroundColor: "#EFF6FF", borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#BFDBFE" }}>
+                <Text style={{ fontSize: 10, color: "#1E40AF", fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 }}>Assigned Route</Text>
+                <Text style={{ fontSize: 14, fontWeight: "900", color: "#1D4ED8", marginTop: 4 }}>{routeName || "Route #1"}</Text>
+              </View>
+              <View style={{ flex: 1, backgroundColor: "#ECFDF5", borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#A7F3D0" }}>
+                <Text style={{ fontSize: 10, color: "#065F46", fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 }}>Passengers</Text>
+                <Text style={{ fontSize: 18, fontWeight: "900", color: "#047857", marginTop: 4 }}>{students.length > 0 ? students.length : "12"}</Text>
+              </View>
+            </View>
+
             {/* SOS Button Panel */}
             <View style={styles.section}>
               <View style={styles.sosCard}>
@@ -902,7 +1002,7 @@ export default function DriverDashboard() {
         {activeTab === "profile" && (
           <View style={styles.tabContent}>
             
-            {/* Onboarding Wizard Form */}
+            {/* Onboarding Wizard Form if not completed */}
             {!onboardingCompleted && (
               <View style={[styles.section, { backgroundColor: "#FFFBEB", padding: 18, borderRadius: 24, borderWidth: 1, borderColor: "#FDE68A" }]}>
                 <Text style={{ fontSize: 16, fontWeight: "900", color: "#B45309", marginBottom: 6 }}>Setup Onboarding Profile</Text>
@@ -919,82 +1019,243 @@ export default function DriverDashboard() {
               </View>
             )}
 
-            {/* Profile Overview (Driver Identity Card) */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Driver Identity</Text>
-              <View style={styles.card}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-                  <View style={{ height: 48, width: 48, borderRadius: 16, backgroundColor: "#E0F2FE", justifyContent: "center", alignItems: "center" }}>
-                    <User size={22} color="#0284C7" />
-                  </View>
-                  <View>
-                    <Text style={{ fontSize: 16, fontWeight: "900", color: "#0F172A" }}>{driverName}</Text>
-                    <Text style={{ fontSize: 12, color: "#64748B" }}>Active driver profile</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            {/* NESTED OPTION: Settings Configuration Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>System Settings Option</Text>
-              <View style={styles.card}>
-                {isLoadingPaymentSettings ? (
-                  <ActivityIndicator color="#10B981" />
-                ) : (
-                  <>
-                    <Text style={styles.label}>Pricing Mode</Text>
-                    <View style={styles.roleContainer}>
-                      <TouchableOpacity style={[styles.roleBtn, paymentMode === "fixed" && styles.roleBtnActive]} onPress={() => setPaymentMode("fixed")}>
-                        <Text style={[styles.roleBtnText, paymentMode === "fixed" && styles.roleBtnTextActive]}>Fixed</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={[styles.roleBtn, paymentMode === "distance_based" && styles.roleBtnActive]} onPress={() => setPaymentMode("distance_based")}>
-                        <Text style={[styles.roleBtnText, paymentMode === "distance_based" && styles.roleBtnTextActive]}>Distance</Text>
-                      </TouchableOpacity>
+            {/* 4A. VIEW PROFILE MODE */}
+            {profileSubView === "view" && (
+              <>
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Driver Identity</Text>
+                  <View style={styles.card}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 16 }}>
+                      <View style={{ height: 48, width: 48, borderRadius: 16, backgroundColor: "#E0F2FE", justifyContent: "center", alignItems: "center" }}>
+                        <User size={22} color="#0284C7" />
+                      </View>
+                      <View>
+                        <Text style={{ fontSize: 16, fontWeight: "900", color: "#0F172A" }}>{driverName}</Text>
+                        <Text style={{ fontSize: 12, color: "#64748B" }}>Active driver profile</Text>
+                      </View>
                     </View>
 
-                    <Text style={[styles.label, { marginTop: 12 }]}>Monthly Fixed Rate (LKR)</Text>
-                    <TextInput style={styles.textInput} value={fixedAmount} onChangeText={setFixedAmount} keyboardType="numeric" />
-                    
-                    <Text style={styles.label}>Monthly Due Date Day (1-28)</Text>
-                    <TextInput style={styles.textInput} value={dueDateDay} onChangeText={setDueDateDay} keyboardType="numeric" />
+                    <Text style={{ fontSize: 11, fontWeight: "900", color: "#94A3B8", textTransform: "uppercase", marginTop: 8 }}>Email Address</Text>
+                    <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700", marginTop: 2 }}>{driverEmail}</Text>
 
-                    <Text style={styles.label}>Auto-Generate Prices Day (1-28)</Text>
-                    <TextInput 
-                      style={styles.textInput} 
-                      placeholder="e.g. 1 (optional)"
-                      placeholderTextColor="#94A3B8"
-                      value={autoGenerateDay} 
-                      onChangeText={setAutoGenerateDay} 
-                      keyboardType="numeric" 
-                    />
+                    <Text style={{ fontSize: 11, fontWeight: "900", color: "#94A3B8", textTransform: "uppercase", marginTop: 12 }}>Phone Number</Text>
+                    <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700", marginTop: 2 }}>{driverPhone || "Not set"}</Text>
+                  </View>
+                </View>
 
-                    <TouchableOpacity style={styles.actionBtn} onPress={handleUpdatePaymentSettings}>
-                      <Text style={styles.actionBtnText}>Save Settings</Text>
-                    </TouchableOpacity>
+                {onboardingCompleted && (
+                  <>
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>Transport Info</Text>
+                      <View style={styles.card}>
+                        <Text style={{ fontSize: 11, fontWeight: "900", color: "#94A3B8", textTransform: "uppercase" }}>License Number</Text>
+                        <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700", marginTop: 2 }}>{licenseNumber}</Text>
+
+                        <Text style={{ fontSize: 11, fontWeight: "900", color: "#94A3B8", textTransform: "uppercase", marginTop: 12 }}>Predefined Route</Text>
+                        <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700", marginTop: 2 }}>{routeName || "Route #1"}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>Vehicle Info</Text>
+                      <View style={styles.card}>
+                        <Text style={{ fontSize: 11, fontWeight: "900", color: "#94A3B8", textTransform: "uppercase" }}>Registration Number</Text>
+                        <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700", marginTop: 2 }}>{vehicleNumber}</Text>
+
+                        <Text style={{ fontSize: 11, fontWeight: "900", color: "#94A3B8", textTransform: "uppercase", marginTop: 12 }}>Vehicle Specifications</Text>
+                        <Text style={{ fontSize: 13, color: "#334155", fontWeight: "700", marginTop: 2 }}>{vehicleType.toUpperCase()} ({vehicleCapacity} seats)</Text>
+                      </View>
+                    </View>
                   </>
                 )}
+
+                <View style={{ flexDirection: "row", gap: 12, marginHorizontal: 16, marginTop: 12 }}>
+                  <TouchableOpacity style={[styles.actionBtn, { flex: 1, backgroundColor: "#10B981" }]} onPress={() => setProfileSubView("edit")}>
+                    <Text style={styles.actionBtnText}>Edit Profile</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionBtn, { flex: 1, backgroundColor: "#64748B" }]} onPress={() => setProfileSubView("settings")}>
+                    <Text style={styles.actionBtnText}>Settings</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+
+            {/* 4B. EDIT PROFILE MODE */}
+            {profileSubView === "edit" && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Edit Profile details</Text>
+                <View style={styles.card}>
+                  <Text style={styles.label}>Full Name</Text>
+                  <TextInput style={styles.textInput} value={driverName} onChangeText={setDriverName} />
+
+                  <Text style={styles.label}>Email (read-only)</Text>
+                  <TextInput style={[styles.textInput, { backgroundColor: "#F1F5F9" }]} value={driverEmail} editable={false} />
+
+                  <Text style={styles.label}>Mobile Number</Text>
+                  <TextInput style={styles.textInput} value={driverPhone} onChangeText={setDriverPhone} keyboardType="phone-pad" />
+
+                  <Text style={styles.label}>License Number</Text>
+                  <TextInput style={styles.textInput} value={licenseNumber} onChangeText={setLicenseNumber} />
+
+                  <Text style={styles.label}>Vehicle Registration No.</Text>
+                  <TextInput style={styles.textInput} value={vehicleNumber} onChangeText={setVehicleNumber} />
+
+                  <Text style={styles.label}>Seats Capacity</Text>
+                  <TextInput style={styles.textInput} value={vehicleCapacity} onChangeText={setVehicleCapacity} keyboardType="numeric" />
+
+                  <Text style={styles.label}>Route Name / ID</Text>
+                  <TextInput style={styles.textInput} value={routeName} onChangeText={setRouteName} />
+
+                  <TouchableOpacity style={[styles.actionBtn, { marginTop: 16 }]} onPress={handleSaveDriverProfile}>
+                    <Text style={styles.actionBtnText}>Save Changes</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#64748B", marginTop: 8 }]} onPress={() => setProfileSubView("view")}>
+                    <Text style={styles.actionBtnText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            )}
 
-            {/* Password Profiles Settings */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Change Password</Text>
-              <View style={styles.card}>
-                <Text style={styles.label}>Email Address</Text>
-                <TextInput style={[styles.textInput, { backgroundColor: "#F1F5F9" }]} value={driverEmail} editable={false} />
+            {/* 4C. SETTINGS MODE */}
+            {profileSubView === "settings" && (
+              <>
+                {/* NESTED OPTION: Settings Configuration Section */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Pricing & Billing Settings</Text>
+                  <View style={styles.card}>
+                    {isLoadingPaymentSettings ? (
+                      <ActivityIndicator color="#10B981" />
+                    ) : (
+                      <>
+                        <Text style={styles.label}>Pricing Mode</Text>
+                        <View style={styles.roleContainer}>
+                          <TouchableOpacity style={[styles.roleBtn, paymentMode === "fixed" && styles.roleBtnActive]} onPress={() => setPaymentMode("fixed")}>
+                            <Text style={[styles.roleBtnText, paymentMode === "fixed" && styles.roleBtnTextActive]}>Fixed</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={[styles.roleBtn, paymentMode === "distance_based" && styles.roleBtnActive]} onPress={() => setPaymentMode("distance_based")}>
+                            <Text style={[styles.roleBtnText, paymentMode === "distance_based" && styles.roleBtnTextActive]}>Distance</Text>
+                          </TouchableOpacity>
+                        </View>
 
-                <Text style={styles.label}>Old Password</Text>
-                <TextInput style={styles.textInput} secureTextEntry value={oldPassword} onChangeText={setOldPassword} placeholder="••••••••" placeholderTextColor="#94A3B8" />
+                        <Text style={[styles.label, { marginTop: 12 }]}>Monthly Fixed Rate (LKR)</Text>
+                        <TextInput style={styles.textInput} value={fixedAmount} onChangeText={setFixedAmount} keyboardType="numeric" />
+                        
+                        <Text style={styles.label}>Monthly Due Date Day (1-28)</Text>
+                        <TextInput style={styles.textInput} value={dueDateDay} onChangeText={setDueDateDay} keyboardType="numeric" />
 
-                <Text style={styles.label}>New Password</Text>
-                <TextInput style={styles.textInput} secureTextEntry value={newPassword} onChangeText={setNewPassword} placeholder="••••••••" placeholderTextColor="#94A3B8" />
+                        <Text style={styles.label}>Auto-Generate Prices Day (1-28)</Text>
+                        <TextInput 
+                          style={styles.textInput} 
+                          placeholder="e.g. 1 (optional)"
+                          placeholderTextColor="#94A3B8"
+                          value={autoGenerateDay} 
+                          onChangeText={setAutoGenerateDay} 
+                          keyboardType="numeric" 
+                        />
 
-                <TouchableOpacity style={styles.actionBtn} onPress={handleUpdatePassword} disabled={isSubmittingPassword}>
-                  {isSubmittingPassword ? <ActivityIndicator color="#FFF" /> : <Text style={styles.actionBtnText}>Update Password</Text>}
+                        <TouchableOpacity style={styles.actionBtn} onPress={handleUpdatePaymentSettings}>
+                          <Text style={styles.actionBtnText}>Save Pricing settings</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                  </View>
+                </View>
+
+                {/* Password Profiles Settings */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Security Settings</Text>
+                  <View style={styles.card}>
+                    <Text style={styles.label}>Old Password</Text>
+                    <TextInput style={styles.textInput} secureTextEntry value={oldPassword} onChangeText={setOldPassword} placeholder="••••••••" placeholderTextColor="#94A3B8" />
+
+                    <Text style={styles.label}>New Password</Text>
+                    <TextInput style={styles.textInput} secureTextEntry value={newPassword} onChangeText={setNewPassword} placeholder="••••••••" placeholderTextColor="#94A3B8" />
+
+                    <TouchableOpacity style={styles.actionBtn} onPress={handleUpdatePassword} disabled={isSubmittingPassword}>
+                      {isSubmittingPassword ? <ActivityIndicator color="#FFF" /> : <Text style={styles.actionBtnText}>Update Password</Text>}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Appearance Settings */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Appearance & Theme</Text>
+                  <View style={[styles.card, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
+                    <Text style={{ fontSize: 13, fontWeight: "700", color: "#334155" }}>Dark Mode Options</Text>
+                    <Switch
+                      value={isDarkMode}
+                      onValueChange={setIsDarkMode}
+                      trackColor={{ false: "#E2E8F0", true: "#A7F3D0" }}
+                      thumbColor={isDarkMode ? "#10B981" : "#94A3B8"}
+                    />
+                  </View>
+                </View>
+
+                {/* Notification Settings */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Notifications Config</Text>
+                  <View style={[styles.card, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
+                    <Text style={{ fontSize: 13, fontWeight: "700", color: "#334155" }}>Enable Push Alerts</Text>
+                    <Switch
+                      value={isNotificationsEnabled}
+                      onValueChange={setIsNotificationsEnabled}
+                      trackColor={{ false: "#E2E8F0", true: "#A7F3D0" }}
+                      thumbColor={isNotificationsEnabled ? "#10B981" : "#94A3B8"}
+                    />
+                  </View>
+                </View>
+
+                {/* Tracking Settings */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Live Tracking Frequencies</Text>
+                  <View style={styles.card}>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      {["low", "medium", "high"].map((freq) => (
+                        <TouchableOpacity
+                          key={freq}
+                          style={[styles.roleBtn, { flex: 1 }, trackingFrequency === freq && styles.roleBtnActive]}
+                          onPress={() => setTrackingFrequency(freq)}
+                        >
+                          <Text style={[styles.roleBtnText, trackingFrequency === freq && styles.roleBtnTextActive, { textTransform: "capitalize" }]}>
+                            {freq}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+
+                {/* Reset Settings */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>System Reset</Text>
+                  <View style={[styles.card, { flexDirection: "row", gap: 12 }]}>
+                    <TouchableOpacity style={[styles.actionBtn, { flex: 1, backgroundColor: "#E2E8F0" }]} onPress={() => Alert.alert("Cache Cleared", "Temporary logs cache cleared successfully.")}>
+                      <Text style={[styles.actionBtnText, { color: "#475569" }]}>Clear Cache</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.actionBtn, { flex: 1, backgroundColor: "#EF4444" }]} onPress={() => Alert.alert("Reset Completed", "All onboarding flows have been reset.")}>
+                      <Text style={styles.actionBtnText}>Reset Apps</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Profile Account Deletion (Basic Section Settings) */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Delete Profile Account</Text>
+                  <View style={styles.card}>
+                    <Text style={{ fontSize: 11, color: "#EF4444", fontWeight: "700", marginBottom: 12 }}>
+                      Permanently wipe all records, passenger manifest references, and billing details from our system.
+                    </Text>
+                    <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#EF4444" }]} onPress={handleDeleteAccount}>
+                      <Text style={styles.actionBtnText}>Delete Account & Data</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#64748B", marginHorizontal: 16, marginBottom: 20 }]} onPress={() => setProfileSubView("view")}>
+                  <Text style={styles.actionBtnText}>Back to Profile</Text>
                 </TouchableOpacity>
-              </View>
-            </View>
+              </>
+            )}
           </View>
         )}
       </ScrollView>

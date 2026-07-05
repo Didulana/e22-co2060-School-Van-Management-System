@@ -172,3 +172,15 @@ export const listDemoAccounts = async (_req: Request, res: Response) => {
     accounts: getDemoCredentials(),
   });
 };
+
+export const deleteCurrentUser = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    await pool.query("DELETE FROM users WHERE id = $1", [req.user.id]);
+    res.json({ success: true, message: "User account deleted successfully" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to delete user profile" });
+  }
+};
