@@ -147,6 +147,16 @@ export default function DriverDashboard() {
   const [routeName, setRouteName] = useState("");
   const [isOnboardingSubmitting, setIsOnboardingSubmitting] = useState(false);
 
+  const themeColors = {
+    background: isDarkMode ? "#0F172A" : "#F8FAFC",
+    cardBg: isDarkMode ? "#1E293B" : "#FFFFFF",
+    textPrimary: isDarkMode ? "#F8FAFC" : "#0F172A",
+    textSecondary: isDarkMode ? "#94A3B8" : "#64748B",
+    border: isDarkMode ? "#334155" : "#E2E8F0",
+    inputBg: isDarkMode ? "#0F172A" : "#F8FAFC",
+    headerBg: isDarkMode ? "#1E293B" : "#FFFFFF"
+  };
+
   // Initialize and load auth credentials
   useEffect(() => {
     async function initDashboard() {
@@ -163,6 +173,9 @@ export default function DriverDashboard() {
         setDriverEmail(session.user?.email || "");
         setDriverId(session.user?.id);
         setDriverPhone(session.user?.phone || "");
+
+        const savedDarkMode = await SecureStore.getItemAsync("ui-dark-mode");
+        if (savedDarkMode) setIsDarkMode(savedDarkMode === "true");
 
         // Fetch onboarding details to populate view fields
         try {
@@ -743,6 +756,11 @@ export default function DriverDashboard() {
     );
   };
 
+  const handleToggleDarkMode = async (value: boolean) => {
+    setIsDarkMode(value);
+    await SecureStore.setItemAsync("ui-dark-mode", value ? "true" : "false");
+  };
+
   const handleLogout = async () => {
     await stopTracking();
     await SecureStore.deleteItemAsync("school-van-auth-session");
@@ -761,12 +779,12 @@ export default function DriverDashboard() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* 1. Header Area */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: themeColors.headerBg, borderColor: themeColors.border }]}>
         <View>
-          <Text style={styles.welcome}>Driver Dashboard</Text>
-          <Text style={styles.name}>{driverName}</Text>
+          <Text style={[styles.welcome, { color: themeColors.textSecondary }]}>Driver Dashboard</Text>
+          <Text style={[styles.name, { color: themeColors.textPrimary }]}>{driverName}</Text>
         </View>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <LogOut size={20} color="#EF4444" />
@@ -1184,7 +1202,7 @@ export default function DriverDashboard() {
                     <Text style={{ fontSize: 13, fontWeight: "700", color: "#334155" }}>Dark Mode Options</Text>
                     <Switch
                       value={isDarkMode}
-                      onValueChange={setIsDarkMode}
+                      onValueChange={handleToggleDarkMode}
                       trackColor={{ false: "#E2E8F0", true: "#A7F3D0" }}
                       thumbColor={isDarkMode ? "#10B981" : "#94A3B8"}
                     />
@@ -1261,25 +1279,25 @@ export default function DriverDashboard() {
       </ScrollView>
 
       {/* 3. Bottom Navigation Tab Bar (Stick Footer Layout) */}
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { backgroundColor: themeColors.headerBg, borderColor: themeColors.border }]}>
         <TouchableOpacity style={[styles.tabItem, activeTab === "home" && styles.tabItemActive]} onPress={() => setActiveTab("home")}>
-          <Truck size={20} color={activeTab === "home" ? "#10B981" : "#64748B"} />
-          <Text style={[styles.tabItemText, activeTab === "home" && styles.tabItemTextActive]}>Home</Text>
+          <Truck size={20} color={activeTab === "home" ? "#10B981" : themeColors.textSecondary} />
+          <Text style={[styles.tabItemText, { color: themeColors.textSecondary }, activeTab === "home" && styles.tabItemTextActive]}>Home</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.tabItem, activeTab === "payments" && styles.tabItemActive]} onPress={() => setActiveTab("payments")}>
-          <CreditCard size={20} color={activeTab === "payments" ? "#10B981" : "#64748B"} />
-          <Text style={[styles.tabItemText, activeTab === "payments" && styles.tabItemTextActive]}>Payments</Text>
+          <CreditCard size={20} color={activeTab === "payments" ? "#10B981" : themeColors.textSecondary} />
+          <Text style={[styles.tabItemText, { color: themeColors.textSecondary }, activeTab === "payments" && styles.tabItemTextActive]}>Payments</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.tabItem, activeTab === "notifications" && styles.tabItemActive]} onPress={() => setActiveTab("notifications")}>
-          <Bell size={20} color={activeTab === "notifications" ? "#10B981" : "#64748B"} />
-          <Text style={[styles.tabItemText, activeTab === "notifications" && styles.tabItemTextActive]}>Notifications</Text>
+          <Bell size={20} color={activeTab === "notifications" ? "#10B981" : themeColors.textSecondary} />
+          <Text style={[styles.tabItemText, { color: themeColors.textSecondary }, activeTab === "notifications" && styles.tabItemTextActive]}>Notifications</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.tabItem, activeTab === "profile" && styles.tabItemActive]} onPress={() => setActiveTab("profile")}>
-          <User size={20} color={activeTab === "profile" ? "#10B981" : "#64748B"} />
-          <Text style={[styles.tabItemText, activeTab === "profile" && styles.tabItemTextActive]}>Profile</Text>
+          <User size={20} color={activeTab === "profile" ? "#10B981" : themeColors.textSecondary} />
+          <Text style={[styles.tabItemText, { color: themeColors.textSecondary }, activeTab === "profile" && styles.tabItemTextActive]}>Profile</Text>
         </TouchableOpacity>
       </View>
 

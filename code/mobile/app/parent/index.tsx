@@ -150,6 +150,16 @@ export default function ParentDashboard() {
   const [newPassword, setNewPassword] = useState("");
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
+  const themeColors = {
+    background: isDarkMode ? "#0F172A" : "#F8FAFC",
+    cardBg: isDarkMode ? "#1E293B" : "#FFFFFF",
+    textPrimary: isDarkMode ? "#F8FAFC" : "#0F172A",
+    textSecondary: isDarkMode ? "#94A3B8" : "#64748B",
+    border: isDarkMode ? "#334155" : "#E2E8F0",
+    inputBg: isDarkMode ? "#0F172A" : "#F8FAFC",
+    headerBg: isDarkMode ? "#1E293B" : "#FFFFFF"
+  };
+
   // Initialize and load auth credentials
   useEffect(() => {
     async function initDashboard() {
@@ -165,6 +175,9 @@ export default function ParentDashboard() {
         setParentName(session.user?.name || "Parent");
         setParentEmail(session.user?.email || "");
         setParentPhone(session.user?.phone || "");
+
+        const savedDarkMode = await SecureStore.getItemAsync("ui-dark-mode");
+        if (savedDarkMode) setIsDarkMode(savedDarkMode === "true");
 
         const savedPhone = await SecureStore.getItemAsync("parent-profile-phone");
         if (savedPhone) setParentPhone(savedPhone);
@@ -506,6 +519,11 @@ export default function ParentDashboard() {
     );
   };
 
+  const handleToggleDarkMode = async (value: boolean) => {
+    setIsDarkMode(value);
+    await SecureStore.setItemAsync("ui-dark-mode", value ? "true" : "false");
+  };
+
   const handleLogout = async () => {
     if (socket) socket.disconnect();
     await SecureStore.deleteItemAsync("school-van-auth-session");
@@ -538,12 +556,12 @@ export default function ParentDashboard() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* 1. Header Area */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: themeColors.headerBg, borderColor: themeColors.border }]}>
         <View>
-          <Text style={styles.welcome}>Parent Dashboard</Text>
-          <Text style={styles.name}>{parentName}</Text>
+          <Text style={[styles.welcome, { color: themeColors.textSecondary }]}>Parent Dashboard</Text>
+          <Text style={[styles.name, { color: themeColors.textPrimary }]}>{parentName}</Text>
         </View>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <LogOut size={20} color="#EF4444" />
@@ -957,7 +975,7 @@ export default function ParentDashboard() {
                     <Text style={{ fontSize: 13, fontWeight: "700", color: "#334155" }}>Dark Mode Options</Text>
                     <Switch
                       value={isDarkMode}
-                      onValueChange={setIsDarkMode}
+                      onValueChange={handleToggleDarkMode}
                       trackColor={{ false: "#E2E8F0", true: "#A7F3D0" }}
                       thumbColor={isDarkMode ? "#10B981" : "#94A3B8"}
                     />
@@ -1034,30 +1052,30 @@ export default function ParentDashboard() {
       </ScrollView>
 
       {/* 3. Bottom Navigation Tab Bar (Stick Footer Layout) */}
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { backgroundColor: themeColors.headerBg, borderColor: themeColors.border }]}>
         <TouchableOpacity style={[styles.tabItem, activeTab === "home" && styles.tabItemActive]} onPress={() => setActiveTab("home")}>
-          <Navigation size={20} color={activeTab === "home" ? "#10B981" : "#64748B"} />
-          <Text style={[styles.tabItemText, activeTab === "home" && styles.tabItemTextActive]}>Tracking</Text>
+          <Navigation size={20} color={activeTab === "home" ? "#10B981" : themeColors.textSecondary} />
+          <Text style={[styles.tabItemText, { color: themeColors.textSecondary }, activeTab === "home" && styles.tabItemTextActive]}>Tracking</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.tabItem, activeTab === "children" && styles.tabItemActive]} onPress={() => setActiveTab("children")}>
-          <Users size={20} color={activeTab === "children" ? "#10B981" : "#64748B"} />
-          <Text style={[styles.tabItemText, activeTab === "children" && styles.tabItemTextActive]}>Kids</Text>
+          <Users size={20} color={activeTab === "children" ? "#10B981" : themeColors.textSecondary} />
+          <Text style={[styles.tabItemText, { color: themeColors.textSecondary }, activeTab === "children" && styles.tabItemTextActive]}>Kids</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.tabItem, activeTab === "payments" && styles.tabItemActive]} onPress={() => setActiveTab("payments")}>
-          <CreditCard size={20} color={activeTab === "payments" ? "#10B981" : "#64748B"} />
-          <Text style={[styles.tabItemText, activeTab === "payments" && styles.tabItemTextActive]}>Payments</Text>
+          <CreditCard size={20} color={activeTab === "payments" ? "#10B981" : themeColors.textSecondary} />
+          <Text style={[styles.tabItemText, { color: themeColors.textSecondary }, activeTab === "payments" && styles.tabItemTextActive]}>Payments</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.tabItem, activeTab === "notifications" && styles.tabItemActive]} onPress={() => setActiveTab("notifications")}>
-          <Bell size={20} color={activeTab === "notifications" ? "#10B981" : "#64748B"} />
-          <Text style={[styles.tabItemText, activeTab === "notifications" && styles.tabItemTextActive]}>Alerts</Text>
+          <Bell size={20} color={activeTab === "notifications" ? "#10B981" : themeColors.textSecondary} />
+          <Text style={[styles.tabItemText, { color: themeColors.textSecondary }, activeTab === "notifications" && styles.tabItemTextActive]}>Alerts</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.tabItem, activeTab === "profile" && styles.tabItemActive]} onPress={() => setActiveTab("profile")}>
-          <User size={20} color={activeTab === "profile" ? "#10B981" : "#64748B"} />
-          <Text style={[styles.tabItemText, activeTab === "profile" && styles.tabItemTextActive]}>Profile</Text>
+          <User size={20} color={activeTab === "profile" ? "#10B981" : themeColors.textSecondary} />
+          <Text style={[styles.tabItemText, { color: themeColors.textSecondary }, activeTab === "profile" && styles.tabItemTextActive]}>Profile</Text>
         </TouchableOpacity>
       </View>
 

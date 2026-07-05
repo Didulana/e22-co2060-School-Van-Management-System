@@ -37,6 +37,24 @@ export default function EmergencyContacts() {
   const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    async function loadTheme() {
+      const val = await SecureStore.getItemAsync("ui-dark-mode");
+      if (val === "true") setIsDarkMode(true);
+    }
+    loadTheme();
+  }, []);
+
+  const themeColors = {
+    background: isDarkMode ? "#0F172A" : "#F8FAFC",
+    cardBg: isDarkMode ? "#1E293B" : "#FFFFFF",
+    textPrimary: isDarkMode ? "#F8FAFC" : "#0F172A",
+    textSecondary: isDarkMode ? "#94A3B8" : "#64748B",
+    border: isDarkMode ? "#334155" : "#E2E8F0",
+    headerBg: isDarkMode ? "#1E293B" : "#FFFFFF"
+  };
 
   const loadContacts = async () => {
     setIsLoading(true);
@@ -73,13 +91,13 @@ export default function EmergencyContacts() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* Header Panel */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#0F172A" />
+      <View style={[styles.header, { backgroundColor: themeColors.headerBg, borderColor: themeColors.border }]}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: isDarkMode ? "#334155" : "#F1F5F9" }]} onPress={() => router.back()}>
+          <ArrowLeft size={20} color={themeColors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Emergency Contacts</Text>
+        <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]}>Emergency Contacts</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -100,15 +118,15 @@ export default function EmergencyContacts() {
           keyExtractor={(item, index) => index.toString()}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]}>
               <View style={styles.cardInfo}>
-                <View style={styles.avatar}>
+                <View style={[styles.avatar, { backgroundColor: isDarkMode ? "#334155" : "#EFF6FF" }]}>
                   <User size={20} color="#3B82F6" />
                 </View>
                 <View style={styles.meta}>
-                  <Text style={styles.driverName}>{item.driver_name}</Text>
-                  <Text style={styles.studentLabel}>Child: {item.student_name}</Text>
-                  <Text style={styles.routeLabel}>Route: {item.route_name || "Standard Route"}</Text>
+                  <Text style={[styles.driverName, { color: themeColors.textPrimary }]}>{item.driver_name}</Text>
+                  <Text style={[styles.studentLabel, { color: themeColors.textSecondary }]}>Child: {item.student_name}</Text>
+                  <Text style={[styles.routeLabel, { color: themeColors.textSecondary }]}>Route: {item.route_name || "Standard Route"}</Text>
                 </View>
               </View>
 

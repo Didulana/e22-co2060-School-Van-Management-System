@@ -41,6 +41,24 @@ export default function NotificationsLog() {
   const router = useRouter();
   const [logs, setLogs] = useState<NotificationLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    async function loadTheme() {
+      const val = await SecureStore.getItemAsync("ui-dark-mode");
+      if (val === "true") setIsDarkMode(true);
+    }
+    loadTheme();
+  }, []);
+
+  const themeColors = {
+    background: isDarkMode ? "#0F172A" : "#F8FAFC",
+    cardBg: isDarkMode ? "#1E293B" : "#FFFFFF",
+    textPrimary: isDarkMode ? "#F8FAFC" : "#0F172A",
+    textSecondary: isDarkMode ? "#94A3B8" : "#64748B",
+    border: isDarkMode ? "#334155" : "#E2E8F0",
+    headerBg: isDarkMode ? "#1E293B" : "#FFFFFF"
+  };
 
   const loadNotifications = async () => {
     setIsLoading(true);
@@ -98,15 +116,15 @@ export default function NotificationsLog() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* Header Panel */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#0F172A" />
+      <View style={[styles.header, { backgroundColor: themeColors.headerBg, borderColor: themeColors.border }]}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: isDarkMode ? "#334155" : "#F1F5F9" }]} onPress={() => router.back()}>
+          <ArrowLeft size={20} color={themeColors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Alert logs</Text>
-        <TouchableOpacity style={styles.backBtn} onPress={loadNotifications} disabled={isLoading}>
-          <Bell size={18} color="#0F172A" />
+        <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]}>Alert logs</Text>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: isDarkMode ? "#334155" : "#F1F5F9" }]} onPress={loadNotifications} disabled={isLoading}>
+          <Bell size={18} color={themeColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -127,14 +145,21 @@ export default function NotificationsLog() {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <View style={getCardStyle(item.type)}>
+            <View style={[
+              getCardStyle(item.type), 
+              item.type !== "sos" && { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }
+            ]}>
               <View style={styles.cardHeader}>
-                <View style={styles.iconWrapper}>
+                <View style={[styles.iconWrapper, { backgroundColor: isDarkMode ? "#334155" : "#F1F5F9" }]}>
                   {getLogIcon(item.type)}
                 </View>
                 <Text style={styles.timestamp}>{formatTimestamp(item.created_at)}</Text>
               </View>
-              <Text style={[styles.message, item.type === "sos" && styles.sosMessage]}>
+              <Text style={[
+                styles.message, 
+                item.type !== "sos" && { color: themeColors.textPrimary },
+                item.type === "sos" && styles.sosMessage
+              ]}>
                 {item.message}
               </Text>
             </View>

@@ -19,6 +19,7 @@ import { API_BASE_URL } from "../constants/config";
 export default function LoginScreen() {
   const router = useRouter();
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   
   // Login/Signup States
   const [email, setEmail] = useState("");
@@ -28,6 +29,23 @@ export default function LoginScreen() {
   const [role, setRole] = useState<"driver" | "parent">("parent");
   
   const [isLoading, setIsLoading] = useState(false);
+
+  React.useEffect(() => {
+    async function loadTheme() {
+      const val = await SecureStore.getItemAsync("ui-dark-mode");
+      if (val === "true") setIsDarkMode(true);
+    }
+    loadTheme();
+  }, []);
+
+  const themeColors = {
+    background: isDarkMode ? "#0F172A" : "#F8FAFC",
+    cardBg: isDarkMode ? "#1E293B" : "#FFFFFF",
+    textPrimary: isDarkMode ? "#F8FAFC" : "#0F172A",
+    textSecondary: isDarkMode ? "#94A3B8" : "#64748B",
+    border: isDarkMode ? "#334155" : "#E2E8F0",
+    inputBg: isDarkMode ? "#0F172A" : "#F8FAFC"
+  };
 
   const handleSubmit = async () => {
     if (isLoginMode) {
@@ -99,23 +117,23 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.background }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <Text style={styles.title}>School Van</Text>
+          <Text style={[styles.title, { color: themeColors.textPrimary }]}>School Van</Text>
           <Text style={styles.subtitle}>Transit Control System</Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{isLoginMode ? "Sign In" : "Create Account"}</Text>
+        <View style={[styles.card, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]}>
+          <Text style={[styles.cardTitle, { color: themeColors.textPrimary }]}>{isLoginMode ? "Sign In" : "Create Account"}</Text>
 
           {!isLoginMode && (
             <>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Full Name</Text>
+                <Text style={[styles.label, { color: themeColors.textSecondary }]}>Full Name</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: themeColors.inputBg, color: themeColors.textPrimary, borderColor: themeColors.border }]}
                   placeholder="e.g. John Doe"
                   placeholderTextColor="#94A3B8"
                   value={name}
@@ -124,9 +142,9 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Phone Number</Text>
+                <Text style={[styles.label, { color: themeColors.textSecondary }]}>Phone Number</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: themeColors.inputBg, color: themeColors.textPrimary, borderColor: themeColors.border }]}
                   placeholder="e.g. +94771234567"
                   placeholderTextColor="#94A3B8"
                   value={phone}
@@ -136,16 +154,16 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Register As</Text>
+                <Text style={[styles.label, { color: themeColors.textSecondary }]}>Register As</Text>
                 <View style={styles.roleContainer}>
                   <TouchableOpacity
-                    style={[styles.roleBtn, role === "parent" && styles.roleBtnActive]}
+                    style={[styles.roleBtn, { backgroundColor: themeColors.inputBg, borderColor: themeColors.border }, role === "parent" && styles.roleBtnActive]}
                     onPress={() => setRole("parent")}
                   >
                     <Text style={[styles.roleBtnText, role === "parent" && styles.roleBtnTextActive]}>Parent</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.roleBtn, role === "driver" && styles.roleBtnActive]}
+                    style={[styles.roleBtn, { backgroundColor: themeColors.inputBg, borderColor: themeColors.border }, role === "driver" && styles.roleBtnActive]}
                     onPress={() => setRole("driver")}
                   >
                     <Text style={[styles.roleBtnText, role === "driver" && styles.roleBtnTextActive]}>Driver</Text>
@@ -156,9 +174,9 @@ export default function LoginScreen() {
           )}
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
+            <Text style={[styles.label, { color: themeColors.textSecondary }]}>Email Address</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: themeColors.inputBg, color: themeColors.textPrimary, borderColor: themeColors.border }]}
               placeholder="e.g. user@schoolvan.local"
               placeholderTextColor="#94A3B8"
               value={email}
@@ -170,9 +188,9 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={[styles.label, { color: themeColors.textSecondary }]}>Password</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: themeColors.inputBg, color: themeColors.textPrimary, borderColor: themeColors.border }]}
               placeholder="••••••••"
               placeholderTextColor="#94A3B8"
               value={password}

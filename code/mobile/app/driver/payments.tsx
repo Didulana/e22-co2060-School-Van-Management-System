@@ -50,6 +50,25 @@ export default function DriverPayments() {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    async function loadTheme() {
+      const val = await SecureStore.getItemAsync("ui-dark-mode");
+      if (val === "true") setIsDarkMode(true);
+    }
+    loadTheme();
+  }, []);
+
+  const themeColors = {
+    background: isDarkMode ? "#0F172A" : "#F8FAFC",
+    cardBg: isDarkMode ? "#1E293B" : "#FFFFFF",
+    textPrimary: isDarkMode ? "#F8FAFC" : "#0F172A",
+    textSecondary: isDarkMode ? "#94A3B8" : "#64748B",
+    border: isDarkMode ? "#334155" : "#E2E8F0",
+    headerBg: isDarkMode ? "#1E293B" : "#FFFFFF",
+    inputBg: isDarkMode ? "#0F172A" : "#F8FAFC"
+  };
 
   const loadPayments = async () => {
     setIsLoading(true);
@@ -156,15 +175,15 @@ export default function DriverPayments() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* Header Layout */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#0F172A" />
+      <View style={[styles.header, { backgroundColor: themeColors.headerBg, borderColor: themeColors.border }]}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: isDarkMode ? "#334155" : "#F1F5F9" }]} onPress={() => router.back()}>
+          <ArrowLeft size={20} color={themeColors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Student Dues</Text>
-        <TouchableOpacity style={styles.refreshBtn} onPress={loadPayments} disabled={isLoading}>
-          <RefreshCw size={18} color="#0F172A" />
+        <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]}>Student Dues</Text>
+        <TouchableOpacity style={[styles.refreshBtn, { backgroundColor: isDarkMode ? "#334155" : "#F1F5F9" }]} onPress={loadPayments} disabled={isLoading}>
+          <RefreshCw size={18} color={themeColors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -196,10 +215,10 @@ export default function DriverPayments() {
           renderItem={({ item }) => {
             const colors = getStatusColor(item.status);
             return (
-              <View style={styles.paymentCard}>
+              <View style={[styles.paymentCard, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]}>
                 <View style={styles.cardInfo}>
-                  <Text style={styles.studentName}>{item.student_name || `Student #${item.student_id}`}</Text>
-                  <Text style={styles.monthLabel}>Month: {item.month} • Due: LKR {Number(item.amount_due).toFixed(2)}</Text>
+                  <Text style={[styles.studentName, { color: themeColors.textPrimary }]}>{item.student_name || `Student #${item.student_id}`}</Text>
+                  <Text style={[styles.monthLabel, { color: themeColors.textSecondary }]}>Month: {item.month} • Due: LKR {Number(item.amount_due).toFixed(2)}</Text>
                 </View>
                 <View style={styles.cardActions}>
                   <View style={[styles.badge, { backgroundColor: colors.bg }]}>
@@ -236,19 +255,19 @@ export default function DriverPayments() {
         onRequestClose={() => setSelectedPayment(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Review Payment</Text>
+          <View style={[styles.modalContent, { backgroundColor: themeColors.cardBg }]}>
+            <Text style={[styles.modalTitle, { color: themeColors.textPrimary }]}>Review Payment</Text>
             {selectedPayment && (
               <>
-                <Text style={styles.modalDesc}>
+                <Text style={[styles.modalDesc, { color: themeColors.textSecondary }]}>
                   Verifying payment from student:{"\n"}
-                  <Text style={{ fontWeight: "800" }}>{selectedPayment.student_name}</Text>{"\n"}
+                  <Text style={{ fontWeight: "800", color: themeColors.textPrimary }}>{selectedPayment.student_name}</Text>{"\n"}
                   Amount: LKR {Number(selectedPayment.amount_due).toFixed(2)}
                 </Text>
                 <Text style={styles.modalMeta}>Reference Code: {selectedPayment.receipt_ref || "N/A"}</Text>
 
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, { backgroundColor: themeColors.inputBg, color: themeColors.textPrimary, borderColor: themeColors.border }]}
                   placeholder="Rejection remarks (required only if rejecting)"
                   value={rejectReason}
                   onChangeText={setRejectReason}
