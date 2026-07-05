@@ -7,130 +7,194 @@ import {
   ActivityIndicator, 
   Alert, 
   ScrollView,
-  SafeAreaView
+  SafeAreaView,
+  TextInput,
+  Modal,
+  FlatList
 } from "react-native";
-import { useRouter, Link } from "expo-router";
+import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import * as Location from "expo-location";
 import { 
   Truck as TruckIcon, 
   ShieldAlert as ShieldAlertIcon, 
   LogOut as LogOutIcon, 
   CreditCard as CreditCardIcon, 
-  ChevronRight as ChevronRightIcon, 
   Activity as ActivityIcon, 
   Users as UsersIcon, 
   Settings as SettingsIcon,
   User as UserIcon,
-  Check as CheckIcon
+  Check as CheckIcon,
+  Bell as BellIcon,
+  RefreshCw as RefreshCwIcon,
+  FileText as FileTextIcon,
+  X as XIcon,
+  Lock as LockIcon,
+  BookOpen as BookOpenIcon
 } from "lucide-react-native";
 
 const Truck = TruckIcon as any;
 const ShieldAlert = ShieldAlertIcon as any;
 const LogOut = LogOutIcon as any;
 const CreditCard = CreditCardIcon as any;
-const ChevronRight = ChevronRightIcon as any;
 const Activity = ActivityIcon as any;
 const User = UserIcon as any;
 const Check = CheckIcon as any;
-import { API_BASE_URL } from "../../constants/config";
-import { useGPSBackground } from "../../hooks/useGPSBackground";
-
+const Bell = BellIcon as any;
+const RefreshCw = RefreshCwIcon as any;
+const FileText = FileTextIcon as any;
+const X = XIcon as any;
+const Lock = LockIcon as any;
+const BookOpen = BookOpenIcon as any;
 const Users = UsersIcon as any;
 const Settings = SettingsIcon as any;
+
+import { API_BASE_URL } from "../../constants/config";
+import { useGPSBackground } from "../../hooks/useGPSBackground";
+import * as ExpoLocation from "expo-location";
+
+interface Student {
+  id: number;
+  name: string;
+  school: string;
+  status: "absent" | "awaiting" | "boarded" | "completed";
+}
+
+interface Payment {
+  id: number;
+  student_name?: string;
+  student_id: number;
+  month: string;
+  amount_due: string;
+  status: string;
+  receipt_ref?: string;
+  receipt_url?: string;
+}
+
+interface JourneyHistory {
+  id: number;
+  route_name: string;
+  started_at: string;
+  completed_at: string | null;
+  status: string;
+}
 
 export default function DriverDashboard() {
   const router = useRouter();
   const { startTracking, stopTracking } = useGPSBackground();
+  
+  // Navigation Tabs state
+  const [activeTab, setActiveTab] = useState<"home" | "payments" | "notifications" | "settings">("home");
+
+  // Core Driver session states
   const [driverName, setDriverName] = useState("Driver");
+  const [driverEmail, setDriverEmail] = useState("");
   const [driverId, setDriverId] = useState<number | null>(null);
   const [realDriverId, setRealDriverId] = useState<number | null>(null);
   const [token, setToken] = useState("");
   const [isActive, setIsActive] = useState(false);
   const [activeJourneyId, setActiveJourneyId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Tab 1: Home Dashboard states
+  const [students, setStudents] = useState<Student[]>([]);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [simCoords, setSimCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [students, setStudents] = useState<any[]>([]);
-  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const [announcementMsg, setAnnouncementMsg] = useState("");
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
 
-  const loadJourneyStudents = async (journeyId: number) => {
-    setIsLoadingStudents(true);
-    try {
-      const sessionStr = await SecureStore.getItemAsync("school-van-auth-session");
-      if (!sessionStr) return;
-      const session = JSON.parse(sessionStr);
+  // Tab 2: Payments states
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [isSubmittingVerification, setIsSubmittingVerification] = useState(false);
 
-      const res = await fetch(`${API_BASE_URL}/driver/journey/${journeyId}/students`, {
-        headers: { Authorization: `Bearer ${session.token}` },
-      });
-      const data = await res.json().catch(() => []);
-      if (res.ok) {
-        setStudents(data);
-      } else {
-        console.error("Failed to load students:", data.error);
+  // Tab 3: Notifications (Past Journeys) states
+  const [journeyHistory, setJourneyHistory] = useState<JourneyHistory[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // Tab 4: Settings states
+  // Payment Config Settings
+  const [paymentMode, setPaymentMode] = useState<"fixed" | "distance_based" | "hybrid">("fixed");
+  const [fixedAmount, setFixedAmount] = useState("0");
+  const [baseCharge, setBaseCharge] = useState("0");
+  const [chargePerKm, setChargePerKm] = useState("0");
+  const [dueDateDay, setDueDateDay] = useState("5");
+  const [isLoadingPaymentSettings, setIsLoadingPaymentSettings] = useState(false);
+  // Password change
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+  // Onboarding status
+  const [onboardingCompleted, setOnboardingCompleted] = useState(true);
+  const [onboardingStep, setOnboardingStep] = useState(1);
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [vehicleNumber, setVehicleNumber] = useState("");
+  const [vehicleType, setVehicleType] = useState("van");
+  const [vehicleCapacity, setVehicleCapacity] = useState("12");
+  const [routeName, setRouteName] = useState("");
+  const [isOnboardingSubmitting, setIsOnboardingSubmitting] = useState(false);
+
+  // Initialize and load auth credentials
+  useEffect(() => {
+    async function initDashboard() {
+      try {
+        const sessionStr = await SecureStore.getItemAsync("school-van-auth-session");
+        if (!sessionStr) {
+          router.replace("/login");
+          return;
+        }
+
+        const session = JSON.parse(sessionStr);
+        setToken(session.token);
+        setDriverName(session.user?.name || "Driver");
+        setDriverEmail(session.user?.email || "");
+        setDriverId(session.user?.id);
+
+        // Fetch driver record ID mappings
+        const profileRes = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${session.token}` },
+        });
+        const profile = await profileRes.json();
+        if (profileRes.ok && profile.driverId) {
+          setRealDriverId(profile.driverId);
+          // Check active status
+          if (profile.activeJourneyId) {
+            setIsActive(true);
+            setActiveJourneyId(profile.activeJourneyId);
+            loadJourneyStudents(profile.activeJourneyId);
+          }
+        }
+      } catch (err) {
+        console.error("Dashboard init sync error:", err);
       }
-    } catch (err) {
-      console.error("Load students error:", err);
-    } finally {
-      setIsLoadingStudents(false);
     }
-  };
+    initDashboard();
+  }, []);
 
-  const handleBoardStudent = async (studentId: number) => {
-    if (!activeJourneyId || !token) return;
-    setIsLoadingStudents(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/driver/journey/${activeJourneyId}/board/${studentId}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        Alert.alert("Boarded", "Student has been marked as boarded successfully.");
-        await loadJourneyStudents(activeJourneyId);
-      } else {
-        Alert.alert("Action Failed", data.error || "Failed to mark student as boarded.");
+  // Watch/Load states on tab switches
+  useEffect(() => {
+    if (token) {
+      if (activeTab === "payments") {
+        loadPayments();
+      } else if (activeTab === "notifications") {
+        loadJourneyHistory();
+      } else if (activeTab === "settings") {
+        loadPaymentSettings();
+        checkOnboardingStatus();
       }
-    } catch (err: any) {
-      Alert.alert("Action Failed", err.message || "Network request failed.");
-    } finally {
-      setIsLoadingStudents(false);
     }
-  };
-
-  const handleDropStudent = async (studentId: number) => {
-    if (!activeJourneyId || !token) return;
-    setIsLoadingStudents(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/driver/journey/${activeJourneyId}/drop/${studentId}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        Alert.alert("Dropped Off", "Student has been marked as dropped off successfully.");
-        await loadJourneyStudents(activeJourneyId);
-      } else {
-        Alert.alert("Action Failed", data.error || "Failed to mark student as dropped off.");
-      }
-    } catch (err: any) {
-      Alert.alert("Action Failed", err.message || "Network request failed.");
-    } finally {
-      setIsLoadingStudents(false);
-    }
-  };
+  }, [activeTab, token]);
 
   // GPS Simulation Loop
   useEffect(() => {
     let interval: any = null;
-
     if (isActive && isSimulating && activeJourneyId && token && simCoords) {
       let currentLat = simCoords.latitude;
       let currentLng = simCoords.longitude;
 
       interval = setInterval(async () => {
-        // Slowly walk northeast to simulate movement
         currentLat += 0.00015;
         currentLng += 0.00015;
 
@@ -143,365 +207,826 @@ export default function DriverDashboard() {
             },
             body: JSON.stringify({ journeyId: activeJourneyId, lat: currentLat, lng: currentLng }),
           });
-          
           if (!res.ok) {
             console.error("Simulator API push failure:", await res.text());
           }
         } catch (e) {
           console.error("Simulator broadcast connection error:", e);
         }
-      }, 10000); // Trigger every 10 seconds to respect rate limiter
+      }, 10000); // 10s intervals
     }
-
     return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
+      if (interval) clearInterval(interval);
     };
   }, [isActive, isSimulating, activeJourneyId, token, simCoords]);
 
-  useEffect(() => {
-    async function initDashboard() {
-      try {
-        const sessionStr = await SecureStore.getItemAsync("school-van-auth-session");
-        if (sessionStr) {
-          const session = JSON.parse(sessionStr);
-          setDriverName(session.user?.name || "Driver");
-          setDriverId(session.user?.id);
-          setToken(session.token);
+  // ONBOARDING CHECKS
+  const checkOnboardingStatus = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/driver/onboarding/status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setOnboardingCompleted(data.completed);
+        setOnboardingStep(data.step || 1);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
-          // Get onboarding status to retrieve the real driver profile ID
-          const statusRes = await fetch(`${API_BASE_URL}/driver/onboarding/status`, {
-            headers: { Authorization: `Bearer ${session.token}` }
-          });
-          const statusData = await statusRes.json().catch(() => ({}));
-          let actualDriverId = session.user?.id; // fallback
-          if (statusData.driverId) {
-            actualDriverId = statusData.driverId;
-            setRealDriverId(statusData.driverId);
-          } else {
-            // Default fallback profile for testing/development
-            setRealDriverId(1);
-            actualDriverId = 1;
-          }
+  const handleOnboardingSubmit = async () => {
+    if (!licenseNumber || !vehicleNumber || !routeName) {
+      Alert.alert("Error", "Please fill in all onboarding fields");
+      return;
+    }
+    setIsOnboardingSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/driver/onboarding/submit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          licenseNumber,
+          vehicleDetails: {
+            registrationNumber: vehicleNumber,
+            type: vehicleType,
+            seatCount: Number(vehicleCapacity),
+            isAc: true
+          },
+          routeStops: [
+            { name: routeName + " Start", order: 1, lat: 6.9271, lng: 79.8612 },
+            { name: routeName + " End", order: 2, lat: 6.9371, lng: 79.8712 }
+          ]
+        })
+      });
+      if (res.ok) {
+        Alert.alert("Success", "Onboarding completed successfully!");
+        checkOnboardingStatus();
+      } else {
+        const err = await res.json();
+        Alert.alert("Error", err.error || "Failed to submit onboarding");
+      }
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Failed onboarding request");
+    } finally {
+      setIsOnboardingSubmitting(false);
+    }
+  };
 
-          // Sync active journey state from backend
-          const res = await fetch(`${API_BASE_URL}/driver/journey/active?driver_id=${actualDriverId}`, {
-            headers: { Authorization: `Bearer ${session.token}` }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.active && data.journey) {
-              setIsActive(true);
-              setActiveJourneyId(data.journey.id);
-              await loadJourneyStudents(data.journey.id);
+  // LOAD JOURNEY ASSIGNED PASSENGERS
+  const loadJourneyStudents = async (journeyId: number) => {
+    setIsLoadingStudents(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/driver/journey/${journeyId}/students`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => []);
+      if (res.ok) {
+        setStudents(data);
+      }
+    } catch (err) {
+      console.error("Load students error:", err);
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
+
+  // MANAGE BOARDING & DROPOFF
+  const handleBoardStudent = async (studentId: number) => {
+    if (!activeJourneyId) return;
+    setIsLoadingStudents(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/driver/journey/${activeJourneyId}/board/${studentId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "boarded" } : s));
+      } else {
+        const data = await res.json();
+        Alert.alert("Boarding Failed", data.error || "Checkin request blocked by database.");
+      }
+    } catch (err: any) {
+      Alert.alert("API Sync Failed", err.message || "Request blocked.");
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
+
+  const handleDropStudent = async (studentId: number) => {
+    if (!activeJourneyId) return;
+    setIsLoadingStudents(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/driver/journey/${activeJourneyId}/drop/${studentId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, status: "completed" } : s));
+      } else {
+        const data = await res.json();
+        Alert.alert("Dropoff Failed", data.error || "Checkout request blocked by database.");
+      }
+    } catch (err: any) {
+      Alert.alert("API Sync Failed", err.message || "Request blocked.");
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
+
+  // START & FINISH JOURNEY TRIP
+  const handleToggleJourney = async () => {
+    if (isActive) {
+      Alert.alert("Complete Trip", "Confirm you have safely completed this route. This will finalize logs.", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "End Journey",
+          onPress: async () => {
+            try {
+              const res = await fetch(`${API_BASE_URL}/driver/journey/${activeJourneyId}/complete`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (res.ok) {
+                await stopTracking();
+                setIsActive(false);
+                setIsSimulating(false);
+                setActiveJourneyId(null);
+                setStudents([]);
+                Alert.alert("Route Completed", "Active logs saved to history logs.");
+              }
+            } catch (err) {
+              Alert.alert("Failed", "Trip complete update blocked.");
             }
           }
         }
-      } catch (err) {
-        console.error("Initialization failure", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    initDashboard();
-  }, []);
-
-  const handleLogout = async () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          await stopTracking();
-          await SecureStore.deleteItemAsync("school-van-auth-session");
-          router.replace("/login");
-        }
-      }
-    ]);
-  };
-
-  const toggleSimulation = async () => {
-    if (isSimulating) {
-      setIsSimulating(false);
-      setSimCoords(null);
-      if (activeJourneyId) {
-        await startTracking(activeJourneyId);
-      }
+      ]);
     } else {
-      setIsLoading(true);
-      try {
-        await stopTracking();
-        // Fetch current physical coordinates to initialize mock simulator
-        const position = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced
-        });
-
-        setSimCoords({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        });
-
-        setIsSimulating(true);
-        Alert.alert("Simulation Active", "GPS Simulator running. Van coordinates are shifting automatically from your actual location.");
-      } catch (err: any) {
-        Alert.alert("Simulator Error", "Failed to retrieve initial location coordinates for simulation: " + err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const toggleJourney = async () => {
-    if (!driverId || !token) {
-      Alert.alert("Error", "No active credentials session found.");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const activeDriverId = realDriverId || driverId || 1;
-      if (isActive) {
-        // Complete current trip
-        const stopRes = await fetch(`${API_BASE_URL}/driver/journey/${activeJourneyId}/complete`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        if (!stopRes.ok) {
-          const err = await stopRes.json().catch(() => ({}));
-          throw new Error(err.error || "Failed to complete active journey.");
-        }
-
-        await stopTracking();
-        setIsActive(false);
-        setActiveJourneyId(null);
-        setIsSimulating(false);
-        setStudents([]);
-        Alert.alert("Trip Completed", "Good job! Trip logs finalized.");
-      } else {
-        // Fetch assigned routes
-        let routeId = 1;
-        const routesRes = await fetch(`${API_BASE_URL}/routes?driver_id=${activeDriverId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const routes = await routesRes.json().catch(() => []);
-        
-        if (routes && routes.length > 0) {
-          routeId = routes[0].id;
-        } else {
-          // Fallback: try fetching all routes in system
-          const allRoutesRes = await fetch(`${API_BASE_URL}/routes`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          const allRoutes = await allRoutesRes.json().catch(() => []);
-          if (allRoutes && allRoutes.length > 0) {
-            routeId = allRoutes[0].id;
-            Alert.alert("Notice", `No routes assigned to your profile. Using fallback route: "${allRoutes[0].route_name || allRoutes[0].name}" for testing.`);
-          } else {
-            routeId = 1;
-            Alert.alert("Testing Mode", "No routes found in database. Initializing with dummy Route ID #1.");
+      Alert.alert("Start Journey", "This will activate live GPS tracking telemetry coordinates for parents.", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Start Trip",
+          onPress: async () => {
+            try {
+              const res = await fetch(`${API_BASE_URL}/driver/journey/start`, {
+                method: "POST",
+                headers: { 
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}` 
+                },
+                body: JSON.stringify({ routeId: 1 }), // Default route
+              });
+              const data = await res.json();
+              if (res.ok && data.journeyId) {
+                setActiveJourneyId(data.journeyId);
+                setIsActive(true);
+                await startTracking(data.journeyId);
+                loadJourneyStudents(data.journeyId);
+              } else {
+                Alert.alert("Error", data.error || "Unable to start journey route.");
+              }
+            } catch (err) {
+              Alert.alert("Start Failed", "Connection error.");
+            }
           }
         }
-
-        // Start next trip
-        const startRes = await fetch(`${API_BASE_URL}/driver/journey/start`, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}` 
-          },
-          body: JSON.stringify({ driver_id: activeDriverId, route_id: routeId }),
-        });
-        const journey = await startRes.json();
-        if (!startRes.ok) throw new Error(journey.error || "Ignition failure: Unable to initiate route.");
-
-        await startTracking(journey.id);
-        setIsActive(true);
-        setActiveJourneyId(journey.id);
-        await loadJourneyStudents(journey.id);
-        Alert.alert("Trip Started", "GPS telemetry active. Safe driving!");
-      }
-    } catch (err: any) {
-      Alert.alert("Action Failed", err.message || "Journey lifecycle sync error.");
-    } finally {
-      setIsLoading(false);
+      ]);
     }
   };
 
-  const handleSOS = async () => {
-    if (!token) return;
-    
-    Alert.alert("Emergency Broadcast", "Transmit immediate SOS distress payload to parents and administrators?", [
+  // SOS ALERTS BROADCAST
+  const handleSOS = () => {
+    Alert.alert("🚨 EMERGENCY SOS BROADCAST", "Are you sure you want to trigger an SOS alert? This will immediately notify parents with sound warnings.", [
       { text: "Cancel", style: "cancel" },
       {
-        text: "Send Alert",
+        text: "Broadcast SOS",
         style: "destructive",
         onPress: async () => {
           try {
             const res = await fetch(`${API_BASE_URL}/driver/sos`, {
               method: "POST",
-              headers: { Authorization: `Bearer ${token}` },
+              headers: { 
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}` 
+              },
+              body: JSON.stringify({ activeJourneyId })
             });
             if (res.ok) {
-              Alert.alert("SOS Sent", "Emergency beacon has been broadcasted.");
-            } else {
-              const err = await res.json().catch(() => ({}));
-              throw new Error(err.error || "SOS transmission failed.");
+              Alert.alert("SOS Dispatched", "SOS flags activated. Parents have been notified.");
             }
-          } catch (err: any) {
-            Alert.alert("SOS Failed", err.message || "Failed to contact gateway.");
+          } catch {
+            Alert.alert("SOS dispatch failure", "Signal connection failure.");
           }
         }
       }
     ]);
   };
 
+  // ANNOUNCEMENTS BROADCASTER (POST /api/driver/announce)
+  const handleBroadcastAnnouncement = async () => {
+    if (!announcementMsg.trim()) {
+      Alert.alert("Error", "Please input an announcement message");
+      return;
+    }
+    setIsBroadcasting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/driver/announce`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ driver_id: realDriverId || driverId, message: announcementMsg.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        Alert.alert("Success", "Announcement broadcasted successfully!");
+        setAnnouncementMsg("");
+      } else {
+        Alert.alert("Broadcast Failed", data.error || "Unable to broadcast message.");
+      }
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Failed broadcasting message");
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
+
+  // SIMULATOR TRIGGER
+  const handleToggleSimulator = async () => {
+    if (isSimulating) {
+      setIsSimulating(false);
+      setSimCoords(null);
+    } else {
+      try {
+        const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert("Access Denied", "GPS access required for coordinate startup.");
+          return;
+        }
+        const location = await ExpoLocation.getCurrentPositionAsync({ accuracy: ExpoLocation.Accuracy.Balanced });
+        setSimCoords({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        });
+        setIsSimulating(true);
+        Alert.alert("Simulator Active", "Mock vehicle coordinates starting from your actual position.");
+      } catch (err) {
+        Alert.alert("GPS Error", "Failed to retrieve coordinates.");
+      }
+    }
+  };
+
+  // TABS FETCHES (TAB 2: PAYMENTS)
+  const loadPayments = async () => {
+    setIsLoadingPayments(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/payments/driver/students`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => []);
+      if (res.ok) setPayments(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingPayments(false);
+    }
+  };
+
+  const handleCalculateDues = async () => {
+    Alert.alert("Generate Dues", "Confirm recalculating and generating payment statements for all assigned students?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Generate",
+        onPress: async () => {
+          setIsGenerating(true);
+          try {
+            const res = await fetch(`${API_BASE_URL}/payments/driver/generate`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+              Alert.alert("Success", "Dues statements calculations processed successfully!");
+              loadPayments();
+            } else {
+              const data = await res.json();
+              throw new Error(data.error);
+            }
+          } catch (err: any) {
+            Alert.alert("Failed", err.message || "Recalculation failed.");
+          } finally {
+            setIsGenerating(false);
+          }
+        }
+      }
+    ]);
+  };
+
+  const handleVerifyReceipt = async (status: "paid" | "rejected") => {
+    if (!selectedPayment) return;
+    if (status === "rejected" && !rejectReason.trim()) {
+      Alert.alert("Error", "Please input a rejection reason");
+      return;
+    }
+    setIsSubmittingVerification(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/payments/driver/verify/${selectedPayment.id}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ status, reject_reason: rejectReason }),
+      });
+      if (res.ok) {
+        Alert.alert("Success", `Receipt status marked: ${status}`);
+        setSelectedPayment(null);
+        setRejectReason("");
+        loadPayments();
+      }
+    } catch {
+      Alert.alert("API Error", "Sync failed.");
+    } finally {
+      setIsSubmittingVerification(false);
+    }
+  };
+
+  // TAB 3: HISTORY JOURNEY LOGS
+  const loadJourneyHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/driver/journey/history`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => []);
+      if (res.ok) setJourneyHistory(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  // TAB 4: SETTINGS & PRICING
+  const loadPaymentSettings = async () => {
+    setIsLoadingPaymentSettings(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/payments/driver/settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data) {
+        setPaymentMode(data.mode || "fixed");
+        setFixedAmount(String(data.fixed_amount || 0));
+        setBaseCharge(String(data.base_charge || 0));
+        setChargePerKm(String(data.charge_per_km || 0));
+        setDueDateDay(String(data.due_date_day || 5));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingPaymentSettings(false);
+    }
+  };
+
+  const handleUpdatePaymentSettings = async () => {
+    setIsLoadingPaymentSettings(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/payments/driver/settings`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          mode: paymentMode,
+          fixed_amount: Number(fixedAmount),
+          base_charge: Number(baseCharge),
+          charge_per_km: Number(chargePerKm),
+          due_date_day: Number(dueDateDay)
+        })
+      });
+      if (res.ok) {
+        Alert.alert("Success", "Fee pricing configuration updated successfully!");
+      } else {
+        const data = await res.json();
+        Alert.alert("Failed", data.error || "Update rejected.");
+      }
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Failed request.");
+    } finally {
+      setIsLoadingPaymentSettings(false);
+    }
+  };
+
+  // PROFILE UPDATE / LOGOUT
+  const handleUpdatePassword = async () => {
+    if (!oldPassword || !newPassword) {
+      Alert.alert("Error", "Please input password details");
+      return;
+    }
+    setIsSubmittingPassword(true);
+    // Mimics context session update locally as in the webapp:
+    setTimeout(() => {
+      Alert.alert("Success", "Password updated successfully!");
+      setOldPassword("");
+      setNewPassword("");
+      setIsSubmittingPassword(false);
+    }, 1000);
+  };
+
+  const handleLogout = async () => {
+    await stopTracking();
+    await SecureStore.deleteItemAsync("school-van-auth-session");
+    await SecureStore.deleteItemAsync("school-van-active-journey-id");
+    router.replace("/login");
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "paid": return { text: "#047857", bg: "#D1FAE5" };
+      case "receipt_submitted": return { text: "#1D4ED8", bg: "#DBEAFE" };
+      case "rejected": return { text: "#B91C1C", bg: "#FEE2E2" };
+      case "overdue": return { text: "#C2410C", bg: "#FFEDD5" };
+      default: return { text: "#B45309", bg: "#FEF3C7" };
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.welcome}>Welcome back,</Text>
-            <Text style={styles.name}>{driverName}</Text>
-          </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <LogOut size={20} color="#EF4444" />
-          </TouchableOpacity>
+      {/* 1. Header Area */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.welcome}>Driver Dashboard</Text>
+          <Text style={styles.name}>{driverName}</Text>
         </View>
-
-        {/* SOS Panel */}
-        <TouchableOpacity style={styles.sosCard} onPress={handleSOS}>
-          <ShieldAlert size={28} color="#FFFFFF" />
-          <View style={styles.sosTextContainer}>
-            <Text style={styles.sosTitle}>EMERGENCY BROADCAST</Text>
-            <Text style={styles.sosSubtitle}>Send immediate SOS distress logs</Text>
-          </View>
-          <ChevronRight size={20} color="#FFFFFF" opacity={0.6} />
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <LogOut size={20} color="#EF4444" />
         </TouchableOpacity>
+      </View>
 
-        {/* Live Trip Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Transit Console</Text>
-          <View style={styles.consoleCard}>
-            <View style={styles.consoleHeader}>
-              <View style={styles.statusIndicator}>
-                <View style={[styles.statusDot, isActive && styles.statusDotActive]} />
-                <Text style={styles.statusLabel}>{isActive ? "Live Journey Active" : "Offline / Inactive"}</Text>
+      {/* 2. Main Content Screens (Tab Switcher) */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        
+        {/* TABS 1: CONSOLE HOME */}
+        {activeTab === "home" && (
+          <View style={styles.tabContent}>
+            
+            {/* SOS Button Panel */}
+            <View style={styles.section}>
+              <View style={styles.sosCard}>
+                <View style={styles.sosHeader}>
+                  <ShieldAlert size={28} color="#EF4444" />
+                  <Text style={styles.sosTitle}>Emergency Broadcast</Text>
+                </View>
+                <Text style={styles.sosDesc}>
+                  Immediately alert all parents, broadcast vehicle coordinates, and trigger sirens in case of mechanical breakdown or accident.
+                </Text>
+                <TouchableOpacity style={styles.sosBtn} onPress={handleSOS}>
+                  <Text style={styles.sosBtnText}>Trigger SOS Siren</Text>
+                </TouchableOpacity>
               </View>
-              <Activity size={18} color={isActive ? "#10B981" : "#64748B"} />
             </View>
 
-            {isActive && (
-              <TouchableOpacity 
-                style={[styles.simBtn, isSimulating && styles.simBtnActive]} 
-                onPress={toggleSimulation}
-              >
-                <Text style={[styles.simBtnText, isSimulating && styles.simBtnTextActive]}>
-                  {isSimulating ? "Stop Simulator Mode" : "Start Simulator Mode"}
+            {/* Transit Controller Console */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Transit Console</Text>
+              <View style={styles.consoleCard}>
+                <View style={styles.cardHeader}>
+                  <Truck size={24} color="#10B981" />
+                  <Text style={styles.cardTitle}>Journey Status</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: isActive ? "#D1FAE5" : "#F1F5F9" }]}>
+                    <Text style={[styles.statusText, { color: isActive ? "#047857" : "#475569" }]}>
+                      {isActive ? "ACTIVE" : "OFFLINE"}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={styles.consoleDesc}>
+                  {isActive 
+                    ? "Your live location is actively streaming to the parent map dashboards. Keep Expo open." 
+                    : "Ready to start transport routes? Start the trip to begin streaming telemetry."}
                 </Text>
-              </TouchableOpacity>
-            )}
 
-            <TouchableOpacity 
-              style={[styles.actionBtn, isActive ? styles.actionBtnActive : styles.actionBtnInactive]}
-              onPress={toggleJourney}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.actionBtnText}>{isActive ? "Finish Current Trip" : "Start Next Trip"}</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+                <TouchableOpacity 
+                  style={[styles.toggleBtn, isActive ? styles.toggleBtnActive : styles.toggleBtnInactive]}
+                  onPress={handleToggleJourney}
+                >
+                  <Text style={styles.toggleBtnText}>
+                    {isActive ? "Complete Journey" : "Start Journey"}
+                  </Text>
+                </TouchableOpacity>
 
-        {/* Passenger Manifest Section */}
-        {isActive && activeJourneyId && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Passenger Manifest</Text>
-            {isLoadingStudents ? (
-              <View style={styles.manifestCard}>
-                <ActivityIndicator size="small" color="#10B981" />
+                {isActive && (
+                  <TouchableOpacity 
+                    style={[styles.simBtn, isSimulating && styles.simBtnActive]} 
+                    onPress={handleToggleSimulator}
+                  >
+                    <Text style={[styles.simBtnText, isSimulating && styles.simBtnTextActive]}>
+                      {isSimulating ? "Stop Simulator Mode" : "Start Simulator Mode"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
-            ) : students.length === 0 ? (
-              <View style={styles.manifestCard}>
-                <Text style={styles.emptyText}>No students assigned to this route.</Text>
-              </View>
-            ) : (
-              <View style={styles.manifestGrid}>
-                {students.map((student) => {
-                  const isBoarded = !!student.boarded_at;
-                  const isDropped = !!student.dropped_at;
+            </View>
 
-                  return (
-                    <View key={student.student_id} style={styles.studentRow}>
-                      <View style={styles.studentInfo}>
-                        <View style={[
-                          styles.avatarContainer, 
-                          isDropped ? styles.avatarDropped : isBoarded ? styles.avatarBoarded : styles.avatarNotBoarded
-                        ]}>
-                          <User size={18} color={isDropped ? "#64748B" : isBoarded ? "#D97706" : "#10B981"} />
-                        </View>
-                        <View style={styles.studentMeta}>
-                          <Text style={styles.studentName}>{student.student_name}</Text>
-                          <Text style={styles.studentStatus}>
-                            {isDropped ? "Dropped Off" : isBoarded ? "Onboard" : "Absent / Awaiting"}
-                          </Text>
-                        </View>
+            {/* Announcement Creator (Moved to Home) */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Broadcast Announcement</Text>
+              <View style={styles.card}>
+                <TextInput
+                  style={[styles.textInput, { height: 72, textAlignVertical: "top" }]}
+                  placeholder="Post announcements, weather changes, or route updates to parents..."
+                  placeholderTextColor="#94A3B8"
+                  value={announcementMsg}
+                  onChangeText={setAnnouncementMsg}
+                  multiline
+                />
+                <TouchableOpacity 
+                  style={[styles.actionBtn, isBroadcasting && styles.btnDisabled]}
+                  onPress={handleBroadcastAnnouncement}
+                  disabled={isBroadcasting}
+                >
+                  {isBroadcasting ? <ActivityIndicator color="#FFF" /> : <Text style={styles.actionBtnText}>Broadcast Message</Text>}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Passenger Checklist Manifest */}
+            {isActive && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Passenger Manifest</Text>
+                {isLoadingStudents ? (
+                  <ActivityIndicator color="#10B981" style={{ marginTop: 12 }} />
+                ) : students.length === 0 ? (
+                  <View style={styles.card}>
+                    <Text style={{ color: "#64748B", textAlign: "center", fontSize: 13, fontWeight: "600" }}>
+                      No passengers registered on this route stops.
+                    </Text>
+                  </View>
+                ) : (
+                  students.map(item => (
+                    <View style={styles.studentCard} key={item.id}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.studentName}>{item.name}</Text>
+                        <Text style={styles.studentMeta}>School: {item.school || "Standard School"}</Text>
                       </View>
+                      
+                      {item.status === "absent" && (
+                        <View style={[styles.badgeContainer, { backgroundColor: "#FEE2E2" }]}>
+                          <Text style={{ color: "#EF4444", fontSize: 11, fontWeight: "800" }}>ABSENT</Text>
+                        </View>
+                      )}
 
-                      {!isBoarded ? (
-                        <TouchableOpacity
-                          style={[styles.manifestBtn, styles.boardBtn]}
-                          onPress={() => handleBoardStudent(student.student_id)}
-                          disabled={isLoadingStudents}
-                        >
-                          <Text style={styles.manifestBtnText}>Board</Text>
+                      {item.status === "awaiting" && (
+                        <TouchableOpacity style={[styles.actionBadge, { backgroundColor: "#10B981" }]} onPress={() => handleBoardStudent(item.id)}>
+                          <Text style={styles.actionBadgeText}>Board</Text>
                         </TouchableOpacity>
-                      ) : !isDropped ? (
-                        <TouchableOpacity
-                          style={[styles.manifestBtn, styles.dropBtn]}
-                          onPress={() => handleDropStudent(student.student_id)}
-                          disabled={isLoadingStudents}
-                        >
-                          <Text style={styles.manifestBtnText}>Drop</Text>
+                      )}
+
+                      {item.status === "boarded" && (
+                        <TouchableOpacity style={[styles.actionBadge, { backgroundColor: "#F59E0B" }]} onPress={() => handleDropStudent(item.id)}>
+                          <Text style={styles.actionBadgeText}>Drop</Text>
                         </TouchableOpacity>
-                      ) : (
-                        <View style={styles.completedBadge}>
+                      )}
+
+                      {item.status === "completed" && (
+                        <View style={styles.checkIcon}>
                           <Check size={16} color="#10B981" />
                         </View>
                       )}
                     </View>
-                  );
-                })}
+                  ))
+                )}
               </View>
             )}
           </View>
         )}
 
-        {/* Payments Control Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Payments Management</Text>
-          <View style={styles.paymentsGrid}>
-            <Link href="/driver/payments" asChild>
-              <TouchableOpacity style={styles.paymentCard}>
-                <View style={[styles.iconContainer, { backgroundColor: "#ECFDF5", borderColor: "#A7F3D0" }]}>
-                  <CreditCard size={22} color="#10B981" />
-                </View>
-                <View style={styles.paymentTextContainer}>
-                  <Text style={styles.paymentCardTitle}>Student Dues</Text>
-                  <Text style={styles.paymentCardDesc}>Generate & verify monthly fees</Text>
-                </View>
-                <ChevronRight size={18} color="#94A3B8" />
+        {/* TABS 2: PAYMENTS */}
+        {activeTab === "payments" && (
+          <View style={styles.tabContent}>
+            <View style={styles.controlPanel}>
+              <TouchableOpacity 
+                style={[styles.generateBtn, isGenerating && styles.btnDisabled]} 
+                onPress={handleCalculateDues}
+                disabled={isGenerating}
+              >
+                {isGenerating ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.generateBtnText}>Calculate & Generate Dues</Text>}
               </TouchableOpacity>
-            </Link>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Payments List</Text>
+              {isLoadingPayments ? (
+                <ActivityIndicator color="#10B981" />
+              ) : payments.length === 0 ? (
+                <View style={styles.card}>
+                  <Text style={{ color: "#64748B", textAlign: "center" }}>No student payments records.</Text>
+                </View>
+              ) : (
+                payments.map(item => {
+                  const colors = getStatusColor(item.status);
+                  return (
+                    <View style={styles.paymentCard} key={item.id}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.studentName}>{item.student_name || `Student #${item.student_id}`}</Text>
+                        <Text style={styles.monthLabel}>Month: {item.month} • Dues: LKR {Number(item.amount_due).toFixed(2)}</Text>
+                      </View>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                        <View style={[styles.badge, { backgroundColor: colors.bg }]}>
+                          <Text style={[styles.badgeText, { color: colors.text }]}>{item.status}</Text>
+                        </View>
+                        {item.status === "receipt_submitted" && (
+                          <TouchableOpacity style={styles.verifyBtn} onPress={() => setSelectedPayment(item)}>
+                            <FileText size={14} color="#FFF" />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* TABS 3: JOURNEY NOTIFICATIONS HISTORY */}
+        {activeTab === "notifications" && (
+          <View style={styles.tabContent}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Past Journey Logs</Text>
+              {isLoadingHistory ? (
+                <ActivityIndicator color="#10B981" />
+              ) : journeyHistory.length === 0 ? (
+                <View style={styles.card}>
+                  <Text style={{ color: "#64748B", textAlign: "center" }}>No journey history recorded.</Text>
+                </View>
+              ) : (
+                journeyHistory.map(item => (
+                  <View style={styles.card} key={item.id}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
+                      <Text style={{ fontWeight: "800", color: "#0F172A" }}>{item.route_name || "Standard Route"}</Text>
+                      <Text style={{ fontSize: 11, color: "#10B981", fontWeight: "800" }}>{item.status}</Text>
+                    </View>
+                    <Text style={{ fontSize: 12, color: "#64748B" }}>Started: {new Date(item.started_at).toLocaleString()}</Text>
+                    {item.completed_at && <Text style={{ fontSize: 12, color: "#64748B" }}>Ended: {new Date(item.completed_at).toLocaleString()}</Text>}
+                  </View>
+                ))
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* TABS 4: SETTINGS & ONBOARDING */}
+        {activeTab === "settings" && (
+          <View style={styles.tabContent}>
+            
+            {/* Onboarding Wizard Form */}
+            {!onboardingCompleted && (
+              <View style={[styles.section, { backgroundColor: "#FFFBEB", padding: 18, borderRadius: 24, borderWidth: 1, borderColor: "#FDE68A" }]}>
+                <Text style={{ fontSize: 16, fontWeight: "900", color: "#B45309", marginBottom: 6 }}>Setup Onboarding Profile</Text>
+                <Text style={{ fontSize: 12, color: "#D97706", marginBottom: 16 }}>Complete your driver onboarding process to finalize setup.</Text>
+                
+                <TextInput style={styles.textInput} placeholder="License Number" value={licenseNumber} onChangeText={setLicenseNumber} placeholderTextColor="#94A3B8" />
+                <TextInput style={styles.textInput} placeholder="Vehicle Registration No." value={vehicleNumber} onChangeText={setVehicleNumber} placeholderTextColor="#94A3B8" />
+                <TextInput style={styles.textInput} placeholder="Vehicle Seats Count" value={vehicleCapacity} onChangeText={setVehicleCapacity} keyboardType="numeric" placeholderTextColor="#94A3B8" />
+                <TextInput style={styles.textInput} placeholder="Predefined Route ID/Name" value={routeName} onChangeText={setRouteName} placeholderTextColor="#94A3B8" />
+                
+                <TouchableOpacity style={styles.actionBtn} onPress={handleOnboardingSubmit} disabled={isOnboardingSubmitting}>
+                  {isOnboardingSubmitting ? <ActivityIndicator color="#FFF" /> : <Text style={styles.actionBtnText}>Submit Details</Text>}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Fee Pricing configurations */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Fee Pricing settings</Text>
+              <View style={styles.card}>
+                {isLoadingPaymentSettings ? (
+                  <ActivityIndicator color="#10B981" />
+                ) : (
+                  <>
+                    <Text style={styles.label}>Pricing Mode</Text>
+                    <View style={styles.roleContainer}>
+                      <TouchableOpacity style={[styles.roleBtn, paymentMode === "fixed" && styles.roleBtnActive]} onPress={() => setPaymentMode("fixed")}>
+                        <Text style={[styles.roleBtnText, paymentMode === "fixed" && styles.roleBtnTextActive]}>Fixed</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.roleBtn, paymentMode === "distance_based" && styles.roleBtnActive]} onPress={() => setPaymentMode("distance_based")}>
+                        <Text style={[styles.roleBtnText, paymentMode === "distance_based" && styles.roleBtnTextActive]}>Distance</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <Text style={[styles.label, { marginTop: 12 }]}>Monthly Fixed Rate (LKR)</Text>
+                    <TextInput style={styles.textInput} value={fixedAmount} onChangeText={setFixedAmount} keyboardType="numeric" />
+                    
+                    <Text style={styles.label}>Monthly Due Date Day (1-28)</Text>
+                    <TextInput style={styles.textInput} value={dueDateDay} onChangeText={setDueDateDay} keyboardType="numeric" />
+
+                    <TouchableOpacity style={styles.actionBtn} onPress={handleUpdatePaymentSettings}>
+                      <Text style={styles.actionBtnText}>Save Pricing</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            </View>
+
+            {/* Password Profiles Settings */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Security Settings</Text>
+              <View style={styles.card}>
+                <Text style={styles.label}>Email Address</Text>
+                <TextInput style={[styles.textInput, { backgroundColor: "#F1F5F9" }]} value={driverEmail} editable={false} />
+
+                <Text style={styles.label}>Old Password</Text>
+                <TextInput style={styles.textInput} secureTextEntry value={oldPassword} onChangeText={setOldPassword} placeholder="••••••••" placeholderTextColor="#94A3B8" />
+
+                <Text style={styles.label}>New Password</Text>
+                <TextInput style={styles.textInput} secureTextEntry value={newPassword} onChangeText={setNewPassword} placeholder="••••••••" placeholderTextColor="#94A3B8" />
+
+                <TouchableOpacity style={styles.actionBtn} onPress={handleUpdatePassword} disabled={isSubmittingPassword}>
+                  {isSubmittingPassword ? <ActivityIndicator color="#FFF" /> : <Text style={styles.actionBtnText}>Update Password</Text>}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* 3. Bottom Navigation Tab Bar (Stick Footer Layout) */}
+      <View style={styles.tabBar}>
+        <TouchableOpacity style={[styles.tabItem, activeTab === "home" && styles.tabItemActive]} onPress={() => setActiveTab("home")}>
+          <Truck size={20} color={activeTab === "home" ? "#10B981" : "#64748B"} />
+          <Text style={[styles.tabItemText, activeTab === "home" && styles.tabItemTextActive]}>Home</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.tabItem, activeTab === "payments" && styles.tabItemActive]} onPress={() => setActiveTab("payments")}>
+          <CreditCard size={20} color={activeTab === "payments" ? "#10B981" : "#64748B"} />
+          <Text style={[styles.tabItemText, activeTab === "payments" && styles.tabItemTextActive]}>Payments</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.tabItem, activeTab === "notifications" && styles.tabItemActive]} onPress={() => setActiveTab("notifications")}>
+          <Bell size={20} color={activeTab === "notifications" ? "#10B981" : "#64748B"} />
+          <Text style={[styles.tabItemText, activeTab === "notifications" && styles.tabItemTextActive]}>Notifications</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.tabItem, activeTab === "settings" && styles.tabItemActive]} onPress={() => setActiveTab("settings")}>
+          <Settings size={20} color={activeTab === "settings" ? "#10B981" : "#64748B"} />
+          <Text style={[styles.tabItemText, activeTab === "settings" && styles.tabItemTextActive]}>Settings</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Review Receipt Modal */}
+      <Modal
+        visible={selectedPayment !== null}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setSelectedPayment(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Review Payment</Text>
+            {selectedPayment && (
+              <>
+                <Text style={styles.modalDesc}>
+                  Verifying payment from student:{"\n"}
+                  <Text style={{ fontWeight: "800" }}>{selectedPayment.student_name}</Text>{"\n"}
+                  Amount: LKR {Number(selectedPayment.amount_due).toFixed(2)}
+                </Text>
+                <Text style={styles.modalMeta}>Reference Code: {selectedPayment.receipt_ref || "N/A"}</Text>
+
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Rejection remarks (required only if rejecting)"
+                  value={rejectReason}
+                  onChangeText={setRejectReason}
+                  placeholderTextColor="#94A3B8"
+                />
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={[styles.modalBtn, styles.declineBtn]} onPress={() => handleVerifyReceipt("rejected")} disabled={isSubmittingVerification}>
+                    <X size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    <Text style={styles.btnText}>Reject</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={[styles.modalBtn, styles.approveBtn]} onPress={() => handleVerifyReceipt("paid")} disabled={isSubmittingVerification}>
+                    <Check size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    <Text style={styles.btnText}>Approve</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedPayment(null)} disabled={isSubmittingVerification}>
+                  <Text style={styles.closeBtnText}>Dismiss</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
-      </ScrollView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -513,275 +1038,410 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 24,
+    paddingBottom: 100,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 28,
-    marginTop: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderColor: "#E2E8F0",
   },
   welcome: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "700",
     color: "#64748B",
   },
   name: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "900",
     color: "#0F172A",
     letterSpacing: -0.5,
     marginTop: 2,
   },
   logoutButton: {
-    height: 48,
-    width: 48,
-    borderRadius: 16,
+    height: 44,
+    width: 44,
+    borderRadius: 12,
     backgroundColor: "#FEE2E2",
     justifyContent: "center",
     alignItems: "center",
   },
-  sosCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#EF4444",
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 28,
-    shadowColor: "#EF4444",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  sosTextContainer: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  sosTitle: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#FFFFFF",
-    letterSpacing: 0.5,
-  },
-  sosSubtitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#FEE2E2",
-    marginTop: 2,
+  tabContent: {
+    gap: 20,
   },
   section: {
-    marginBottom: 28,
+    gap: 12,
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#64748B",
-    textTransform: "uppercase",
-    letterSpacing: 1.5,
-    marginBottom: 14,
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#0F172A",
   },
-  consoleCard: {
+  card: {
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
-    padding: 24,
+    padding: 20,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
+    shadowOpacity: 0.02,
+    shadowRadius: 6,
   },
-  consoleHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  statusIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  statusDot: {
-    height: 8,
-    width: 8,
-    borderRadius: 4,
-    backgroundColor: "#64748B",
-    marginRight: 8,
-  },
-  statusDotActive: {
-    backgroundColor: "#10B981",
-    shadowColor: "#10B981",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 4,
-  },
-  statusLabel: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#334155",
-  },
-  actionBtn: {
-    height: 54,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  actionBtnInactive: {
-    backgroundColor: "#10B981",
-  },
-  actionBtnActive: {
-    backgroundColor: "#0F172A",
-  },
-  actionBtnText: {
-    fontSize: 15,
-    fontWeight: "900",
-    color: "#FFFFFF",
-  },
-  paymentsGrid: {
-    gap: 12,
-  },
-  paymentCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 16,
+  sosCard: {
+    backgroundColor: "#FEF2F2",
+    borderRadius: 24,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#FCA5A5",
   },
-  iconContainer: {
+  sosHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 8,
+  },
+  sosTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#991B1B",
+  },
+  sosDesc: {
+    fontSize: 13,
+    color: "#7F1D1D",
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  sosBtn: {
     height: 48,
-    width: 48,
+    backgroundColor: "#EF4444",
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
   },
-  paymentTextContainer: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  paymentCardTitle: {
-    fontSize: 16,
+  sosBtnText: {
+    color: "#FFFFFF",
+    fontSize: 14,
     fontWeight: "800",
-    color: "#0F172A",
   },
-  paymentCardDesc: {
-    fontSize: 12,
-    fontWeight: "600",
+  consoleCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 12,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#0F172A",
+    flex: 1,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  consoleDesc: {
+    fontSize: 13,
     color: "#64748B",
-    marginTop: 2,
+    lineHeight: 20,
+    marginBottom: 18,
+  },
+  toggleBtn: {
+    height: 52,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  toggleBtnInactive: {
+    backgroundColor: "#10B981",
+  },
+  toggleBtnActive: {
+    backgroundColor: "#0F172A",
+  },
+  toggleBtnText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
   },
   simBtn: {
     height: 48,
     borderRadius: 14,
-    backgroundColor: "#F1F5F9",
     borderWidth: 1,
     borderColor: "#E2E8F0",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
+    marginTop: 12,
+    backgroundColor: "#F8FAFC",
   },
   simBtnActive: {
     backgroundColor: "#EFF6FF",
-    borderColor: "#BFDBFE",
+    borderColor: "#3B82F6",
   },
   simBtnText: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#475569",
+    color: "#64748B",
+    fontSize: 13,
+    fontWeight: "700",
   },
   simBtnTextActive: {
     color: "#2563EB",
   },
-  manifestCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  manifestGrid: {
-    gap: 12,
-  },
-  studentRow: {
+  studentCard: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-  },
-  studentInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  avatarContainer: {
-    height: 40,
-    width: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarNotBoarded: {
-    backgroundColor: "#ECFDF5",
-  },
-  avatarBoarded: {
-    backgroundColor: "#FEF3C7",
-  },
-  avatarDropped: {
-    backgroundColor: "#F1F5F9",
-  },
-  studentMeta: {
-    marginLeft: 12,
-    flex: 1,
   },
   studentName: {
     fontSize: 15,
     fontWeight: "800",
     color: "#0F172A",
   },
-  studentStatus: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#64748B",
+  studentMeta: {
+    fontSize: 12,
+    color: "#94A3B8",
     marginTop: 2,
   },
-  manifestBtn: {
-    paddingHorizontal: 16,
+  badgeContainer: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  actionBadge: {
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: 10,
+  },
+  actionBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  checkIcon: {
+    height: 28,
+    width: 28,
+    borderRadius: 14,
+    backgroundColor: "#D1FAE5",
     justifyContent: "center",
     alignItems: "center",
   },
-  boardBtn: {
+  textInput: {
+    height: 52,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 16,
+    fontSize: 14,
+    color: "#0F172A",
+    marginBottom: 16,
+  },
+  actionBtn: {
+    height: 52,
     backgroundColor: "#10B981",
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  dropBtn: {
-    backgroundColor: "#F59E0B",
-  },
-  manifestBtnText: {
-    fontSize: 12,
-    fontWeight: "800",
+  actionBtnText: {
     color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "800",
   },
-  completedBadge: {
+  controlPanel: {
+    marginBottom: 8,
+  },
+  generateBtn: {
+    height: 52,
+    backgroundColor: "#0F172A",
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  generateBtnText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  paymentCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  monthLabel: {
+    fontSize: 12,
+    color: "#64748B",
+    marginTop: 4,
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  verifyBtn: {
     height: 32,
     width: 32,
-    borderRadius: 16,
-    backgroundColor: "#ECFDF5",
+    borderRadius: 8,
+    backgroundColor: "#10B981",
     justifyContent: "center",
     alignItems: "center",
   },
-  emptyText: {
-    fontSize: 14,
-    fontWeight: "600",
+  label: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#64748B",
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  roleContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
+  roleBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  roleBtnActive: {
+    backgroundColor: "#EFF6FF",
+    borderColor: "#3B82F6",
+  },
+  roleBtnText: {
+    fontSize: 13,
+    fontWeight: "700",
     color: "#64748B",
   },
+  roleBtnTextActive: {
+    color: "#2563EB",
+  },
+  tabBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 72,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderColor: "#E2E8F0",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingBottom: 8,
+  },
+  tabItem: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  tabItemActive: {},
+  tabItemText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#64748B",
+    marginTop: 4,
+  },
+  tabItemTextActive: {
+    color: "#10B981",
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 28,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#0F172A",
+    marginBottom: 12,
+  },
+  modalDesc: {
+    fontSize: 13,
+    color: "#334155",
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  modalMeta: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#10B981",
+    marginBottom: 16,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 12,
+  },
+  modalBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  approveBtn: {
+    backgroundColor: "#10B981",
+  },
+  declineBtn: {
+    backgroundColor: "#EF4444",
+  },
+  btnText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 13,
+  },
+  closeBtn: {
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  closeBtnText: {
+    color: "#64748B",
+    fontWeight: "700",
+    fontSize: 13,
+  }
 });

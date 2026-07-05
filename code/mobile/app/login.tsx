@@ -18,45 +18,81 @@ import { API_BASE_URL } from "../constants/config";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  
+  // Login/Signup States
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [role, setRole] = useState<"driver" | "parent">("parent");
+  
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Authentication failed");
+  const handleSubmit = async () => {
+    if (isLoginMode) {
+      if (!email || !password) {
+        Alert.alert("Error", "Please fill in all fields");
+        return;
       }
-
-      // Save token and user details to SecureStore
-      await SecureStore.setItemAsync("school-van-auth-session", JSON.stringify(data));
-
-      if (data.user?.role === "driver") {
-        router.replace("/driver");
-      } else if (data.user?.role === "parent") {
-        router.replace("/parent");
-      } else {
-        Alert.alert("Forbidden", "Admin panel not supported in this client.");
-        await SecureStore.deleteItemAsync("school-van-auth-session");
+      setIsLoading(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim(), password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Authentication failed");
+        
+        await SecureStore.setItemAsync("school-van-auth-session", JSON.stringify(data));
+        if (data.user?.role === "driver") {
+          router.replace("/driver");
+        } else if (data.user?.role === "parent") {
+          router.replace("/parent");
+        } else {
+          Alert.alert("Forbidden", "Admin panel not supported in this client.");
+          await SecureStore.deleteItemAsync("school-van-auth-session");
+        }
+      } catch (err: any) {
+        Alert.alert("Login Failed", err.message || "Unable to sync with remote gateway.");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      Alert.alert("Login Failed", err.message || "Unable to sync with remote gateway.");
-    } finally {
-      setIsLoading(false);
+    } else {
+      if (!name || !email || !password || !phone) {
+        Alert.alert("Error", "Please fill in all fields");
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name.trim(),
+            email: email.trim(),
+            password,
+            phone: phone.trim(),
+            role
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Registration failed");
+
+        Alert.alert("Success", "Account created successfully!");
+        await SecureStore.setItemAsync("school-van-auth-session", JSON.stringify(data));
+        
+        if (data.user?.role === "driver") {
+          router.replace("/driver");
+        } else if (data.user?.role === "parent") {
+          router.replace("/parent");
+        }
+      } catch (err: any) {
+        Alert.alert("Registration Failed", err.message || "Unable to complete sign-up.");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -72,13 +108,58 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Sign In</Text>
+          <Text style={styles.cardTitle}>{isLoginMode ? "Sign In" : "Create Account"}</Text>
+
+          {!isLoginMode && (
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Full Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. John Doe"
+                  placeholderTextColor="#94A3B8"
+                  value={name}
+                  onChangeText={setName}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Phone Number</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. +94771234567"
+                  placeholderTextColor="#94A3B8"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Register As</Text>
+                <View style={styles.roleContainer}>
+                  <TouchableOpacity
+                    style={[styles.roleBtn, role === "parent" && styles.roleBtnActive]}
+                    onPress={() => setRole("parent")}
+                  >
+                    <Text style={[styles.roleBtnText, role === "parent" && styles.roleBtnTextActive]}>Parent</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.roleBtn, role === "driver" && styles.roleBtnActive]}
+                    onPress={() => setRole("driver")}
+                  >
+                    <Text style={[styles.roleBtnText, role === "driver" && styles.roleBtnTextActive]}>Driver</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </>
+          )}
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email Address</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g. driver@schoolvan.local"
+              placeholder="e.g. user@schoolvan.local"
               placeholderTextColor="#94A3B8"
               value={email}
               onChangeText={setEmail}
@@ -104,14 +185,24 @@ export default function LoginScreen() {
 
           <TouchableOpacity 
             style={[styles.button, isLoading && styles.buttonDisabled]} 
-            onPress={handleLogin}
+            onPress={handleSubmit}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.buttonText}>Authenticate</Text>
+              <Text style={styles.buttonText}>{isLoginMode ? "Authenticate" : "Sign Up"}</Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.toggleBtn}
+            onPress={() => setIsLoginMode(!isLoginMode)}
+            disabled={isLoading}
+          >
+            <Text style={styles.toggleText}>
+              {isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -209,5 +300,42 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#FFFFFF",
     letterSpacing: 0.5,
+  },
+  roleContainer: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  roleBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  roleBtnActive: {
+    backgroundColor: "#EFF6FF",
+    borderColor: "#3B82F6",
+  },
+  roleBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+  roleBtnTextActive: {
+    color: "#2563EB",
+  },
+  toggleBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 20,
+    paddingVertical: 8,
+  },
+  toggleText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#3B82F6",
   },
 });
