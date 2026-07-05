@@ -145,17 +145,35 @@ export default function DriverDashboard() {
   const [vehicleType, setVehicleType] = useState("van");
   const [vehicleCapacity, setVehicleCapacity] = useState("12");
   const [routeName, setRouteName] = useState("");
+  const [totalPassengers, setTotalPassengers] = useState(0);
   const [isOnboardingSubmitting, setIsOnboardingSubmitting] = useState(false);
 
   const themeColors = {
-    background: isDarkMode ? "#0F172A" : "#F8FAFC",
-    cardBg: isDarkMode ? "#1E293B" : "#FFFFFF",
-    textPrimary: isDarkMode ? "#F8FAFC" : "#0F172A",
-    textSecondary: isDarkMode ? "#94A3B8" : "#64748B",
-    border: isDarkMode ? "#334155" : "#E2E8F0",
-    inputBg: isDarkMode ? "#0F172A" : "#F8FAFC",
-    headerBg: isDarkMode ? "#1E293B" : "#FFFFFF"
+    background: isDarkMode ? "#000000" : "#F5F7FA",
+    cardBg: isDarkMode ? "rgba(22, 22, 26, 0.85)" : "rgba(255, 255, 255, 0.85)",
+    textPrimary: isDarkMode ? "#FFFFFF" : "#1C1C1E",
+    textSecondary: isDarkMode ? "#8E8E93" : "#6E6E73",
+    border: isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.06)",
+    inputBg: isDarkMode ? "rgba(30, 30, 35, 0.8)" : "rgba(242, 242, 247, 0.8)",
+    headerBg: isDarkMode ? "rgba(10, 10, 12, 0.9)" : "rgba(255, 255, 255, 0.9)"
   };
+
+  const themedStyles = {
+    ...globalStyles,
+    container: StyleSheet.flatten([globalStyles.container, { backgroundColor: themeColors.background }]),
+    header: StyleSheet.flatten([globalStyles.header, { backgroundColor: themeColors.headerBg, borderColor: themeColors.border }]),
+    card: StyleSheet.flatten([globalStyles.card, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]),
+    consoleCard: StyleSheet.flatten([globalStyles.consoleCard, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]),
+    sosCard: StyleSheet.flatten([globalStyles.sosCard, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]),
+    paymentCard: StyleSheet.flatten([globalStyles.paymentCard, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]),
+    textInput: StyleSheet.flatten([globalStyles.textInput, { backgroundColor: themeColors.inputBg, color: themeColors.textPrimary, borderColor: themeColors.border }]),
+    welcome: StyleSheet.flatten([globalStyles.welcome, { color: themeColors.textSecondary }]),
+    name: StyleSheet.flatten([globalStyles.name, { color: themeColors.textPrimary }]),
+    sectionTitle: StyleSheet.flatten([globalStyles.sectionTitle, { color: themeColors.textPrimary }]),
+    tabBar: StyleSheet.flatten([globalStyles.tabBar, { backgroundColor: themeColors.headerBg, borderColor: themeColors.border }])
+  };
+
+  const styles = themedStyles;
 
   // Initialize and load auth credentials
   useEffect(() => {
@@ -215,6 +233,8 @@ export default function DriverDashboard() {
           const routesData = await routesRes.json().catch(() => []);
           if (routesRes.ok && routesData.length > 0) {
             setAssignedRouteId(routesData[0].id);
+            setRouteName(routesData[0].route_name || "");
+            setTotalPassengers(routesData[0].passenger_count || 0);
           }
         }
       } catch (err) {
@@ -806,7 +826,7 @@ export default function DriverDashboard() {
               </View>
               <View style={{ flex: 1, backgroundColor: "#ECFDF5", borderRadius: 20, padding: 14, borderWidth: 1, borderColor: "#A7F3D0" }}>
                 <Text style={{ fontSize: 10, color: "#065F46", fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 }}>Passengers</Text>
-                <Text style={{ fontSize: 18, fontWeight: "900", color: "#047857", marginTop: 4 }}>{students.length > 0 ? students.length : "12"}</Text>
+                <Text style={{ fontSize: 18, fontWeight: "900", color: "#047857", marginTop: 4 }}>{students.length > 0 ? students.length : totalPassengers}</Text>
               </View>
             </View>
 
@@ -1352,7 +1372,7 @@ export default function DriverDashboard() {
   );
 }
 
-const styles = StyleSheet.create({
+const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8FAFC",

@@ -115,7 +115,13 @@ export const getAllRoutes = async (driverId?: number) => {
       u.name AS driver_name,
       r.vehicle_id,
       v.vehicle_number,
-      v.type AS vehicle_type
+      v.type AS vehicle_type,
+      (
+        SELECT COUNT(DISTINCT s.id)::int
+        FROM students s
+        JOIN route_stops rs ON (s.pickup_stop_id = rs.id OR s.dropoff_stop_id = rs.id)
+        WHERE rs.route_id = r.id
+      ) AS passenger_count
     FROM routes r
     JOIN drivers d ON r.driver_id = d.id
     JOIN users u ON d.user_id = u.id

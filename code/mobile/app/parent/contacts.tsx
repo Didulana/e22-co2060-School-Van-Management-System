@@ -48,13 +48,23 @@ export default function EmergencyContacts() {
   }, []);
 
   const themeColors = {
-    background: isDarkMode ? "#0F172A" : "#F8FAFC",
-    cardBg: isDarkMode ? "#1E293B" : "#FFFFFF",
-    textPrimary: isDarkMode ? "#F8FAFC" : "#0F172A",
-    textSecondary: isDarkMode ? "#94A3B8" : "#64748B",
-    border: isDarkMode ? "#334155" : "#E2E8F0",
-    headerBg: isDarkMode ? "#1E293B" : "#FFFFFF"
+    background: isDarkMode ? "#000000" : "#F5F7FA",
+    cardBg: isDarkMode ? "rgba(22, 22, 26, 0.85)" : "rgba(255, 255, 255, 0.85)",
+    textPrimary: isDarkMode ? "#FFFFFF" : "#1C1C1E",
+    textSecondary: isDarkMode ? "#8E8E93" : "#6E6E73",
+    border: isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.06)",
+    headerBg: isDarkMode ? "rgba(10, 10, 12, 0.9)" : "rgba(255, 255, 255, 0.9)"
   };
+
+  const themedStyles = {
+    ...globalStyles,
+    container: StyleSheet.flatten([globalStyles.container, { backgroundColor: themeColors.background }]),
+    header: StyleSheet.flatten([globalStyles.header, { backgroundColor: themeColors.headerBg, borderColor: themeColors.border }]),
+    card: StyleSheet.flatten([globalStyles.card, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]),
+    headerTitle: StyleSheet.flatten([globalStyles.headerTitle, { color: themeColors.textPrimary }])
+  };
+
+  const styles = themedStyles;
 
   const loadContacts = async () => {
     setIsLoading(true);
@@ -145,7 +155,7 @@ export default function EmergencyContacts() {
   );
 }
 
-const styles = StyleSheet.create({
+const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8FAFC",
