@@ -20,7 +20,9 @@ import {
   Navigation as NavigationIcon, 
   MapPin as MapPinIcon, 
   CheckSquare as CheckSquareIcon, 
-  ShieldAlert as ShieldAlertIcon 
+  ShieldAlert as ShieldAlertIcon,
+  Phone as PhoneIcon,
+  Bell as BellIcon
 } from "lucide-react-native";
 
 const LogOut = LogOutIcon as any;
@@ -30,6 +32,8 @@ const Navigation = NavigationIcon as any;
 const MapPin = MapPinIcon as any;
 const CheckSquare = CheckSquareIcon as any;
 const ShieldAlert = ShieldAlertIcon as any;
+const Phone = PhoneIcon as any;
+const Bell = BellIcon as any;
 import MapView, { Marker } from "react-native-maps";
 import io from "socket.io-client";
 
@@ -302,6 +306,29 @@ export default function ParentDashboard() {
               {childStatus?.journeyId ? "Active Tracking Stream" : "Van is Offline"}
             </Text>
           </View>
+        </View>
+
+        {/* Quick Action Navigation Grid */}
+        <View style={styles.actionGrid}>
+          <TouchableOpacity 
+            style={styles.actionGridCard} 
+            onPress={() => router.push("/parent/contacts")}
+          >
+            <View style={[styles.actionGridIconWrapper, { backgroundColor: "#EFF6FF" }]}>
+              <Phone size={20} color="#2563EB" />
+            </View>
+            <Text style={styles.actionGridText}>Emergency Contacts</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionGridCard} 
+            onPress={() => router.push("/parent/notifications")}
+          >
+            <View style={[styles.actionGridIconWrapper, { backgroundColor: "#FEF3C7" }]}>
+              <Bell size={20} color="#D97706" />
+            </View>
+            <Text style={styles.actionGridText}>Alert Logs</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Payment Dues Card (Matches Web App Card Layout!) */}
@@ -670,5 +697,37 @@ const styles = StyleSheet.create({
     color: "#64748B",
     fontSize: 14,
     fontWeight: "800",
+  },
+  actionGrid: {
+    flexDirection: "row",
+    gap: 16,
+    marginBottom: 28,
+  },
+  actionGridCard: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 16,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.02,
+    shadowRadius: 6,
+  },
+  actionGridIconWrapper: {
+    height: 48,
+    width: 48,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  actionGridText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#334155",
+    textAlign: "center",
   },
 });
