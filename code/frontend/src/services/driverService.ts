@@ -169,7 +169,7 @@ export async function getAttendance(driverId: number): Promise<AttendanceRecord[
   return await res.json().catch(() => []);
 }
 
-export async function triggerSOS(): Promise<{ message: string }> {
+export async function triggerSOS(): Promise<{ message: string; recipientCount: number }> {
   const res = await fetch(`${API_BASE}/sos`, {
     method: "POST",
     headers: { "Authorization": `Bearer ${getAuthToken()}` }

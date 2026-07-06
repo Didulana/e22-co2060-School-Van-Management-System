@@ -350,3 +350,21 @@ export async function getActiveJourneyForStudent(studentId: number) {
   const result = await pool.query(query, [studentId]);
   return result.rows[0]?.id || null;
 }
+
+/**
+ * Get all parent user IDs for students assigned to a given journey.
+ * Used by the SOS service to send direct, per-parent notifications.
+ */
+export async function getParentUserIdsByJourneyId(journeyId: number): Promise<number[]> {
+  const query = `
+    SELECT DISTINCT ps.parent_id AS user_id
+    FROM journeys j
+    JOIN routes r ON r.id = j.route_id
+    JOIN route_stops rs ON rs.route_id = r.id
+    JOIN students s ON (s.pickup_stop_id = rs.id OR s.dropoff_stop_id = rs.id)
+    JOIN parent_students ps ON ps.student_id = s.id
+    WHERE j.id = $1
+  `;
+  const result = await pool.query(query, [journeyId]);
+  return result.rows.map((row: { user_id: number }) => row.user_id);
+}

@@ -13,7 +13,7 @@ import TrackingMap from "../../components/parent/TrackingMap";
 import Van3DIcon from "../../components/Van3DIcon";
 import { useAuth } from "../../features/auth/AuthContext";
 import { getSocket, initSocket, disconnectSocket } from "../../services/socketService";
-import { Bell, Phone, UserX, RefreshCcw, Navigation, Clock, ShieldAlert, Zap, CheckCircle2, X } from "lucide-react";
+import { Bell, Phone, UserX, RefreshCcw, Navigation, Clock, ShieldAlert, Zap, CheckCircle2, X, AlertTriangle } from "lucide-react";
 
 interface Location {
   latitude: number;
@@ -54,6 +54,7 @@ export default function TrackingPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [sosAlert, setSosAlert] = useState<{ message: string; timestamp: string } | null>(null);
 
   const loadChildrenData = async () => {
     try {
@@ -109,9 +110,6 @@ export default function TrackingPage() {
     }
   };
 
-
-
-
   useEffect(() => {
     if (session?.token) {
       loadChildrenData();
@@ -119,6 +117,21 @@ export default function TrackingPage() {
     }
     return () => disconnectSocket();
   }, [session?.token]);
+
+  // SOS alert listener — attached once at login, listens on the personal user room
+  useEffect(() => {
+    if (!session?.token) return;
+    const socket = getSocket();
+
+    const handleSos = (data: { message: string; timestamp: string }) => {
+      setSosAlert({ message: data.message, timestamp: data.timestamp });
+      // Refresh notifications panel so the persisted row appears
+      if (selectedChildId !== null) loadChildData(selectedChildId, true);
+    };
+
+    socket.on("sos:alert", handleSos);
+    return () => { socket.off("sos:alert", handleSos); };
+  }, [session?.token, selectedChildId]);
 
   useEffect(() => {
     if (selectedChildId !== null && status?.journeyId) {
@@ -167,7 +180,51 @@ export default function TrackingPage() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 font-sans">
+    <div className="space-y-10 animate-in fade-in duration-700 font-sans">
+      {/* SOS Emergency Overlay */}
+      {sosAlert && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          {/* Blurred backdrop */}
+          <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm" />
+          <div className="relative z-10 w-full max-w-lg rounded-[3rem] bg-white shadow-2xl overflow-hidden animate-in zoom-in-90 duration-500">
+            {/* Red flashing header */}
+            <div className="bg-red-600 px-10 py-8 flex items-center gap-5">
+              <div className="h-16 w-16 rounded-[1.5rem] bg-white/20 flex items-center justify-center animate-pulse">
+                <AlertTriangle className="text-white" size={36} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-red-200 uppercase tracking-[0.3em] mb-1">Emergency Alert</p>
+                <h2 className="text-3xl font-black text-white tracking-tighter leading-none">SOS Triggered</h2>
+              </div>
+            </div>
+            {/* Message body */}
+            <div className="px-10 py-8">
+              <p className="text-lg font-bold text-slate-800 leading-relaxed">{sosAlert.message}</p>
+              <p className="mt-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                Received at {new Date(sosAlert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </p>
+            </div>
+            {/* Actions */}
+            <div className="px-10 pb-10 flex flex-col sm:flex-row gap-4">
+              {emergencyContacts.length > 0 && (
+                <a
+                  href={`tel:${emergencyContacts[0]?.driver_phone}`}
+                  className="flex-1 flex items-center justify-center gap-3 rounded-2xl bg-red-600 px-8 py-5 text-base font-black text-white shadow-xl shadow-red-200 hover:bg-red-700 active:scale-95 transition-all"
+                >
+                  <Phone size={20} /> Call Driver
+                </a>
+              )}
+              <button
+                onClick={() => setSosAlert(null)}
+                className="flex-1 flex items-center justify-center gap-3 rounded-2xl bg-slate-100 px-8 py-5 text-base font-black text-slate-600 hover:bg-slate-200 active:scale-95 transition-all"
+              >
+                <X size={20} /> Acknowledge
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Dynamic Header */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>

@@ -76,13 +76,11 @@ export default function DriverDashboard() {
       if (status.driverId) {
         setRealDriverId(status.driverId);
         try {
-          // Fetch specific route for this driver
           const driverRoutes = await getRoutes(status.driverId);
           setRoutes(driverRoutes);
           if (driverRoutes.length > 0) {
               setSelectedRoute(driverRoutes[0].id || 0);
           }
-          // Now that we have the real driver ID, refresh the journey status
           await refreshJourney(status.driverId);
         } catch (routeErr: any) {
           console.error("Link broken: Unable to fetch driver-specific route manifest.", routeErr);
@@ -111,7 +109,7 @@ export default function DriverDashboard() {
 
   useEffect(() => {
     let watchId: number | null = null;
-    
+
     if (isActive && journey?.id) {
       if ("geolocation" in navigator) {
         watchId = navigator.geolocation.watchPosition(
@@ -153,11 +151,17 @@ export default function DriverDashboard() {
   };
 
   const handleSOS = async () => {
+    // Prevent accidental taps with a confirmation dialog
+    const confirmed = window.confirm(
+      "⚠️ EMERGENCY ALERT\n\nThis will immediately send an SOS notification to all parents on your current route.\n\nAre you sure you want to proceed?"
+    );
+    if (!confirmed) return;
+
     setActionLoading(true);
     try {
       const result = await triggerSOS();
       setError(null);
-      alert(`✓ EMERGENCY TRANSMISSION: ${result.message}`);
+      alert(`✅ SOS SENT SUCCESSFULLY\n\n${result.message}`);
     } catch (err: any) {
       setError(err.message || "SOS TRANSMISSION FAILURE: Manual backup required.");
     } finally {
@@ -301,7 +305,7 @@ export default function DriverDashboard() {
                 onClick={() => navigate("/driver/onboarding")}
                 className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border border-slate-100 bg-slate-50 text-slate-400 font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-emerald-500 hover:border-emerald-100 transition-all active:scale-95 w-full lg:w-auto"
             >
-                Edit Route Details
+              Edit Route Details
             </button>
           </div>
 
@@ -410,7 +414,7 @@ export default function DriverDashboard() {
                   <Users size={18}/>
               </div>
             </div>
-            
+
             {students.length === 0 ? (
               <div className="p-12 md:p-20 text-center">
                   <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl md:rounded-[2.5rem] bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-200 mx-auto shadow-inner mb-4">
