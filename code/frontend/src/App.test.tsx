@@ -3,8 +3,9 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 describe('App', () => {
-  it('renders without crashing', () => {
+  it('renders without crashing', async () => {
     render(<App />);
-    expect(screen.getByText('Admin Dashboard')).toBeInTheDocument();
+    const welcomeElement = await screen.findByText('Welcome Back');
+    expect(welcomeElement).toBeInTheDocument();
   });
 });

@@ -125,9 +125,9 @@ export const listDemoAccounts = async (_req: Request, res: Response) => {
   // We can fetch hardcoded demos from DB or mock them if frontend needs it temporarily
   return res.json({
     accounts: [
-      { email: "admin@school.com", role: "admin" },
-      { email: "driver@school.com", role: "driver" },
-      { email: "parent@school.com", role: "parent" }
+      { email: "admin@schoolvan.local", role: "admin", name: "School Admin", passwordHint: "Admin@123" },
+      { email: "driver1@schoolvan.local", role: "driver", name: "Driver One", passwordHint: "Driver@123" },
+      { email: "parent1@schoolvan.local", role: "parent", name: "Parent One", passwordHint: "Parent@123" }
     ],
   });
 };
