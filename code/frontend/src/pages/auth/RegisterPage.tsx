@@ -1,8 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../features/auth/AuthContext";
-
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:5001") + "/api";
+import { API_BASE_URL } from "../../config/api";
 
 const emptyForm = {
   name: "",

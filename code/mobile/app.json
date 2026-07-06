@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "mobile",
+    "slug": "mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "schoolvan",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow School Van to track your location in the background to update parents during trips.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app requires access to your location to share your transit journey with parents.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app requires background location access to broadcast your van's coordinates while driving.",
+        "NSLocationAlwaysUsageDescription": "This app requires background location access to stream coordinates to parents."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

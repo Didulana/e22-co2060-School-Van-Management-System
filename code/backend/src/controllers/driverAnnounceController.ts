@@ -4,13 +4,21 @@ import { pool } from "../config/db";
 /**
  * POST / — Send announcement to all parents on the driver's route
  */
-export const sendAnnouncement = async (req: Request, res: Response) => {
+export const sendAnnouncement = async (req: any, res: Response) => {
   try {
-    const { driver_id, message } = req.body;
+    const userId = req.user!.id;
+    const { message } = req.body;
 
-    if (!driver_id || !message) {
-      return res.status(400).json({ error: "driver_id and message are required" });
+    if (!message) {
+      return res.status(400).json({ error: "message is required" });
     }
+
+    // Find the driver ID from user ID
+    const driverRes = await pool.query(`SELECT id FROM drivers WHERE user_id = $1`, [userId]);
+    if (driverRes.rows.length === 0) {
+      return res.status(404).json({ error: "Driver profile not found for this user account" });
+    }
+    const driver_id = driverRes.rows[0].id;
 
     // Find all parent IDs linked to this driver via their assigned routes and students
     const parentsResult = await pool.query(
@@ -24,7 +32,7 @@ export const sendAnnouncement = async (req: Request, res: Response) => {
     );
 
     if (parentsResult.rows.length === 0) {
-      return res.status(404).json({ error: "No parents found for this driver" });
+      return res.status(404).json({ error: "No parents found for this driver's route stops" });
     }
 
     // Create a notification for each parent

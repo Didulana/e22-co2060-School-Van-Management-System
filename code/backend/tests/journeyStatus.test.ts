@@ -19,6 +19,18 @@ jest.mock("../src/models/journeyStatusModel", () => ({
   getNotificationCount: jest.fn(),
 }));
 
+jest.mock("../src/middleware/authMiddleware", () => ({
+  authenticateToken: (req: any, _res: any, next: any) => {
+    req.user = {
+      id: 101,
+      email: "parent1@test.com",
+      role: "parent",
+    };
+    next();
+  },
+  requireRole: (...roles: string[]) => (req: any, res: any, next: any) => next(),
+}));
+
 import app from "../src/app";
 import * as journeyStatusModel from "../src/models/journeyStatusModel";
 

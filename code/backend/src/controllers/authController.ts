@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { pool } from "../config/db";
-import { signAuthToken } from "../services/authService";
+import { signAuthToken, authenticateDemoUser, getDemoCredentials } from "../services/authService";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
+import { demoUsers } from "../data/demoUsers";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -58,6 +59,26 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
+    // Check if it's a demo user first
+    const demoUser = authenticateDemoUser(email, password);
+    if (demoUser) {
+      const token = signAuthToken({
+        id: demoUser.id,
+        email: demoUser.email,
+        role: demoUser.role,
+      });
+
+      return res.json({
+        token,
+        user: {
+          id: demoUser.id,
+          name: demoUser.name,
+          email: demoUser.email,
+          role: demoUser.role,
+        },
+      });
+    }
+
     const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
     const user = result.rows[0];
 
@@ -108,10 +129,35 @@ export const getCurrentUser = async (req: AuthenticatedRequest, res: Response) =
       [req.user.id]
     );
 
-    const user = result.rows[0];
+    let user = result.rows[0];
+
+    if (!user) {
+      const demo = demoUsers.find((u) => u.id === req.user?.id);
+      if (demo) {
+        user = {
+          id: demo.id,
+          name: demo.name,
+          email: demo.email,
+          role: demo.role,
+          phone: "",
+          is_approved: true,
+          created_at: new Date(),
+        };
+      }
+    }
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
+    }
+
+    if (demoUsers.some((u) => u.id === user.id)) {
+      return res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        },
+      });
     }
 
     res.json({ user });
@@ -122,12 +168,19 @@ export const getCurrentUser = async (req: AuthenticatedRequest, res: Response) =
 
 // Keep for legacy frontend tests if they still exist, otherwise just return empty
 export const listDemoAccounts = async (_req: Request, res: Response) => {
-  // We can fetch hardcoded demos from DB or mock them if frontend needs it temporarily
   return res.json({
-    accounts: [
-      { email: "admin@schoolvan.local", role: "admin", name: "School Admin", passwordHint: "Admin@123" },
-      { email: "driver1@schoolvan.local", role: "driver", name: "Driver One", passwordHint: "Driver@123" },
-      { email: "parent1@schoolvan.local", role: "parent", name: "Parent One", passwordHint: "Parent@123" }
-    ],
+    accounts: getDemoCredentials(),
   });
+};
+
+export const deleteCurrentUser = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    await pool.query("DELETE FROM users WHERE id = $1", [req.user.id]);
+    res.json({ success: true, message: "User account deleted successfully" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Failed to delete user profile" });
+  }
 };

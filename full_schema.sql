@@ -13,8 +13,12 @@ CREATE TABLE IF NOT EXISTS vehicles (
     vehicle_number VARCHAR(50) NOT NULL UNIQUE,
     type VARCHAR(50) NOT NULL,
     capacity INTEGER NOT NULL,
+    is_ac BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE vehicles
+ADD COLUMN IF NOT EXISTS is_ac BOOLEAN DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS drivers (
     id SERIAL PRIMARY KEY,
@@ -77,7 +81,7 @@ CREATE TABLE IF NOT EXISTS routes (
 );
 CREATE TABLE IF NOT EXISTS predefined_stops (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     latitude DECIMAL(10, 8) NOT NULL,
     longitude DECIMAL(11, 8) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -100,7 +104,8 @@ INSERT INTO predefined_stops (name, latitude, longitude) VALUES
 ('Kottawa', 6.8412, 79.9652),
 ('Homagama', 6.8441, 80.0022),
 ('Battaramulla', 6.8981, 79.9162),
-('Malabe', 6.9048, 79.9542);
+('Malabe', 6.9048, 79.9542)
+ON CONFLICT DO NOTHING;
 CREATE TABLE IF NOT EXISTS parent_students (
     id SERIAL PRIMARY KEY,
     parent_id INTEGER NOT NULL,
@@ -176,3 +181,50 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 CREATE INDEX IF NOT EXISTS idx_notifications_journey
 ON notifications (journey_id);
+CREATE TABLE IF NOT EXISTS payment_settings (
+    id SERIAL PRIMARY KEY,
+    driver_id INTEGER NOT NULL UNIQUE,
+    mode VARCHAR(20) NOT NULL DEFAULT 'fixed' CHECK (mode IN ('fixed', 'dynamic')),
+    fixed_amount DECIMAL(10, 2) DEFAULT 0,
+    base_charge DECIMAL(10, 2) DEFAULT 0,
+    charge_per_km DECIMAL(10, 2) DEFAULT 0,
+    due_date_day INTEGER DEFAULT 5,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_payment_settings_driver
+        FOREIGN KEY (driver_id)
+        REFERENCES drivers(id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+    id SERIAL PRIMARY KEY,
+    student_id INTEGER NOT NULL,
+    driver_id INTEGER NOT NULL,
+    month VARCHAR(20) NOT NULL, -- e.g. "2026-07"
+    amount_due DECIMAL(10, 2) NOT NULL,
+    amount_paid DECIMAL(10, 2) DEFAULT 0,
+    due_date DATE NOT NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'pending' 
+        CHECK (status IN ('pending', 'paid', 'overdue', 'receipt_submitted', 'rejected')),
+    receipt_url TEXT,
+    receipt_ref VARCHAR(100),
+    reject_reason TEXT,
+    approved_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_payments_student
+        FOREIGN KEY (student_id)
+        REFERENCES students(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_payments_driver
+        FOREIGN KEY (driver_id)
+        REFERENCES drivers(id)
+        ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_student_driver_month
+ON payments (student_id, driver_id, month);
+
+ALTER TABLE students ADD COLUMN IF NOT EXISTS nickname VARCHAR(255);

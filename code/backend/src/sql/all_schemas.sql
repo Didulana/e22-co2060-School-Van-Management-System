@@ -72,7 +72,7 @@ ON notifications (journey_id);CREATE TABLE IF NOT EXISTS parent_students (
     UNIQUE (parent_id, student_id)
 );CREATE TABLE IF NOT EXISTS predefined_stops (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     latitude DECIMAL(10, 8) NOT NULL,
     longitude DECIMAL(11, 8) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -95,7 +95,8 @@ INSERT INTO predefined_stops (name, latitude, longitude) VALUES
 ('Kottawa', 6.8412, 79.9652),
 ('Homagama', 6.8441, 80.0022),
 ('Battaramulla', 6.8981, 79.9162),
-('Malabe', 6.9048, 79.9542);
+('Malabe', 6.9048, 79.9542)
+ON CONFLICT DO NOTHING;
 CREATE TABLE IF NOT EXISTS route_stops (
     id SERIAL PRIMARY KEY,
     route_id INTEGER NOT NULL,
@@ -177,6 +178,9 @@ CREATE TABLE IF NOT EXISTS vehicles (
     vehicle_number VARCHAR(50) NOT NULL UNIQUE,
     type VARCHAR(50) NOT NULL,
     capacity INTEGER NOT NULL,
+    is_ac BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE vehicles
+ADD COLUMN IF NOT EXISTS is_ac BOOLEAN DEFAULT FALSE;

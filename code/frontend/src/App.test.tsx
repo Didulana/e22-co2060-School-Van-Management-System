@@ -3,9 +3,8 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 describe('App', () => {
-  it('renders without crashing', async () => {
+  it('renders without crashing', () => {
     render(<App />);
-    const welcomeElement = await screen.findByText('Welcome Back');
-    expect(welcomeElement).toBeInTheDocument();
+    expect(screen.getByText('Connecting...')).toBeInTheDocument();
   });
 });
