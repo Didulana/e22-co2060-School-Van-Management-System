@@ -89,16 +89,39 @@ export async function getChildById(studentId: number) {
   return result.rows[0];
 }
 
-export async function markChildAbsent(studentId: number, date: string, reason?: string) {
+export async function markChildAbsent(studentId: number, date: string, sessionType: string, reason?: string) {
   const query = `
-    INSERT INTO student_absences (student_id, absence_date, reason)
-    VALUES ($1, $2, $3)
-    ON CONFLICT (student_id, absence_date) DO UPDATE SET reason = EXCLUDED.reason
+    INSERT INTO student_absences (student_id, absence_date, session_type, reason)
+    VALUES ($1, $2, $3, $4)
+    ON CONFLICT (student_id, absence_date) 
+    DO UPDATE SET session_type = EXCLUDED.session_type, reason = EXCLUDED.reason
     RETURNING *
   `;
-  const result = await pool.query(query, [studentId, date, reason]);
+  const result = await pool.query(query, [studentId, date, sessionType, reason]);
   return result.rows[0];
 }
+
+export async function getChildrenAbsences(studentId: number) {
+  const query = `
+    SELECT id, student_id, absence_date::TEXT, session_type, reason
+    FROM student_absences
+    WHERE student_id = $1
+    ORDER BY absence_date DESC
+  `;
+  const result = await pool.query(query, [studentId]);
+  return result.rows;
+}
+
+export async function deleteChildAbsence(studentId: number, date: string) {
+  const query = `
+    DELETE FROM student_absences
+    WHERE student_id = $1 AND absence_date = $2
+    RETURNING *
+  `;
+  const result = await pool.query(query, [studentId, date]);
+  return result.rows[0];
+}
+
 
 export async function getJourneyHistory(parentId: number) {
   const query = `
