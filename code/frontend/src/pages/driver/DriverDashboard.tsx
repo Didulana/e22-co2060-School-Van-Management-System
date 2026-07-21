@@ -440,53 +440,62 @@ export default function DriverDashboard() {
                   };
 
                   return (
-                    <li key={student.student_id} className="group flex flex-col md:flex-row items-start md:items-center justify-between px-6 py-8 md:px-12 md:py-12 hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-0 gap-6 md:gap-4">
+                    <li key={student.student_id} className={`group flex flex-col md:flex-row items-start md:items-center justify-between px-6 py-8 md:px-12 md:py-12 hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-0 gap-6 md:gap-4 ${(student as any).is_absent ? 'opacity-50' : ''}`}>
                       <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto">
-                        <div className={`h-14 w-14 md:h-24 md:w-24 rounded-2xl md:rounded-[2rem] flex items-center justify-center border-2 transition-all duration-500 shadow-sm shrink-0 ${isDropped ? 'bg-emerald-500 text-white border-emerald-400' : (student.boarded_at ? 'bg-blue-500 text-white border-blue-400' : 'bg-white text-slate-300 border-slate-100')}`}>
-                          {isDropped ? <CheckCircle2 className="w-6 h-6 md:w-10 md:h-10" /> : <UserCircle className="w-6 h-6 md:w-10 md:h-10" />}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xl md:text-3xl font-black text-slate-900 tracking-tighter leading-none truncate">{student.student_name}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Clock size={12} className="text-slate-300 shrink-0" />
-                            <p className="text-xs md:text-base font-bold text-slate-400 truncate">
-                              {student.boarded_at
-                                ? `Boarded: ${new Date(student.boarded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                                : "Awaiting Boarding"}
-                              {student.dropped_at && ` • Arrival: ${new Date(student.dropped_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                            </p>
+                          <div className={`h-14 w-14 md:h-24 md:w-24 rounded-2xl md:rounded-[2rem] flex items-center justify-center border-2 transition-all duration-500 shadow-sm shrink-0 ${(student as any).is_absent ? 'bg-red-50 text-red-300 border-red-100' : isDropped ? 'bg-emerald-500 text-white border-emerald-400' : (student.boarded_at ? 'bg-blue-500 text-white border-blue-400' : 'bg-white text-slate-300 border-slate-100')}`}>
+                              {isDropped ? <CheckCircle2 className="w-6 h-6 md:w-10 md:h-10" /> : <UserCircle className="w-6 h-6 md:w-10 md:h-10" />}
                           </div>
-                        </div>
+                          <div className="min-w-0">
+                            <p className="text-xl md:text-3xl font-black text-slate-900 tracking-tighter leading-none truncate">{student.student_name}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                               <Clock size={12} className="text-slate-300 shrink-0" />
+                               <p className="text-xs md:text-base font-bold text-slate-400 truncate">
+                                  {student.boarded_at
+                                    ? `Boarded: ${new Date(student.boarded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                    : "Awaiting Boarding"}
+                                  {student.dropped_at && ` • Arrival: ${new Date(student.dropped_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                               </p>
+                            </div>
+                          </div>
                       </div>
 
                       <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                        {statusInfo?.label === "Morning Trip" && !student.boarded_at && (
-                          <button
-                            disabled={studentActionLoading.includes(student.student_id)}
-                            onClick={() => handleStudentAction(student.student_id, 'board')}
-                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest shadow-md shadow-blue-500/15 hover:bg-blue-700 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30"
-                          >
-                            {studentActionLoading.includes(student.student_id) ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
-                            {studentActionLoading.includes(student.student_id) ? "Syncing..." : "Pick Up"}
-                          </button>
-                        )}
+                          {(student as any).is_absent ? (
+                            <div className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-red-50 border border-red-100 text-red-500 text-xs font-black uppercase tracking-widest">
+                              <span>Absent</span>
+                            </div>
+                          ) : (
+                            <>
+                              {statusInfo?.label === "Morning Trip" && !student.boarded_at && (
+                                <button
+                                  disabled={studentActionLoading.includes(student.student_id)}
+                                  onClick={() => handleStudentAction(student.student_id, 'board')}
+                                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest shadow-md shadow-blue-500/15 hover:bg-blue-700 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30"
+                                >
+                                  {studentActionLoading.includes(student.student_id) ? <Loader2 className="animate-spin" size={16} /> : <Plus size={16} />}
+                                  {studentActionLoading.includes(student.student_id) ? "Syncing..." : "Pick Up"}
+                                </button>
+                              )}
+                              
+                              {statusInfo?.label === "Afternoon Trip" && student.boarded_at && !student.dropped_at && (
+                                <button
+                                  disabled={studentActionLoading.includes(student.student_id)}
+                                  onClick={() => handleStudentAction(student.student_id, 'drop')}
+                                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-emerald-500 text-white text-xs font-black uppercase tracking-widest shadow-md shadow-emerald-500/15 hover:bg-emerald-600 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30"
+                                >
+                                  {studentActionLoading.includes(student.student_id) ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
+                                  {studentActionLoading.includes(student.student_id) ? "Syncing..." : "Drop Off"}
+                                </button>
+                              )}
 
-                        {statusInfo?.label === "Afternoon Trip" && student.boarded_at && !student.dropped_at && (
-                          <button
-                            disabled={studentActionLoading.includes(student.student_id)}
-                            onClick={() => handleStudentAction(student.student_id, 'drop')}
-                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-emerald-500 text-white text-xs font-black uppercase tracking-widest shadow-md shadow-emerald-500/15 hover:bg-emerald-600 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30"
-                          >
-                            {studentActionLoading.includes(student.student_id) ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
-                            {studentActionLoading.includes(student.student_id) ? "Syncing..." : "Drop Off"}
-                          </button>
-                        )}
-
-                        <div className={`px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-1.5 shrink-0 ${isDropped ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : (student.boarded_at ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-100 text-slate-400 border border-transparent')
-                          }`}>
-                          {isDropped && <Check size={12} />}
-                          <span>{getStatusLabel()}</span>
-                        </div>
+                              <div className={`px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-1.5 shrink-0 ${
+                              isDropped ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : (student.boarded_at ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-slate-100 text-slate-400 border border-transparent')
+                              }`}>
+                                {isDropped && <Check size={12} />}
+                                <span>{getStatusLabel()}</span>
+                              </div>
+                            </>
+                          )}
                       </div>
                     </li>
                   );
