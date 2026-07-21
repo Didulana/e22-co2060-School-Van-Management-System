@@ -387,6 +387,13 @@ export async function getParentUserIdsByJourneyId(journeyId: number): Promise<nu
     JOIN students s ON (s.pickup_stop_id = rs.id OR s.dropoff_stop_id = rs.id)
     JOIN parent_students ps ON ps.student_id = s.id
     WHERE j.id = $1
+    
+    UNION
+    
+    SELECT DISTINCT ps.parent_id AS user_id
+    FROM student_boarding sb
+    JOIN parent_students ps ON ps.student_id = sb.student_id
+    WHERE sb.journey_id = $1
   `;
   const result = await pool.query(query, [journeyId]);
   return result.rows.map((row: { user_id: number }) => row.user_id);
