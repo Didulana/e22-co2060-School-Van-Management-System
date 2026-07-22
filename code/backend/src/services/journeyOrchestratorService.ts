@@ -10,6 +10,7 @@ export async function handleJourneyEventWorkflow(
   message: string
 ) {
   await saveJourneyEvent(journeyId, driverId, type, message);
+
   await sendJourneyNotification(journeyId, type, message);
 }
 
@@ -23,7 +24,8 @@ export async function handleBoardingWorkflow(
   await sendJourneyNotification(
     journeyId,
     "student_boarded",
-    `Student ${studentId} boarded the van`
+    `Student ${studentId} boarded the van`,
+    studentId
   );
 }
 
@@ -37,6 +39,7 @@ export async function handleDropoffWorkflow(
   await sendJourneyNotification(
     journeyId,
     "student_dropped",
-    `Student ${studentId} dropped off safely`
+    `Student ${studentId} dropped off safely`,
+    studentId
   );
 }
