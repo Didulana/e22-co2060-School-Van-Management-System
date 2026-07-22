@@ -172,6 +172,14 @@ export default function TrackingPage() {
   const location = status?.latestLocation;
   const notifications = status?.notifications || [];
 
+  const isConnectionDropped = !!(
+    (status as any)?.is_connection_dropped ||
+    (location as any)?.is_connection_dropped ||
+    (location?.recorded_at && status?.boarded && !status?.dropped && (Date.now() - new Date(location.recorded_at).getTime()) > 45000)
+  );
+
+  const cityName = (status as any)?.last_passed_city || (location as any)?.city_name || null;
+
   if (loading && children.length === 0) return (
     <div className="flex min-h-[400px] flex-col items-center justify-center">
         <div className="h-14 w-14 animate-spin rounded-full border-[6px] border-slate-100 border-t-emerald-500 shadow-xl" />
@@ -181,6 +189,26 @@ export default function TrackingPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 font-sans">
+      {/* Driver Connection Dropped Warning Banner */}
+      {isConnectionDropped && (
+        <div className="rounded-[2rem] bg-amber-50 border border-amber-200 p-6 text-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in slide-in-from-top-2 shadow-soft">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-700 font-bold shrink-0 animate-pulse">
+              <AlertTriangle size={24} />
+            </div>
+            <div>
+              <p className="text-xs font-black text-amber-900 uppercase tracking-widest">Driver Connection Dropped</p>
+              <p className="text-sm font-semibold text-amber-800 mt-1">
+                Showing last known location near <span className="font-black text-amber-950 underline">{cityName || "En Route"}</span> recorded at {location?.recorded_at ? new Date(location.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "recent time"}.
+              </p>
+            </div>
+          </div>
+          <span className="shrink-0 w-fit rounded-2xl bg-amber-200/80 px-4 py-2 text-[10px] font-black uppercase tracking-wider text-amber-900">
+            Offline (Last Known)
+          </span>
+        </div>
+      )}
+
       {/* SOS Emergency Overlay */}
       {sosAlert && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 animate-in fade-in duration-300">
@@ -290,6 +318,8 @@ export default function TrackingPage() {
                               longitude={Number(location.longitude)} 
                               lastUpdated={location.recorded_at} 
                               routeStops={status?.routeStops}
+                              isConnectionDropped={isConnectionDropped}
+                              cityName={cityName || undefined}
                           />
                       ) : (
                           <div className="flex h-full flex-col items-center justify-center bg-emerald-50/50 rounded-[1.6rem] border border-emerald-100 border-dashed">
@@ -314,17 +344,18 @@ export default function TrackingPage() {
               </div>
 
               {/* Status Grid */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {[
                       { label: "Trip Status", value: status?.dropped ? "Completed" : (status?.boarded ? "On the way" : "Waiting"), icon: <Navigation size={22}/>, color: "text-emerald-600 bg-emerald-50" },
                       { label: "Updated At", value: location?.recorded_at ? new Date(location.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "---", icon: <Clock size={22}/>, color: "text-blue-600 bg-blue-50" },
-                      { label: "Signal Status", value: status?.latestLocation ? "Live" : "No Signal", icon: <Zap size={22}/>, color: "text-slate-600 bg-slate-50" }
+                      { label: "Signal Status", value: isConnectionDropped ? "Offline (Last Known)" : (status?.latestLocation ? "Live" : "No Signal"), icon: <Zap size={22}/>, color: isConnectionDropped ? "text-amber-600 bg-amber-50" : "text-emerald-600 bg-emerald-50" },
+                      { label: "Last Passed City", value: cityName || "En Route", icon: <AlertTriangle size={22}/>, color: "text-purple-600 bg-purple-50" }
                   ].map((s, i) => (
                       <div key={i} className="grid min-h-36 grid-rows-[auto_1fr] rounded-[1.75rem] border border-slate-100 bg-white p-6 shadow-soft transition-all group hover:border-emerald-200">
                           <div className={`h-12 w-12 rounded-2xl flex items-center justify-center mb-5 shadow-sm border border-transparent group-hover:bg-white group-hover:border-slate-100 transition-all ${s.color}`}>{s.icon}</div>
                           <div className="self-end">
                               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mb-1">{s.label}</p>
-                              <p className="text-2xl font-black text-slate-900">{s.value}</p>
+                              <p className="text-xl font-black text-slate-900 truncate">{s.value}</p>
                           </div>
                       </div>
                   ))}

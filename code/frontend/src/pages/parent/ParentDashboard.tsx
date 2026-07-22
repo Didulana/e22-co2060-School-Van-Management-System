@@ -285,6 +285,37 @@ function ChildCard({ child }: { child: Child }) {
                 </Link>
             </div>
 
+            {/* Last Known Location Banner Item */}
+            {(child.last_known_location || child.last_passed_city) && (
+                <div className={`mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-5 py-3.5 ${
+                    child.last_known_location?.is_connection_dropped
+                        ? "border-amber-200 bg-amber-50 text-amber-900"
+                        : "border-slate-100 bg-slate-50/80 text-slate-800"
+                }`}>
+                    <div className="flex items-center gap-2.5">
+                        <MapPin size={16} className={child.last_known_location?.is_connection_dropped ? "text-amber-600 animate-pulse" : "text-emerald-600"} />
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] opacity-70">
+                                {child.last_known_location?.is_connection_dropped ? "Last Known Location (Signal Lost)" : "Last Known Location"}
+                            </p>
+                            <p className="text-xs font-black mt-0.5">
+                                Passed: <span className="text-emerald-700">{child.last_passed_city || child.last_known_location?.city_name || "En Route"}</span>
+                                {child.last_known_location?.recorded_at && (
+                                    <span className="ml-2 text-[10px] font-bold opacity-60">
+                                        • {new Date(child.last_known_location.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                )}
+                            </p>
+                        </div>
+                    </div>
+                    {child.last_known_location?.is_connection_dropped && (
+                        <span className="rounded-full bg-amber-200/80 px-3 py-1 text-[9px] font-black uppercase tracking-wider text-amber-800 shadow-sm">
+                            Driver Offline
+                        </span>
+                    )}
+                </div>
+            )}
+
             <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-100/70 bg-emerald-50/70 px-5 py-3">
                 <Clock size={15} className="text-emerald-600" />
                 <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">

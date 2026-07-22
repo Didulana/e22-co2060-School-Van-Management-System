@@ -229,6 +229,28 @@ export async function getLatestLocationByJourneyId(journeyId: number) {
   return result.rows[0] || null;
 }
 
+export async function getLatestLocationForStudent(studentId: number) {
+  const query = `
+    SELECT
+      jl.latitude,
+      jl.longitude,
+      jl.recorded_at,
+      j.id as journey_id
+    FROM journey_locations jl
+    JOIN journeys j ON jl.journey_id = j.id
+    JOIN students s ON s.id = $1
+    WHERE j.route_id = s.route_id OR j.driver_id = s.driver_id
+    ORDER BY jl.recorded_at DESC
+    LIMIT 1
+  `;
+  try {
+    const result = await pool.query(query, [studentId]);
+    return result.rows[0] || null;
+  } catch (err) {
+    return null;
+  }
+}
+
 export async function getNotificationsByStudentId(studentId: number) {
   const query = `
     SELECT
@@ -397,4 +419,4 @@ export async function getParentUserIdsByJourneyId(journeyId: number): Promise<nu
   `;
   const result = await pool.query(query, [journeyId]);
   return result.rows.map((row: { user_id: number }) => row.user_id);
-}
+}

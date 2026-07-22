@@ -48,6 +48,14 @@ export interface Child {
     pickup_stop_name?: string;
     dropoff_stop_name?: string;
     route_name?: string;
+    last_known_location?: {
+        latitude: number;
+        longitude: number;
+        recorded_at: string;
+        city_name?: string;
+        is_connection_dropped?: boolean;
+    } | null;
+    last_passed_city?: string | null;
 }
 
 export interface JourneyHistoryItem {

@@ -2,13 +2,15 @@ import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
 import * as parentModel from "../models/parentModel";
 import { emitToRoom, journeyRoom } from "../services/socketService";
+import { getCityFromCoordinates } from "../services/reverseGeocodeService";
 
 export async function getChildren(req: AuthenticatedRequest, res: Response) {
   try {
     const parentId = req.user!.id;
     const children = await parentModel.getChildrenByParentId(parentId);
+    const routes = await parentModel.getAvailableRoutes();
     
-    // Add current status to each child (placeholder for now, could be fetched from journeys)
+    // Add current status & last known location to each child
     const childrenWithStatus = await Promise.all(children.map(async (child) => {
       const boarding = await parentModel.getLatestBoardingForStudent(child.id);
       const dropoff = await parentModel.getLatestDropoffForStudent(child.id);
@@ -20,7 +22,45 @@ export async function getChildren(req: AuthenticatedRequest, res: Response) {
         status = "dropped_off";
       }
 
-      return { ...child, current_status: status };
+      // Fetch last known location record for this child
+      const rawLocation = await parentModel.getLatestLocationForStudent(child.id);
+      let lastKnownLocation = null;
+      let lastPassedCity = null;
+
+      if (rawLocation) {
+        // Find route stops for nearest stop fallback
+        const routeData = routes.find(r => r.id === child.route_id);
+        const stops = (routeData?.stops || []).map((s: any) => ({
+          name: s.stop_name,
+          latitude: Number(s.latitude),
+          longitude: Number(s.longitude)
+        }));
+
+        const cityName = await getCityFromCoordinates(
+          Number(rawLocation.latitude),
+          Number(rawLocation.longitude),
+          stops
+        );
+
+        const recTime = new Date(rawLocation.recorded_at).getTime();
+        const isStale = (Date.now() - recTime) > 45000;
+
+        lastKnownLocation = {
+          latitude: Number(rawLocation.latitude),
+          longitude: Number(rawLocation.longitude),
+          recorded_at: rawLocation.recorded_at,
+          city_name: cityName,
+          is_connection_dropped: isStale && status === "en_route"
+        };
+        lastPassedCity = cityName;
+      }
+
+      return {
+        ...child,
+        current_status: status,
+        last_known_location: lastKnownLocation,
+        last_passed_city: lastPassedCity
+      };
     }));
 
     res.json(childrenWithStatus);
@@ -234,15 +274,60 @@ export async function getChildStatus(req: AuthenticatedRequest, res: Response) {
       }
     }
 
+    // Fallback to general last known location if no active journey location yet
+    if (!latestLocation) {
+      const fallbackLoc = await parentModel.getLatestLocationForStudent(studentId);
+      if (fallbackLoc) {
+        latestLocation = {
+          latitude: Number(fallbackLoc.latitude),
+          longitude: Number(fallbackLoc.longitude),
+          recorded_at: fallbackLoc.recorded_at
+        };
+      }
+    }
+
+    const isBoarded = !!(boarding && (!dropoff || boarding.boarded_at > dropoff.dropped_at));
+    const isDropped = !!(dropoff && (!boarding || dropoff.dropped_at > boarding.boarded_at));
+    
+    let cityName = null;
+    let isConnectionDropped = false;
+
+    if (latestLocation) {
+      const stopsForGeo = routeStops.map((s: any) => ({
+        name: s.stop_name,
+        latitude: Number(s.latitude),
+        longitude: Number(s.longitude)
+      }));
+      cityName = await getCityFromCoordinates(
+        Number(latestLocation.latitude),
+        Number(latestLocation.longitude),
+        stopsForGeo
+      );
+
+      const recTime = new Date(latestLocation.recorded_at).getTime();
+      isConnectionDropped = (Date.now() - recTime) > 45000 && isBoarded && !isDropped;
+
+      latestLocation = {
+        ...latestLocation,
+        latitude: Number(latestLocation.latitude),
+        longitude: Number(latestLocation.longitude),
+        city_name: cityName,
+        is_connection_dropped: isConnectionDropped
+      };
+    }
+
     res.json({
       parentId,
       studentId,
       journeyId,
-      boarded: !!(boarding && (!dropoff || boarding.boarded_at > dropoff.dropped_at)),
-      dropped: !!(dropoff && (!boarding || dropoff.dropped_at > boarding.boarded_at)),
+      boarded: isBoarded,
+      dropped: isDropped,
       latestBoarding: boarding,
       latestDropoff: dropoff,
       latestLocation,
+      last_known_location: latestLocation,
+      last_passed_city: cityName,
+      is_connection_dropped: isConnectionDropped,
       notifications,
       routeStops
     });

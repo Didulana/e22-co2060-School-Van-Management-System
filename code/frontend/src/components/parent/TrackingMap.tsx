@@ -8,6 +8,8 @@ interface TrackingMapProps {
   longitude: number;
   lastUpdated?: string;
   routeStops?: Stop[];
+  isConnectionDropped?: boolean;
+  cityName?: string;
 }
 
 const vanSvg = `
@@ -19,9 +21,25 @@ const vanSvg = `
   </svg>
 `;
 
+const offlineVanSvg = `
+  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="40" height="40" rx="20" fill="#f59e0b" fill-opacity="0.25"/>
+    <rect x="5" y="5" width="30" height="30" rx="15" fill="#f59e0b"/>
+    <path d="M12 18H28M12 22H28M15 26H25M12 14H28" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="20" cy="20" r="18" stroke="#f59e0b" stroke-width="2" stroke-dasharray="2 4" class="animate-pulse"/>
+  </svg>
+`;
+
 const vanIcon = L.divIcon({
   html: vanSvg,
   className: "custom-van-icon",
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+});
+
+const offlineVanIcon = L.divIcon({
+  html: offlineVanSvg,
+  className: "custom-offline-van-icon",
   iconSize: [40, 40],
   iconAnchor: [20, 20],
 });
@@ -37,7 +55,9 @@ export default function TrackingMap({
   latitude,
   longitude,
   lastUpdated,
-  routeStops = []
+  routeStops = [],
+  isConnectionDropped = false,
+  cityName
 }: TrackingMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<L.Map | null>(null);
@@ -59,12 +79,27 @@ export default function TrackingMap({
 
       L.control.zoom({ position: 'bottomright' }).addTo(leafletMap.current);
 
-      marker.current = L.marker([latitude, longitude], { icon: vanIcon }).addTo(
+      const currentIcon = isConnectionDropped ? offlineVanIcon : vanIcon;
+      marker.current = L.marker([latitude, longitude], { icon: currentIcon }).addTo(
         leafletMap.current
       );
+      if (isConnectionDropped || cityName) {
+        const tooltipText = isConnectionDropped
+          ? `⚠️ Last Known Location: ${cityName || "En Route"}`
+          : `📍 Van Location: ${cityName || "En Route"}`;
+        marker.current.bindTooltip(tooltipText, { permanent: true, direction: "top" });
+      }
     } else {
       leafletMap.current.panTo([latitude, longitude], { animate: true });
       marker.current?.setLatLng([latitude, longitude]);
+      marker.current?.setIcon(isConnectionDropped ? offlineVanIcon : vanIcon);
+
+      if (isConnectionDropped || cityName) {
+        const tooltipText = isConnectionDropped
+          ? `⚠️ Last Known Location: ${cityName || "En Route"}`
+          : `📍 Van Location: ${cityName || "En Route"}`;
+        marker.current?.bindTooltip(tooltipText, { permanent: true, direction: "top" });
+      }
     }
 
     // Handle stops and route
@@ -119,7 +154,7 @@ export default function TrackingMap({
         { className: 'premium-popup' }
       );
     }
-  }, [latitude, longitude, lastUpdated, routeStops]);
+  }, [latitude, longitude, lastUpdated, routeStops, isConnectionDropped, cityName]);
 
   return (
     <div className="h-full w-full overflow-hidden bg-slate-50">
