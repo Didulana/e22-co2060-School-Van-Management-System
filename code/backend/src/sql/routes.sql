@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS routes (
     route_name VARCHAR(100) NOT NULL,
     driver_id INTEGER NOT NULL,
     vehicle_id INTEGER NOT NULL,
-    schedule VARCHAR(20) NOT NULL CHECK (schedule IN ('morning', 'evening')),
+    schedule VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_routes_driver

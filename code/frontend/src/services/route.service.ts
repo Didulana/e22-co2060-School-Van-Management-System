@@ -1,4 +1,5 @@
-export const API_BASE_URL = "http://localhost:5001/api";
+import { getAuthToken } from "./driverService";
+import { API_BASE_URL } from "../config/api";
 
 export interface Driver {
   id: number;
@@ -18,6 +19,8 @@ export interface Vehicle {
 export interface Stop {
   stop_name: string;
   stop_order: number;
+  latitude: number;
+  longitude: number;
 }
 
 export interface Route {
@@ -32,7 +35,9 @@ export interface Route {
 }
 
 export const getDrivers = async (): Promise<Driver[]> => {
-  const response = await fetch(`${API_BASE_URL}/drivers`);
+  const response = await fetch(`${API_BASE_URL}/drivers`, {
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch drivers");
@@ -42,7 +47,9 @@ export const getDrivers = async (): Promise<Driver[]> => {
 };
 
 export const getVehicles = async (): Promise<Vehicle[]> => {
-  const response = await fetch(`${API_BASE_URL}/vehicles`);
+  const response = await fetch(`${API_BASE_URL}/vehicles`, {
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch vehicles");
@@ -51,8 +58,14 @@ export const getVehicles = async (): Promise<Vehicle[]> => {
   return await response.json();
 };
 
-export const getRoutes = async (): Promise<Route[]> => {
-  const response = await fetch(`${API_BASE_URL}/routes`);
+export const getRoutes = async (driverId?: number): Promise<Route[]> => {
+  const url = driverId 
+    ? `${API_BASE_URL}/routes?driver_id=${driverId}` 
+    : `${API_BASE_URL}/routes`;
+  
+  const response = await fetch(url, {
+    headers: { "Authorization": `Bearer ${getAuthToken()}` }
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch routes");
@@ -66,6 +79,7 @@ export const createRoute = async (routeData: Route): Promise<Route> => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${getAuthToken()}`
     },
     body: JSON.stringify(routeData),
   });

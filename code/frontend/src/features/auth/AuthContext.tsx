@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { AuthSession, AuthUser } from "./types";
-import { readStoredSession, storeSession, clearStoredSession } from "./storage";
+import { readStoredSession, storeSession, clearStoredSession, readProfileOverride, storeProfileOverride } from "./storage";
 import { fetchCurrentUser } from "./api";
 
 interface AuthContextType {
@@ -8,6 +8,7 @@ interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   login: (session: AuthSession) => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
   logout: () => void;
 }
 
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   login: () => {},
+  updateUser: () => {},
   logout: () => {},
 });
 
@@ -34,7 +36,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const user = await fetchCurrentUser(stored.token);
-        const refreshed = { token: stored.token, user };
+        const refreshed = {
+          token: stored.token,
+          user: {
+            ...user,
+            ...readProfileOverride(user.id),
+          },
+        };
         setSession(refreshed);
         storeSession(refreshed);
       } catch {
@@ -57,6 +65,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearStoredSession();
   }, []);
 
+  const handleUpdateUser = useCallback((updates: Partial<AuthUser>) => {
+    setSession((currentSession) => {
+      if (!currentSession) {
+        return currentSession;
+      }
+
+      const updatedSession = {
+        ...currentSession,
+        user: {
+          ...currentSession.user,
+          ...updates,
+        },
+      };
+
+      storeProfileOverride(currentSession.user.id, updates);
+      storeSession(updatedSession);
+      return updatedSession;
+    });
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -64,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: session?.user ?? null,
         isLoading,
         login: handleLogin,
+        updateUser: handleUpdateUser,
         logout: handleLogout,
       }}
     >

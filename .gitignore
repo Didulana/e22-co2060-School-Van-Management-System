@@ -11,4 +11,4 @@ dist/
 **/.env*
 .expo/
 **/.expo/
-*.log
+*.log

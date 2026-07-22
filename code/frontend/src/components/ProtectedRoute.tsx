@@ -24,13 +24,16 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   // Not logged in → go to login
   if (!user) {
+    if (allowedRoles && allowedRoles.includes("admin")) {
+      return <Navigate to="/admin" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
 
   // Logged in but wrong role → redirect to their dashboard
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     const roleHome: Record<string, string> = {
-      admin: "/admin",
+      admin: "/admin/dashboard",
       driver: "/driver",
       parent: "/tracking",
     };

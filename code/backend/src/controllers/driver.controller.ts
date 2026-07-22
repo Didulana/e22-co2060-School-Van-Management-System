@@ -65,3 +65,21 @@ export const assignVehicle = async (req: Request, res: Response) => {
     res.status(400).json({ error: error.message });
   }
 };
+/**
+ * Trigger SOS / Emergency
+ */
+export const triggerSOS = async (req: any, res: Response) => {
+  try {
+    const userId = req.user.id;
+    const driver = await driverService.getDriverByUserId(userId);
+    
+    if (!driver) {
+      return res.status(404).json({ error: "Driver profile not found" });
+    }
+
+    const result = await driverService.triggerSOS(driver.id!);
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};

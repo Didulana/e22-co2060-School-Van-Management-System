@@ -210,7 +210,6 @@ export default function TrackingPage() {
       )}
 
       {/* SOS Emergency Overlay */}
-      {/* SOS Emergency Overlay */}
       {sosAlert && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 animate-in fade-in duration-300">
           {/* Blurred backdrop */}

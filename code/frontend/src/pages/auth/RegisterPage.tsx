@@ -1,8 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../features/auth/AuthContext";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5001/api";
+import { API_BASE_URL } from "../../config/api";
 
 const emptyForm = {
   name: "",
@@ -20,9 +19,34 @@ function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  function validateForm() {
+    if (!form.name.trim() || form.name.length < 3) {
+      return "Name must be at least 3 characters long.";
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      return "Please enter a valid email address.";
+    }
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(form.phone)) {
+      return "Phone number must be exactly 10 digits.";
+    }
+    if (!form.password || form.password.length < 6) {
+      return "Password must be at least 6 characters long.";
+    }
+    return null;
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
+
+    const validationError = validateForm();
+    if (validationError) {
+      setErrorMessage(validationError);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -37,14 +61,14 @@ function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to register");
+        throw new Error(data.details || data.error || "Failed to register");
       }
 
       // Automatically login via context
       login({ token: data.token, user: data.user });
       
       const roleHome: Record<string, string> = {
-        admin: "/admin",
+        admin: "/admin/dashboard",
         driver: "/driver",
         parent: "/tracking",
       };

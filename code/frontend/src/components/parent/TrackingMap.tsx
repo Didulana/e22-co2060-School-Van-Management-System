@@ -154,7 +154,7 @@ export default function TrackingMap({
         { className: 'premium-popup' }
       );
     }
-  }, [latitude, longitude, lastUpdated, routeStops]);
+  }, [latitude, longitude, lastUpdated, routeStops, isConnectionDropped, cityName]);
 
   return (
     <div className="h-full w-full overflow-hidden bg-slate-50">

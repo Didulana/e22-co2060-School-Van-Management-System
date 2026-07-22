@@ -419,4 +419,4 @@ export async function getParentUserIdsByJourneyId(journeyId: number): Promise<nu
   `;
   const result = await pool.query(query, [journeyId]);
   return result.rows.map((row: { user_id: number }) => row.user_id);
-}
+}

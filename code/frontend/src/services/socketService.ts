@@ -1,0 +1,28 @@
+import { io, Socket } from "socket.io-client";
+import { API_ORIGIN } from "../config/api";
+
+const SOCKET_URL = API_ORIGIN;
+
+let socket: Socket | null = null;
+
+export const initSocket = () => {
+    if (!socket) {
+        socket = io(SOCKET_URL, {
+            withCredentials: true,
+            transports: ["websocket"]
+        });
+    }
+    return socket;
+};
+
+export const getSocket = () => {
+    if (!socket) return initSocket();
+    return socket;
+};
+
+export const disconnectSocket = () => {
+    if (socket) {
+        socket.disconnect();
+        socket = null;
+    }
+};
