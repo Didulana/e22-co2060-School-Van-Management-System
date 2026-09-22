@@ -40,6 +40,32 @@ const emptyParentForm: ParentForm = {
   nic: "", address: "", province: "", guardian_type: "Father",
 };
 
+interface InputFieldProps {
+  label: string;
+  id: string;
+  type?: string;
+  value: string | number;
+  onChange: (e: any) => void;
+  placeholder?: string;
+  required?: boolean;
+  icon?: any;
+}
+
+function InputField({ label, id, type = "text", value, onChange, placeholder, required = true, icon: Icon }: InputFieldProps) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-[0.2em]" htmlFor={id}>{label}</label>
+      <div className="relative">
+        {Icon && <Icon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />}
+        <input
+          id={id} type={type} required={required} value={value} onChange={onChange} placeholder={placeholder}
+          className={`w-full rounded-2xl border border-slate-200 ${Icon ? "pl-14" : "px-5"} pr-5 py-3.5 text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 outline-none transition-all bg-white`}
+        />
+      </div>
+    </div>
+  );
+}
+
 function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -215,20 +241,6 @@ function RegisterPage() {
       </div>
     );
   }
-
-  // Input component helper
-  const InputField = ({ label, id, type = "text", value, onChange, placeholder, required = true, icon: Icon }: any) => (
-    <div className="space-y-1.5">
-      <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-[0.2em]" htmlFor={id}>{label}</label>
-      <div className="relative">
-        {Icon && <Icon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />}
-        <input
-          id={id} type={type} required={required} value={value} onChange={onChange} placeholder={placeholder}
-          className={`w-full rounded-2xl border border-slate-200 ${Icon ? "pl-14" : "px-5"} pr-5 py-3.5 text-sm font-semibold text-slate-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 outline-none transition-all bg-white`}
-        />
-      </div>
-    </div>
-  );
 
   // PARENT FORM
   if (role === "parent") {
