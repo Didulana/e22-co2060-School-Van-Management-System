@@ -14,6 +14,7 @@ router.put('/users/:id/status', updateUserStatus);
 router.get('/students', getStudents);
 
 // Driver Application Management
+router.get('/pending-drivers', getPendingDrivers);
 router.get('/drivers/pending', getPendingDrivers);
 router.get('/drivers/:id/profile', getDriverProfile);
 

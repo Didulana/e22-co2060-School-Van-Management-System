@@ -27,10 +27,18 @@ export const getUsers = async (role?: string) => {
 };
 
 export const getPendingDrivers = async () => {
-  const response = await fetch(`${API_BASE_URL}/admin/pending-drivers`, {
+  let response = await fetch(`${API_BASE_URL}/admin/pending-drivers`, {
     headers: getAuthHeaders(),
   });
-  if (!response.ok) throw new Error("Failed to fetch pending drivers");
+  if (!response.ok) {
+    response = await fetch(`${API_BASE_URL}/admin/drivers/pending`, {
+      headers: getAuthHeaders(),
+    });
+  }
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || data.error || "Failed to fetch pending drivers");
+  }
   return response.json();
 };
 
@@ -38,7 +46,10 @@ export const getDriverProfile = async (driverId: number) => {
   const response = await fetch(`${API_BASE_URL}/admin/drivers/${driverId}/profile`, {
     headers: getAuthHeaders(),
   });
-  if (!response.ok) throw new Error("Failed to fetch driver profile");
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || data.error || "Failed to fetch driver profile");
+  }
   return response.json();
 };
 

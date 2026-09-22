@@ -123,7 +123,8 @@ export const getDriverFullProfile = async (userId: number): Promise<any> => {
     FROM users u
     LEFT JOIN drivers d ON u.id = d.user_id
     LEFT JOIN vehicles v ON d.vehicle_id = v.id
-    WHERE u.id = $1 AND u.role = 'driver'
+    WHERE (u.id = $1 OR d.id = $1) AND u.role = 'driver'
+    LIMIT 1
   `, [userId]);
 
   if (result.rows.length === 0) return null;
