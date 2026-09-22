@@ -241,6 +241,12 @@ export async function submitOnboarding(data: any): Promise<void> {
   }
 }
 
+export async function getSchools(): Promise<Array<{ id: number; name: string; city?: string; address?: string; latitude?: number; longitude?: number }>> {
+  const res = await fetch(`${API_BASE_URL}/schools`);
+  if (!res.ok) throw new Error("Failed to fetch schools");
+  return res.json();
+}
+
 // ---- Tracking ----
 
 export async function updateDriverLocation(journeyId: number, lat: number, lng: number): Promise<void> {

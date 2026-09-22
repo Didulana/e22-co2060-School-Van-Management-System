@@ -7,7 +7,14 @@ import { demoUsers } from "../data/demoUsers";
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role, phone } = req.body;
+    const {
+      name, email, password, role, phone,
+      // Enhanced fields
+      nic, address, province, dob, selfie_url, guardian_type,
+      // Driver-specific fields (license + vehicle created during registration)
+      license_number, license_image, license_expiry,
+      vehicle_registration, vehicle_type, seat_count, is_ac
+    } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ error: "Name, email, password, and role are required" });
@@ -23,30 +30,106 @@ export const register = async (req: Request, res: Response) => {
       return res.status(409).json({ error: "Email is already registered" });
     }
 
+    // Check NIC uniqueness if provided
+    if (nic) {
+      const existingNic = await pool.query(`SELECT id FROM users WHERE nic = $1`, [nic]);
+      if (existingNic.rows.length > 0) {
+        return res.status(409).json({ error: "NIC number is already registered" });
+      }
+    }
+
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
-    const result = await pool.query(
-      `INSERT INTO users (name, email, password_hash, role, phone, is_approved)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, name, email, role, phone, is_approved`,
-      [name, email, password_hash, role, phone || null, role === "admin" ? true : false] // Auto approve admin for now, or maybe require approval for drivers
-    );
+    // Parents get auto-approved, drivers must wait for admin approval
+    const isApproved = role === "parent" ? true : role === "admin" ? true : false;
 
-    const newUser = result.rows[0];
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
 
-    const token = signAuthToken({
-      id: newUser.id,
-      email: newUser.email,
-      role: newUser.role,
-    });
+      const userResult = await client.query(
+        `INSERT INTO users (name, email, password_hash, role, phone, is_approved, nic, address, province, dob, selfie_url, guardian_type)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         RETURNING id, name, email, role, phone, is_approved, nic, address, province, dob, guardian_type`,
+        [name, email, password_hash, role, phone || null, isApproved,
+         nic || null, address || null, province || null, dob || null,
+         selfie_url || null, guardian_type || null]
+      );
 
-    res.status(201).json({
-      message: "User registered successfully",
-      token,
-      user: newUser,
-    });
+      const newUser = userResult.rows[0];
+
+      // For drivers, also create driver record + vehicle in the same transaction
+      if (role === "driver" && license_number) {
+        const driverResult = await client.query(
+          `INSERT INTO drivers (user_id, license_number, license_image, license_expiry)
+           VALUES ($1, $2, $3, $4) RETURNING id`,
+          [newUser.id, license_number, license_image || null, license_expiry || null]
+        );
+        const driverId = driverResult.rows[0].id;
+
+        // Create vehicle if provided
+        if (vehicle_registration) {
+          // Check if vehicle already exists
+          const existingVehicle = await client.query(
+            `SELECT id FROM vehicles WHERE vehicle_number = $1`, [vehicle_registration]
+          );
+
+          let vehicleId: number;
+          if (existingVehicle.rows.length > 0) {
+            vehicleId = existingVehicle.rows[0].id;
+            await client.query(
+              `UPDATE vehicles SET type = $1, capacity = $2, is_ac = $3 WHERE id = $4`,
+              [vehicle_type || "Van", seat_count || 12, is_ac || false, vehicleId]
+            );
+          } else {
+            const vehicleResult = await client.query(
+              `INSERT INTO vehicles (vehicle_number, type, capacity, is_ac) VALUES ($1, $2, $3, $4) RETURNING id`,
+              [vehicle_registration, vehicle_type || "Van", seat_count || 12, is_ac || false]
+            );
+            vehicleId = vehicleResult.rows[0].id;
+          }
+
+          // Link vehicle to driver
+          await client.query(
+            `UPDATE drivers SET vehicle_id = $1 WHERE id = $2`,
+            [vehicleId, driverId]
+          );
+        }
+      }
+
+      await client.query("COMMIT");
+
+      const token = signAuthToken({
+        id: newUser.id,
+        email: newUser.email,
+        role: newUser.role,
+      });
+
+      res.status(201).json({
+        message: "User registered successfully",
+        token,
+        user: newUser,
+      });
+    } catch (innerError: any) {
+      await client.query("ROLLBACK");
+      throw innerError;
+    } finally {
+      client.release();
+    }
   } catch (error: any) {
+    // Handle unique constraint violations nicely
+    if (error.code === '23505') {
+      if (error.constraint?.includes('nic')) {
+        return res.status(409).json({ error: "NIC number is already registered" });
+      }
+      if (error.constraint?.includes('email')) {
+        return res.status(409).json({ error: "Email is already registered" });
+      }
+      if (error.constraint?.includes('license')) {
+        return res.status(409).json({ error: "License number is already registered" });
+      }
+    }
     res.status(500).json({ error: "Server error during registration", details: error.message });
   }
 };
@@ -92,10 +175,10 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Optional: check if approved
-    // if (!user.is_approved) {
-    //   return res.status(403).json({ error: "Account pending approval" });
-    // }
+    // Check approval status for drivers
+    if (user.role === "driver" && !user.is_approved) {
+      return res.status(403).json({ error: "pending_approval", message: "Your account is pending admin approval." });
+    }
 
     const token = signAuthToken({
       id: user.id,
@@ -111,6 +194,7 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         role: user.role,
         phone: user.phone,
+        is_approved: user.is_approved,
       },
     });
   } catch (error: any) {

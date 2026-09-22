@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
+import PendingApprovalPage from "./pages/auth/PendingApprovalPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
+import SchoolManagement from "./pages/admin/SchoolManagement";
 import VehicleManagement from "./pages/admin/VehicleManagement";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import RoutesPage from "./pages/Routes";
@@ -32,6 +34,7 @@ export default function App() {
           {/* auth login page (no sidebar) */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/pending-approval" element={<PendingApprovalPage />} />
           
           {/* admin login page */}
           <Route path="/admin" element={<AdminLoginPage />} />
@@ -59,6 +62,11 @@ export default function App() {
             <Route path="/admin/users" element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <UserManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/schools" element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <SchoolManagement />
               </ProtectedRoute>
             } />
             <Route path="/admin/vehicles" element={

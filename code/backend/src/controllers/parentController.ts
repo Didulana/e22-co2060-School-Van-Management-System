@@ -72,13 +72,13 @@ export async function getChildren(req: AuthenticatedRequest, res: Response) {
 export async function registerChild(req: AuthenticatedRequest, res: Response) {
   try {
     const parentId = req.user!.id;
-    const { name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng } = req.body;
+    const { name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, preferred_name, dob, grade, portrait_photo } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: "Child name is required" });
     }
 
-    const child = await parentModel.createChild(parentId, name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng);
+    const child = await parentModel.createChild(parentId, name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, preferred_name, dob, grade, portrait_photo);
     res.status(201).json(child);
   } catch (error: any) {
     res.status(500).json({ error: "Failed to register child", details: error.message });
@@ -88,7 +88,7 @@ export async function registerChild(req: AuthenticatedRequest, res: Response) {
 export async function updateChild(req: AuthenticatedRequest, res: Response) {
   try {
     const studentId = parseInt(req.params.id as string, 10);
-    const { name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng } = req.body;
+    const { name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, preferred_name, dob, grade, portrait_photo } = req.body;
 
     // Verify parent owns this child
     const parentId = req.user!.id;
@@ -97,7 +97,7 @@ export async function updateChild(req: AuthenticatedRequest, res: Response) {
       return res.status(403).json({ error: "Forbidden: Not your child" });
     }
 
-    const updated = await parentModel.updateChild(studentId, name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng);
+    const updated = await parentModel.updateChild(studentId, name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, preferred_name, dob, grade, portrait_photo);
     res.json(updated);
   } catch (error: any) {
     res.status(500).json({ error: "Failed to update child", details: error.message });
@@ -343,5 +343,18 @@ export async function getNotifications(req: AuthenticatedRequest, res: Response)
     res.json(notifications);
   } catch (error: any) {
     res.status(500).json({ error: "Failed to fetch notifications", details: error.message });
+  }
+}
+
+export async function getDriversBySchool(req: AuthenticatedRequest, res: Response) {
+  try {
+    const schoolName = decodeURIComponent(req.params.schoolName as string);
+    if (!schoolName) {
+      return res.status(400).json({ error: "School name is required" });
+    }
+    const drivers = await parentModel.getDriversBySchool(schoolName);
+    res.json(drivers);
+  } catch (error: any) {
+    res.status(500).json({ error: "Failed to fetch drivers for school", details: error.message });
   }
 }

@@ -44,16 +44,26 @@ export interface Child {
     dropoff_lng?: number;
     status: string;
     current_status?: string;
+    preferred_name?: string;
+    dob?: string;
+    grade?: string;
+    portrait_photo?: string;
 }
-export async function createChild(parentId: number, name: string, school?: string, pickupStopId?: number, dropoffStopId?: number, pickupLat?: number, pickupLng?: number, dropoffLat?: number, dropoffLng?: number) {
+export async function createChild(
+  parentId: number, name: string, school?: string,
+  pickupStopId?: number, dropoffStopId?: number,
+  pickupLat?: number, pickupLng?: number,
+  dropoffLat?: number, dropoffLng?: number,
+  preferredName?: string, dob?: string, grade?: string, portraitPhoto?: string
+) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     
     const studentRes = await client.query(
-      `INSERT INTO students (name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [name, school, pickupStopId, dropoffStopId, pickupLat, pickupLng, dropoffLat, dropoffLng]
+      `INSERT INTO students (name, school, pickup_stop_id, dropoff_stop_id, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, preferred_name, dob, grade, portrait_photo) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
+      [name, school, pickupStopId, dropoffStopId, pickupLat, pickupLng, dropoffLat, dropoffLng, preferredName || null, dob || null, grade || null, portraitPhoto || null]
     );
     const studentId = studentRes.rows[0].id;
 
@@ -72,15 +82,22 @@ export async function createChild(parentId: number, name: string, school?: strin
   }
 }
 
-export async function updateChild(studentId: number, name: string, school?: string, pickupStopId?: number, dropoffStopId?: number, pickupLat?: number, pickupLng?: number, dropoffLat?: number, dropoffLng?: number) {
+export async function updateChild(
+  studentId: number, name: string, school?: string,
+  pickupStopId?: number, dropoffStopId?: number,
+  pickupLat?: number, pickupLng?: number,
+  dropoffLat?: number, dropoffLng?: number,
+  preferredName?: string, dob?: string, grade?: string, portraitPhoto?: string
+) {
   const query = `
     UPDATE students 
     SET name = $1, school = $2, pickup_stop_id = $3, dropoff_stop_id = $4, 
-        pickup_lat = $5, pickup_lng = $6, dropoff_lat = $7, dropoff_lng = $8
-    WHERE id = $9
+        pickup_lat = $5, pickup_lng = $6, dropoff_lat = $7, dropoff_lng = $8,
+        preferred_name = $9, dob = $10, grade = $11, portrait_photo = COALESCE($12, portrait_photo)
+    WHERE id = $13
     RETURNING *
   `;
-  const result = await pool.query(query, [name, school, pickupStopId, dropoffStopId, pickupLat, pickupLng, dropoffLat, dropoffLng, studentId]);
+  const result = await pool.query(query, [name, school, pickupStopId, dropoffStopId, pickupLat, pickupLng, dropoffLat, dropoffLng, preferredName || null, dob || null, grade || null, portraitPhoto || null, studentId]);
   return result.rows[0];
 }
 
@@ -419,4 +436,28 @@ export async function getParentUserIdsByJourneyId(journeyId: number): Promise<nu
   `;
   const result = await pool.query(query, [journeyId]);
   return result.rows.map((row: { user_id: number }) => row.user_id);
+}
+
+/**
+ * Get drivers who cover a particular school
+ */
+export async function getDriversBySchool(schoolName: string) {
+  const query = `
+    SELECT DISTINCT
+      d.id as driver_id,
+      u.name as driver_name,
+      u.phone as driver_phone,
+      r.id as route_id,
+      r.route_name
+    FROM driver_schools ds
+    JOIN schools s ON ds.school_id = s.id
+    JOIN drivers d ON ds.driver_id = d.id
+    JOIN users u ON d.user_id = u.id
+    LEFT JOIN routes r ON r.driver_id = d.id
+    WHERE LOWER(s.name) = LOWER($1)
+      AND u.is_approved = true
+    ORDER BY u.name
+  `;
+  const result = await pool.query(query, [schoolName]);
+  return result.rows;
 }

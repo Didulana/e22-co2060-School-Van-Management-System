@@ -45,16 +45,31 @@ export async function submitOnboarding(req: AuthenticatedRequest, res: Response)
     console.log(`[Onboarding] Starting submission for user ${req.user!.id}`);
     
     const userId = req.user!.id;
-    const { licenseNumber, vehicleDetails, routeStops } = req.body;
+    const { licenseNumber, licenseImage, licenseExpiry, vehicleDetails, routeStops, schoolIds } = req.body;
 
     // 1. Create/Update Driver
     let driver = await driverModel.getDriverByUserId(userId, client);
     if (!driver) {
-      driver = await driverModel.createDriver({ user_id: userId, license_number: licenseNumber }, client);
+      driver = await driverModel.createDriver({
+        user_id: userId,
+        license_number: licenseNumber,
+        license_image: licenseImage || null,
+        license_expiry: licenseExpiry || null
+      }, client);
     } else {
-      driver = await driverModel.updateDriver(driver.id!, { license_number: licenseNumber }, client);
+      driver = await driverModel.updateDriver(driver.id!, {
+        license_number: licenseNumber,
+        license_image: licenseImage || undefined,
+        license_expiry: licenseExpiry || undefined
+      }, client);
     }
     console.log(`[Onboarding] Driver ${driver.id} ready`);
+
+    // 1b. Set schools if provided
+    if (schoolIds && Array.isArray(schoolIds) && schoolIds.length > 0) {
+      await driverModel.setDriverSchools(driver.id!, schoolIds, client);
+      console.log(`[Onboarding] Driver ${driver.id} linked to ${schoolIds.length} schools`);
+    }
 
     // 2. Create/Update Vehicle
     let vehicle = await vehicleModel.getVehicleByNumber(vehicleDetails.registrationNumber, client);

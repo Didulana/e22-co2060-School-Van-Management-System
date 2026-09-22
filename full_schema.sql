@@ -228,3 +228,44 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_student_driver_month
 ON payments (student_id, driver_id, month);
 
 ALTER TABLE students ADD COLUMN IF NOT EXISTS nickname VARCHAR(255);
+
+-- Enhanced Registration Fields (users)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS nic VARCHAR(20) UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS province VARCHAR(50);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS dob DATE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS selfie_url TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS guardian_type VARCHAR(20);
+
+-- Enhanced Driver Fields
+ALTER TABLE drivers ADD COLUMN IF NOT EXISTS license_image TEXT;
+ALTER TABLE drivers ADD COLUMN IF NOT EXISTS license_expiry DATE;
+
+-- Schools table
+CREATE TABLE IF NOT EXISTS schools (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    address VARCHAR(255),
+    city VARCHAR(100),
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+ALTER TABLE schools ADD COLUMN IF NOT EXISTS address VARCHAR(255);
+ALTER TABLE schools ADD COLUMN IF NOT EXISTS city VARCHAR(100);
+ALTER TABLE schools ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 8);
+ALTER TABLE schools ADD COLUMN IF NOT EXISTS longitude DECIMAL(11, 8);
+
+-- Driver-Schools junction (which schools each driver covers)
+CREATE TABLE IF NOT EXISTS driver_schools (
+    id SERIAL PRIMARY KEY,
+    driver_id INTEGER NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
+    school_id INTEGER NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+    UNIQUE(driver_id, school_id)
+);
+
+-- Enhanced Student Fields
+ALTER TABLE students ADD COLUMN IF NOT EXISTS preferred_name VARCHAR(255);
+ALTER TABLE students ADD COLUMN IF NOT EXISTS dob DATE;
+ALTER TABLE students ADD COLUMN IF NOT EXISTS grade VARCHAR(20);
+ALTER TABLE students ADD COLUMN IF NOT EXISTS portrait_photo TEXT;

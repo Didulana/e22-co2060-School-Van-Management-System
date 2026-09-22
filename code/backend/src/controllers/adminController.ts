@@ -61,3 +61,38 @@ export async function getStudents(req: Request, res: Response): Promise<void> {
     });
   }
 }
+
+export async function getPendingDrivers(req: Request, res: Response): Promise<void> {
+  try {
+    const drivers = await adminService.getPendingDrivers();
+    res.status(200).json(drivers);
+  } catch (error) {
+    console.error('Get pending drivers error:', error);
+    res.status(500).json({
+      message: 'Failed to fetch pending drivers'
+    });
+  }
+}
+
+export async function getDriverProfile(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = parseInt(req.params.id as string, 10);
+    if (isNaN(userId)) {
+      res.status(400).json({ message: 'Invalid user ID' });
+      return;
+    }
+
+    const profile = await adminService.getDriverFullProfile(userId);
+    if (!profile) {
+      res.status(404).json({ message: 'Driver profile not found' });
+      return;
+    }
+
+    res.status(200).json(profile);
+  } catch (error) {
+    console.error('Get driver profile error:', error);
+    res.status(500).json({
+      message: 'Failed to fetch driver profile'
+    });
+  }
+}

@@ -7,6 +7,7 @@ interface AdminSummary {
   totalUsers: number;
   totalVehicles: number;
   activeRoutes: number;
+  pendingDriverCount?: number;
 }
 
 interface Driver {
@@ -28,6 +29,7 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalVehicles: 0,
     activeRoutes: 0,
+    pendingDriverCount: 0,
   });
 
   const [drivers] = useState<Driver[]>([
@@ -70,7 +72,18 @@ export default function AdminDashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Pending Driver Review */}
+        <div className="glass-card rounded-[1.75rem] p-6 flex items-center gap-5 hover:-translate-y-1 transition-transform duration-300 shadow-soft border border-amber-200/60 bg-gradient-to-br from-white to-amber-50/40">
+          <div className="h-14 w-14 rounded-2xl bg-amber-500/15 text-amber-700 flex items-center justify-center shrink-0">
+            <Users size={28} />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-amber-800 uppercase tracking-wider block">Pending Drivers</span>
+            <span className="text-3xl font-black text-amber-900 mt-1 block">{summary.pendingDriverCount || 0}</span>
+          </div>
+        </div>
+
         {/* Total Users */}
         <div className="glass-card rounded-[1.75rem] p-6 flex items-center gap-5 hover:-translate-y-1 transition-transform duration-300 shadow-soft border border-white/60">
           <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">

@@ -90,7 +90,11 @@ function LoginPage() {
         parent: "/tracking",
       };
       navigate(roleHome[nextSession.user.role] || "/login", { replace: true });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.code === "pending_approval" || error?.message?.includes("pending admin approval") || error?.message === "pending_approval") {
+        navigate("/pending-approval", { state: { email: credentials.email } });
+        return;
+      }
       setErrorMessage(error instanceof Error ? error.message : "Unable to sign in");
     } finally {
       setIsSubmitting(false);

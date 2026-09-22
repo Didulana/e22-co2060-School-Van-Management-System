@@ -24,6 +24,7 @@ import journeyTimelineRoutes from "./routes/journeyTimelineRoutes";
 import parentRoutes from "./routes/parentRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import paymentRoutes from "./routes/paymentRoutes";
+import schoolRoutes from "./routes/schoolRoutes";
 import { authenticateToken, requireRole } from "./middleware/authMiddleware";
 import { getCorsOptions } from "./config/cors";
 
@@ -80,5 +81,6 @@ app.use("/api/journey", authenticateToken, journeyStatusRoutes);
 app.use("/api/journey", authenticateToken, journeyTimelineRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/tracking", trackingRoutes);
+app.use("/api/schools", schoolRoutes);
 
 export default app;

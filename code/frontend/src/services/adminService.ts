@@ -9,12 +9,36 @@ const getAuthHeaders = () => {
   };
 };
 
+export const getAdminSummary = async () => {
+  const response = await fetch(`${API_BASE_URL}/admin/summary`, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch admin summary");
+  return response.json();
+};
+
 export const getUsers = async (role?: string) => {
   const query = role ? `?role=${role}` : "";
   const response = await fetch(`${API_BASE_URL}/admin/users${query}`, {
     headers: getAuthHeaders(),
   });
   if (!response.ok) throw new Error("Failed to fetch users");
+  return response.json();
+};
+
+export const getPendingDrivers = async () => {
+  const response = await fetch(`${API_BASE_URL}/admin/pending-drivers`, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch pending drivers");
+  return response.json();
+};
+
+export const getDriverProfile = async (driverId: number) => {
+  const response = await fetch(`${API_BASE_URL}/admin/drivers/${driverId}/profile`, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to fetch driver profile");
   return response.json();
 };
 
@@ -33,6 +57,40 @@ export const getStudents = async () => {
     headers: getAuthHeaders(),
   });
   if (!response.ok) throw new Error("Failed to fetch students");
+  return response.json();
+};
+
+export const getSchools = async () => {
+  const response = await fetch(`${API_BASE_URL}/schools`);
+  if (!response.ok) throw new Error("Failed to fetch schools");
+  return response.json();
+};
+
+export const createSchool = async (schoolData: {
+  name: string;
+  address?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+}) => {
+  const response = await fetch(`${API_BASE_URL}/schools`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(schoolData),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to create school");
+  }
+  return response.json();
+};
+
+export const deleteSchool = async (id: number) => {
+  const response = await fetch(`${API_BASE_URL}/schools/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to delete school");
   return response.json();
 };
 

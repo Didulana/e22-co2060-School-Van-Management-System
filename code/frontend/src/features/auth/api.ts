@@ -2,11 +2,14 @@ import { AuthSession, AuthUser, DemoAccount } from "./types";
 import { API_BASE_URL } from "../../config/api";
 
 async function parseResponse<T>(response: Response): Promise<T> {
-  const data = (await response.json()) as T & { error?: string };
+  const data = (await response.json()) as T & { error?: string; message?: string };
 
   if (!response.ok) {
-    const errorMsg = (data as any).details || data.error || "Request failed";
-    throw new Error(errorMsg);
+    const errorMsg = (data as any).message || (data as any).details || data.error || "Request failed";
+    const error = new Error(errorMsg) as Error & { code?: string; status?: number };
+    error.code = data.error;
+    error.status = response.status;
+    throw error;
   }
 
   return data;

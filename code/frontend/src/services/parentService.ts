@@ -35,6 +35,10 @@ export interface Route {
 export interface Child {
     id: number;
     name: string;
+    preferred_name?: string;
+    dob?: string;
+    grade?: string;
+    portrait_photo?: string;
     school: string;
     pickup_stop_id: number;
     dropoff_stop_id: number;
@@ -153,3 +157,14 @@ export const getParentNotifications = async (): Promise<any[]> => {
     const response = await axios.get(`${API_BASE_URL}/notifications`, { headers: getAuthHeader() });
     return response.data;
 };
+
+export const getDriversBySchool = async (schoolName: string): Promise<any[]> => {
+    const response = await axios.get(`${API_BASE_URL}/drivers-by-school/${encodeURIComponent(schoolName)}`, { headers: getAuthHeader() });
+    return response.data;
+};
+
+export const getSchools = async (): Promise<Array<{ id: number; name: string; city?: string; address?: string }>> => {
+    const response = await axios.get(`${API_ROOT_URL}/schools`);
+    return response.data;
+};
+
