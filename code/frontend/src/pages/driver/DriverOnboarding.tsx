@@ -5,20 +5,17 @@ import {
   getOnboardingStatus,
   getSchools,
 } from "../../services/driverService";
-import DraggableLocationPicker from "../../components/driver/DraggableLocationPicker";
+import RouteMapEditor, { RouteStop } from "../../components/driver/RouteMapEditor";
 import {
   GraduationCap,
   Truck,
   CheckCircle2,
   ChevronRight,
-  Plus,
-  Trash2,
   ShieldCheck,
   Zap,
   X,
   Navigation,
   Info,
-  MapPin,
   Search,
   Check,
   ChevronLeft,
@@ -29,12 +26,6 @@ interface School {
   name: string;
   city?: string;
   address?: string;
-}
-
-interface StopItem {
-  name: string;
-  latitude: number;
-  longitude: number;
 }
 
 export default function DriverOnboarding() {
@@ -56,13 +47,10 @@ export default function DriverOnboarding() {
     isAc: false,
   });
 
-  // Route stops state: Start location, intermediate stops, End location
-  const [startLocation, setStartLocation] = useState<StopItem>({ name: "", latitude: 0, longitude: 0 });
-  const [endLocation, setEndLocation] = useState<StopItem>({ name: "", latitude: 0, longitude: 0 });
-  const [intermediateStops, setIntermediateStops] = useState<StopItem[]>([]);
-
-  // Location picker modal state
-  const [pickerTarget, setPickerTarget] = useState<"start" | "end" | number | null>(null);
+  // Route stops state
+  const [startLocation, setStartLocation] = useState<RouteStop>({ name: "", latitude: 0, longitude: 0 });
+  const [endLocation, setEndLocation] = useState<RouteStop>({ name: "", latitude: 0, longitude: 0 });
+  const [intermediateStops, setIntermediateStops] = useState<RouteStop[]>([]);
 
   useEffect(() => {
     loadSchoolsAndStatus();
@@ -73,10 +61,33 @@ export default function DriverOnboarding() {
       const schools = await getSchools();
       setAvailableSchools(schools);
 
-      const statusData = await getOnboardingStatus();
-      if (!statusData.completed && statusData.step) {
-        setStep(statusData.step);
+      const statusData: any = await getOnboardingStatus();
+      if (statusData) {
+        if (statusData.selectedSchoolIds && Array.isArray(statusData.selectedSchoolIds)) {
+          setSelectedSchoolIds(statusData.selectedSchoolIds);
+        }
+        if (statusData.driver?.license_number) {
+          setLicenseNumber(statusData.driver.license_number);
+        }
+        if (statusData.vehicle) {
+          setVehicleDetails({
+            registrationNumber: statusData.vehicle.registrationNumber || "",
+            type: statusData.vehicle.type || "Van",
+            seatCount: statusData.vehicle.seatCount || 12,
+            isAc: !!statusData.vehicle.isAc,
+          });
+        }
+        if (statusData.routeStops && statusData.routeStops.length >= 2) {
+          const stops = statusData.routeStops;
+          setStartLocation(stops[0]);
+          setEndLocation(stops[stops.length - 1]);
+          if (stops.length > 2) {
+            setIntermediateStops(stops.slice(1, stops.length - 1));
+          }
+        }
       }
+      // Never skip! Always start on Step 1 (Covered Schools) so the driver can select/review
+      setStep(1);
     } catch (err) {
       console.error("Failed to load initial onboarding data:", err);
     }
@@ -90,28 +101,6 @@ export default function DriverOnboarding() {
     }
   };
 
-  const handlePickerConfirm = (name: string, lat: number, lng: number) => {
-    if (pickerTarget === "start") {
-      setStartLocation({ name, latitude: lat, longitude: lng });
-    } else if (pickerTarget === "end") {
-      setEndLocation({ name, latitude: lat, longitude: lng });
-    } else if (typeof pickerTarget === "number") {
-      const updated = [...intermediateStops];
-      updated[pickerTarget] = { name, latitude: lat, longitude: lng };
-      setIntermediateStops(updated);
-    }
-    setPickerTarget(null);
-  };
-
-  const handleAddIntermediateStop = () => {
-    setIntermediateStops([...intermediateStops, { name: "", latitude: 0, longitude: 0 }]);
-    setPickerTarget(intermediateStops.length);
-  };
-
-  const removeIntermediateStop = (index: number) => {
-    setIntermediateStops(intermediateStops.filter((_, i) => i !== index));
-  };
-
   const handleSubmit = async () => {
     if (selectedSchoolIds.length === 0) {
       alert("Please select at least one school covered by your route.");
@@ -120,12 +109,14 @@ export default function DriverOnboarding() {
     }
 
     if (!startLocation.name || startLocation.latitude === 0) {
-      alert("Please configure your route's Starting Location on the map.");
+      alert("Please enter a Starting Location and check its pin on the map.");
+      setStep(3);
       return;
     }
 
     if (!endLocation.name || endLocation.latitude === 0) {
-      alert("Please configure your route's End Location on the map.");
+      alert("Please enter an End Location and check its pin on the map.");
+      setStep(3);
       return;
     }
 
@@ -149,7 +140,7 @@ export default function DriverOnboarding() {
         schoolIds: selectedSchoolIds,
         routeStops: allStops,
       });
-      alert("Van profile and route successfully saved!");
+      alert("Van profile, covered schools, and route successfully saved!");
       navigate("/driver");
     } catch (err: any) {
       alert(`Error saving onboarding: ${err.message || "Please try again."}`);
@@ -165,9 +156,9 @@ export default function DriverOnboarding() {
   );
 
   return (
-    <div className="flex flex-col items-center py-12 px-4 sm:px-6 w-full animate-in fade-in duration-700 font-sans">
+    <div className="flex flex-col items-center py-10 px-4 sm:px-6 w-full animate-in fade-in duration-700 font-sans">
       {/* Header */}
-      <div className="w-full max-w-3xl flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+      <div className="w-full max-w-5xl flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
         <div className="text-left">
           <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-700">Driver Portal</span>
           <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mt-1">Route & Van Setup</h1>
@@ -183,39 +174,48 @@ export default function DriverOnboarding() {
         </button>
       </div>
 
-      {/* 3-Step Indicator */}
-      <div className="w-full max-w-3xl flex justify-between mb-16 relative">
-        <div className="absolute top-[20px] left-0 w-full h-[2px] bg-slate-100 -z-10" />
+      {/* 3-Step Clickable Stepper */}
+      <div className="w-full max-w-5xl flex justify-between mb-12 relative px-4">
+        <div className="absolute top-[20px] left-8 right-8 h-[2px] bg-slate-100 -z-10" />
         <div
-          className="absolute top-[20px] left-0 h-[2px] bg-emerald-500 -z-10 transition-all duration-700 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-          style={{ width: `${(step - 1) * 50}%` }}
+          className="absolute top-[20px] left-8 h-[2px] bg-emerald-500 -z-10 transition-all duration-700 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+          style={{ width: `${(step - 1) * 45}%` }}
         />
-        {[1, 2, 3].map((s) => (
-          <div key={s} className="flex flex-col items-center">
+        {[
+          { n: 1, label: "1. Covered Schools" },
+          { n: 2, label: "2. Vehicle Info" },
+          { n: 3, label: "3. Route Map Pins" },
+        ].map((s) => (
+          <button
+            key={s.n}
+            type="button"
+            onClick={() => setStep(s.n)}
+            className="flex flex-col items-center group cursor-pointer focus:outline-none"
+          >
             <div
               className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base transition-all duration-500 shadow-lg ${
-                step === s
+                step === s.n
                   ? "bg-slate-900 text-white scale-110 ring-8 ring-slate-100"
-                  : step > s
-                  ? "bg-emerald-500 text-white"
-                  : "bg-white text-slate-300 border-2 border-slate-100"
+                  : step > s.n
+                  ? "bg-emerald-500 text-white group-hover:bg-emerald-600"
+                  : "bg-white text-slate-300 border-2 border-slate-100 group-hover:border-slate-300 group-hover:text-slate-400"
               }`}
             >
-              {step > s ? <CheckCircle2 size={24} /> : s}
+              {step > s.n ? <CheckCircle2 size={24} /> : s.n}
             </div>
             <span
-              className={`mt-4 text-[10px] font-black uppercase tracking-[0.2em] ${
-                step >= s ? "text-slate-900" : "text-slate-300"
+              className={`mt-4 text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${
+                step >= s.n ? "text-slate-900" : "text-slate-300 group-hover:text-slate-500"
               }`}
             >
-              {s === 1 ? "1. Covered Schools" : s === 2 ? "2. Vehicle Info" : "3. Route Map Pins"}
+              {s.label}
             </span>
-          </div>
+          </button>
         ))}
       </div>
 
       {/* Main Form Card */}
-      <div className="w-full max-w-3xl bg-white rounded-[2.5rem] shadow-soft border border-slate-100 overflow-hidden">
+      <div className="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-soft border border-slate-100 overflow-hidden">
         <div className="bg-slate-50/70 px-8 py-6 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-white shadow-xs flex items-center justify-center text-emerald-600 border border-slate-100">
@@ -262,7 +262,7 @@ export default function DriverOnboarding() {
               </div>
 
               {/* Schools list */}
-              <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+              <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
                 {filteredSchools.length === 0 ? (
                   <div className="p-8 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-2xl">
                     No matching schools found.
@@ -308,7 +308,7 @@ export default function DriverOnboarding() {
                 )}
               </div>
 
-              <div className="pt-4 flex items-center justify-between">
+              <div className="pt-4 flex items-center justify-between border-t border-slate-100">
                 <span className="text-xs font-bold text-slate-500">
                   {selectedSchoolIds.length} school{selectedSchoolIds.length === 1 ? "" : "s"} selected
                 </span>
@@ -402,7 +402,7 @@ export default function DriverOnboarding() {
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-between">
+              <div className="pt-4 flex justify-between border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
@@ -422,151 +422,20 @@ export default function DriverOnboarding() {
             </div>
           )}
 
-          {/* STEP 3: ROUTE STOPS (START, INTERMEDIATE, END WITH DRAGGABLE PIN) */}
+          {/* STEP 3: ROUTE STOPS (LIVE SEARCH TEXT BOXES + DRAGGABLE MAP PINS) */}
           {step === 3 && (
             <div className="space-y-8 animate-in fade-in duration-300">
-              <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                <Info className="text-emerald-600 shrink-0" size={20} />
-                <p className="text-xs font-semibold text-emerald-900 leading-relaxed">
-                  Type a location name or click <strong>&ldquo;Set on Map&rdquo;</strong> to open the interactive map and drag your pin to the precise pickup or dropoff point (Uber-style).
-                </p>
-              </div>
-
-              {/* 1. STARTING LOCATION */}
-              <div className="p-5 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
-                    <span className="text-xs font-black uppercase text-slate-700 tracking-wider">
-                      Starting Location
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPickerTarget("start")}
-                    className="px-4 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1.5 shadow-sm"
-                  >
-                    <MapPin size={12} /> {startLocation.name ? "Edit on Map" : "Set on Map"}
-                  </button>
-                </div>
-                {startLocation.name ? (
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <span className="text-sm font-black text-slate-900 block">{startLocation.name}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {startLocation.latitude.toFixed(5)}, {startLocation.longitude.toFixed(5)}
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                      Pin Placed
-                    </span>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-400 italic">No start location set yet. Click &ldquo;Set on Map&rdquo;.</p>
-                )}
-              </div>
-
-              {/* 2. INTERMEDIATE STOPS */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-xs font-black uppercase text-slate-500 tracking-wider">
-                    Intermediate Stops ({intermediateStops.length})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleAddIntermediateStop}
-                    className="px-3.5 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors flex items-center gap-1 shadow-sm"
-                  >
-                    <Plus size={14} /> Add Stop Pin
-                  </button>
-                </div>
-
-                {intermediateStops.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
-                    Optional: Add intermediate passenger pickup points along your path.
-                  </p>
-                ) : (
-                  <div className="space-y-2.5">
-                    {intermediateStops.map((stop, idx) => (
-                      <div
-                        key={idx}
-                        className="p-4 rounded-2xl bg-white border border-slate-200 flex items-center justify-between gap-3 shadow-xs"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-black shrink-0">
-                            {idx + 1}
-                          </div>
-                          <div className="min-w-0">
-                            <span className="text-sm font-bold text-slate-900 block truncate">
-                              {stop.name || "Untitled Stop"}
-                            </span>
-                            {stop.latitude !== 0 && (
-                              <span className="text-[10px] text-slate-400 font-mono block">
-                                {stop.latitude.toFixed(5)}, {stop.longitude.toFixed(5)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => setPickerTarget(idx)}
-                            className="px-3 py-1 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200 transition-colors"
-                          >
-                            <MapPin size={12} className="inline mr-1" />
-                            {stop.latitude !== 0 ? "Edit Pin" : "Set Pin"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeIntermediateStop(idx)}
-                            className="p-1.5 text-slate-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 3. END LOCATION */}
-              <div className="p-5 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-red-500 ring-4 ring-red-100" />
-                    <span className="text-xs font-black uppercase text-slate-700 tracking-wider">
-                      End Location / Final School
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPickerTarget("end")}
-                    className="px-4 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1.5 shadow-sm"
-                  >
-                    <MapPin size={12} /> {endLocation.name ? "Edit on Map" : "Set on Map"}
-                  </button>
-                </div>
-                {endLocation.name ? (
-                  <div className="bg-white p-3 rounded-2xl border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <span className="text-sm font-black text-slate-900 block">{endLocation.name}</span>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {endLocation.latitude.toFixed(5)}, {endLocation.longitude.toFixed(5)}
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                      Pin Placed
-                    </span>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-400 italic">No end location set yet. Click &ldquo;Set on Map&rdquo;.</p>
-                )}
-              </div>
+              <RouteMapEditor
+                startLocation={startLocation}
+                onStartChange={setStartLocation}
+                intermediateStops={intermediateStops}
+                onIntermediateChange={setIntermediateStops}
+                endLocation={endLocation}
+                onEndChange={setEndLocation}
+              />
 
               {/* Final submission button */}
-              <div className="pt-4 flex justify-between items-center">
+              <div className="pt-6 flex justify-between items-center border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setStep(2)}
@@ -587,42 +456,6 @@ export default function DriverOnboarding() {
           )}
         </div>
       </div>
-
-      {/* DRAGGABLE LOCATION PICKER MODAL */}
-      {pickerTarget !== null && (
-        <DraggableLocationPicker
-          title={
-            pickerTarget === "start"
-              ? "Set Starting Location"
-              : pickerTarget === "end"
-              ? "Set End Location / School"
-              : `Set Intermediate Stop #${(pickerTarget as number) + 1}`
-          }
-          initialName={
-            pickerTarget === "start"
-              ? startLocation.name
-              : pickerTarget === "end"
-              ? endLocation.name
-              : intermediateStops[pickerTarget as number]?.name || ""
-          }
-          initialLat={
-            pickerTarget === "start"
-              ? startLocation.latitude
-              : pickerTarget === "end"
-              ? endLocation.latitude
-              : intermediateStops[pickerTarget as number]?.latitude || undefined
-          }
-          initialLng={
-            pickerTarget === "start"
-              ? startLocation.longitude
-              : pickerTarget === "end"
-              ? endLocation.longitude
-              : intermediateStops[pickerTarget as number]?.longitude || undefined
-          }
-          onConfirm={handlePickerConfirm}
-          onCancel={() => setPickerTarget(null)}
-        />
-      )}
     </div>
   );
 }

@@ -32,6 +32,11 @@ export const getVehicleByNumber = async (vehicleNumber: string, client: Pool | P
   return result.rows[0] || null;
 };
 
+export const getVehicleById = async (id: number, client: Pool | PoolClient = db): Promise<Vehicle | null> => {
+  const result = await client.query("SELECT * FROM vehicles WHERE id = $1", [id]);
+  return result.rows[0] || null;
+};
+
 /**
  * Get all vehicles
  */

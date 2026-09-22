@@ -23,16 +23,37 @@ export async function getOnboardingStatus(req: AuthenticatedRequest, res: Respon
       return res.json({ completed: false, step: 1 });
     }
 
-    if (!driver.vehicle_id) {
-      return res.json({ completed: false, step: 2, driverId: driver.id });
+    let vehicle = null;
+    if (driver.vehicle_id) {
+      vehicle = await vehicleModel.getVehicleById(driver.vehicle_id);
     }
 
-    const routes = await routeModel.getAllRoutes(driver.id);
-    if (routes.length === 0) {
-      return res.json({ completed: false, step: 3, driverId: driver.id, vehicleId: driver.vehicle_id });
-    }
+    const schools = driver.id ? await driverModel.getDriverSchools(driver.id) : [];
+    const routes = driver.id ? await routeModel.getAllRoutes(driver.id) : [];
+    const stops = routes.length > 0 && routes[0].stops ? routes[0].stops : [];
 
-    res.json({ completed: true, driverId: driver.id });
+    res.json({
+      completed: routes.length > 0 && schools.length > 0,
+      step: 1,
+      driverId: driver.id,
+      driver: {
+        license_number: driver.license_number,
+        license_image: driver.license_image,
+        license_expiry: driver.license_expiry,
+      },
+      vehicle: vehicle ? {
+        registrationNumber: vehicle.vehicle_number,
+        type: vehicle.type,
+        seatCount: vehicle.capacity,
+        isAc: vehicle.is_ac,
+      } : null,
+      selectedSchoolIds: schools.map((s: any) => s.id),
+      routeStops: stops.map((st: any) => ({
+        name: st.stop_name,
+        latitude: parseFloat(st.latitude),
+        longitude: parseFloat(st.longitude),
+      })),
+    });
   } catch (error: any) {
     res.status(500).json({ error: "Failed to fetch onboarding status", details: error.message });
   }
