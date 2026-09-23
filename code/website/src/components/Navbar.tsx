@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bus, Menu, X, ArrowRight } from 'lucide-react';
+import { PORTAL_URLS } from '../config';
 
 export const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -47,18 +48,20 @@ export const Navbar: React.FC = () => {
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <a 
-              href="http://localhost:5173" 
+              href={PORTAL_URLS.signIn} 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-xs font-bold text-slate-700 hover:text-blue-600 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-blue-300 bg-white shadow-sm transition-all"
             >
-              Sign In to App
+              Sign In
             </a>
             <a 
-              href="#contact" 
+              href={PORTAL_URLS.getStarted}
+              target="_blank" 
+              rel="noopener noreferrer"
               className="flex items-center gap-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2.5 rounded-xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5"
             >
-              <span>Get Fleet Demo</span>
+              <span>Get Started</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </a>
           </div>
@@ -82,8 +85,23 @@ export const Navbar: React.FC = () => {
           <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block text-base font-semibold text-slate-800">Pricing</a>
           <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block text-base font-semibold text-slate-800">FAQ</a>
           <div className="pt-4 border-t border-slate-100 flex flex-col gap-3">
-            <a href="http://localhost:5173" className="w-full text-center py-2.5 text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl">Sign In to App</a>
-            <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="w-full text-center py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl">Get Fleet Demo</a>
+            <a 
+              href={PORTAL_URLS.signIn}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full text-center py-2.5 text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl"
+            >
+              Sign In
+            </a>
+            <a 
+              href={PORTAL_URLS.getStarted}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileMenuOpen(false)} 
+              className="w-full text-center py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl shadow-md"
+            >
+              Get Started
+            </a>
           </div>
         </div>
       )}

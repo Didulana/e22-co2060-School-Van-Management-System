@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Bus, Check, ArrowRight } from 'lucide-react';
+import { PORTAL_URLS } from '../config';
 
 export const PricingCalculator: React.FC = () => {
   const [vanCount, setVanCount] = useState<number>(3);
@@ -74,10 +75,12 @@ export const PricingCalculator: React.FC = () => {
             </div>
 
             <a 
-              href="#contact" 
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20"
+              href={PORTAL_URLS.getStarted}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 transition-all hover:-translate-y-0.5"
             >
-              <span>Start Free 14-Day Trial</span>
+              <span>Get Started - 14-Day Free Trial</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </a>
           </div>

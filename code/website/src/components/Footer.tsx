@@ -1,5 +1,6 @@
 import React from 'react';
 import { Bus, ExternalLink, Github, Globe, GraduationCap } from 'lucide-react';
+import { PORTAL_URLS } from '../config';
 
 export const Footer: React.FC = () => {
   return (
@@ -43,10 +44,11 @@ export const Footer: React.FC = () => {
           <div>
             <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">User Portals</h4>
             <ul className="space-y-2.5">
-              <li><a href="http://localhost:5173" target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors flex items-center gap-1"><span>Parent Mobile Dashboard</span> <ExternalLink className="w-3 h-3" /></a></li>
-              <li><a href="http://localhost:5173" target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors flex items-center gap-1"><span>Driver App View</span> <ExternalLink className="w-3 h-3" /></a></li>
-              <li><a href="http://localhost:5173" target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors flex items-center gap-1"><span>School Admin Portal</span> <ExternalLink className="w-3 h-3" /></a></li>
-              <li><a href="#pricing" className="hover:text-blue-400 transition-colors">Fleet Subscription Plans</a></li>
+              <li><a href={PORTAL_URLS.signIn} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors flex items-center gap-1"><span>Sign In</span> <ExternalLink className="w-3 h-3" /></a></li>
+              <li><a href={PORTAL_URLS.getStarted} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors flex items-center gap-1"><span>Get Started</span> <ExternalLink className="w-3 h-3" /></a></li>
+              <li><a href={PORTAL_URLS.parent} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors flex items-center gap-1"><span>Parent Dashboard</span> <ExternalLink className="w-3 h-3" /></a></li>
+              <li><a href={PORTAL_URLS.driver} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors flex items-center gap-1"><span>Driver Portal</span> <ExternalLink className="w-3 h-3" /></a></li>
+              <li><a href={PORTAL_URLS.admin} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors flex items-center gap-1"><span>School Admin Portal</span> <ExternalLink className="w-3 h-3" /></a></li>
             </ul>
           </div>
 

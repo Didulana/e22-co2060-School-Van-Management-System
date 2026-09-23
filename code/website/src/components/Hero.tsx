@@ -1,5 +1,6 @@
 import React from 'react';
 import { Play, ArrowRight, Zap, CheckCircle2 } from 'lucide-react';
+import { PORTAL_URLS } from '../config';
 
 export const Hero: React.FC = () => {
   return (
@@ -31,18 +32,28 @@ export const Hero: React.FC = () => {
           {/* CTAs */}
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a 
-              href="#simulator" 
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:-translate-y-0.5"
+              href={PORTAL_URLS.getStarted} 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:-translate-y-0.5"
             >
-              <Play className="w-4 h-4 fill-current" />
-              <span>Explore Live Simulator</span>
+              <span>Get Started</span>
+              <ArrowRight className="w-4 h-4" />
             </a>
             <a 
-              href="#contact" 
+              href={PORTAL_URLS.signIn} 
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl shadow-sm transition-all"
             >
-              <span>Book Fleet Demo</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>Sign In</span>
+            </a>
+            <a 
+              href="#simulator" 
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 text-sm font-bold text-slate-500 hover:text-blue-600 transition-colors"
+            >
+              <Play className="w-4 h-4 fill-current text-blue-600" />
+              <span>Explore Simulator</span>
             </a>
           </div>
 
