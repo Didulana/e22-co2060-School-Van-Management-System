@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   GraduationCap,
   Plus,
@@ -8,6 +8,7 @@ import {
   XCircle,
   CheckCircle2,
   Search,
+  Loader2,
 } from "lucide-react";
 import { getSchools, createSchool, deleteSchool } from "../../services/adminService";
 import SchoolMapPicker from "../../components/admin/SchoolMapPicker";
@@ -39,9 +40,20 @@ export default function SchoolManagement() {
     longitude: "",
   });
 
-  useEffect(() => {
-    loadSchools();
-  }, []);
+  // Autocomplete dropdown state for School Name input
+  const [schoolSuggestions, setSchoolSuggestions] = useState<
+    Array<{
+      name: string;
+      address: string;
+      city: string;
+      latitude: number;
+      longitude: number;
+    }>
+  >([]);
+  const [isSearchingSchools, setIsSearchingSchools] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchDebounceRef = useRef<any>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const loadSchools = async () => {
     try {
@@ -54,6 +66,149 @@ export default function SchoolManagement() {
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadSchools();
+  }, []);
+
+  // Close suggestions dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const searchSchools = async (query: string) => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      setSchoolSuggestions([]);
+      return;
+    }
+
+    setIsSearchingSchools(true);
+    try {
+      const queryText =
+        trimmed.toLowerCase().includes("school") ||
+        trimmed.toLowerCase().includes("college") ||
+        trimmed.toLowerCase().includes("vidyalaya")
+          ? trimmed
+          : `${trimmed} school`;
+
+      let res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          queryText
+        )}&limit=6&countrycodes=lk&addressdetails=1`
+      );
+      let data = await res.json();
+
+      if (!data || data.length === 0) {
+        const broadRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            trimmed
+          )}&limit=6&countrycodes=lk&addressdetails=1`
+        );
+        data = await broadRes.json();
+      }
+
+      const parsedResults = (data || []).map((item: any) => {
+        const addr = item.address || {};
+        const rawName =
+          addr.school ||
+          addr.amenity ||
+          addr.building ||
+          item.name ||
+          item.display_name?.split(",")[0]?.trim() ||
+          "";
+        const cleanName = rawName.replace(/^school\s+/i, "");
+
+        const city =
+          addr.city ||
+          addr.town ||
+          addr.village ||
+          addr.suburb ||
+          addr.municipality ||
+          addr.county ||
+          addr.state_district ||
+          "";
+
+        const streetParts = [
+          addr.road || addr.street,
+          addr.neighbourhood || addr.residential || addr.suburb,
+        ].filter(Boolean);
+
+        const address =
+          streetParts.length > 0
+            ? streetParts.join(", ")
+            : item.display_name?.split(",").slice(1, 4).join(", ").trim() || "";
+
+        return {
+          name: cleanName,
+          address,
+          city,
+          latitude: parseFloat(item.lat),
+          longitude: parseFloat(item.lon),
+        };
+      });
+
+      setSchoolSuggestions(parsedResults);
+    } catch (err) {
+      console.error("Failed to search schools:", err);
+      setSchoolSuggestions([]);
+    } finally {
+      setIsSearchingSchools(false);
+    }
+  };
+
+  const handleSchoolNameChange = (val: string) => {
+    setFormData((prev) => ({ ...prev, name: val }));
+    setShowDropdown(true);
+
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      searchSchools(val);
+    }, 350);
+  };
+
+  const handleSelectSchool = (school: {
+    name: string;
+    address: string;
+    city: string;
+    latitude: number;
+    longitude: number;
+  }) => {
+    setFormData((prev) => ({
+      ...prev,
+      name: school.name,
+      address: school.address || prev.address,
+      city: school.city || prev.city,
+      latitude: school.latitude ? school.latitude.toFixed(6) : prev.latitude,
+      longitude: school.longitude ? school.longitude.toFixed(6) : prev.longitude,
+    }));
+    setShowDropdown(false);
+  };
+
+  const handleUseTypedName = () => {
+    setShowDropdown(false);
+  };
+
+  const handleCoordinatesChange = (
+    lat: number,
+    lng: number,
+    autoAddress?: string,
+    autoCity?: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6),
+      address: prev.address ? prev.address : (autoAddress || ""),
+      city: prev.city ? prev.city : (autoCity || ""),
+    }));
   };
 
   const handleCreateSchool = async (e: React.FormEvent) => {
@@ -242,7 +397,7 @@ export default function SchoolManagement() {
                     Register New School
                   </h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    Select a school from the map listing to auto-populate details, or adjust coordinates manually.
+                    Type a school name to pick from suggestions, or add custom school and drag the pin.
                   </p>
                 </div>
               </div>
@@ -255,62 +410,105 @@ export default function SchoolManagement() {
               </button>
             </div>
 
-            {/* Modal Body: Split Map & Form */}
+            {/* Modal Body: Split Form & Map */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-5 overflow-y-auto flex-1 pr-1">
-              {/* Left Column: Interactive Map & School Search (7 cols) */}
-              <div className="lg:col-span-7 flex flex-col min-h-[380px] lg:min-h-[460px]">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-700">
-                      Map & School Listing
-                    </span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                      Auto-Detect
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex-1 rounded-2xl bg-slate-50 p-2.5 border border-slate-100 flex flex-col">
-                  <SchoolMapPicker
-                    selectedLat={formData.latitude ? parseFloat(formData.latitude) : undefined}
-                    selectedLng={formData.longitude ? parseFloat(formData.longitude) : undefined}
-                    onLocationSelect={(details) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        name: details.name !== undefined ? details.name : prev.name,
-                        address: details.address !== undefined ? details.address : prev.address,
-                        city: details.city !== undefined ? details.city : prev.city,
-                        latitude: details.latitude ? details.latitude.toFixed(6) : prev.latitude,
-                        longitude: details.longitude ? details.longitude.toFixed(6) : prev.longitude,
-                      }));
-                    }}
-                    existingSchools={schools}
-                  />
-                </div>
-              </div>
-
-              {/* Right Column: School Details Form (5 cols) */}
+              {/* Left Column: School Details Form (5 cols) */}
               <div className="lg:col-span-5 flex flex-col justify-between">
                 <form id="school-form" onSubmit={handleCreateSchool} className="space-y-4">
-                  <div>
+                  {/* School Name with Live Autocomplete Dropdown */}
+                  <div className="relative" ref={dropdownRef}>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-xs font-bold text-slate-700">
                         School Name <span className="text-red-500">*</span>
                       </label>
-                      {formData.name && (
-                        <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                          <CheckCircle2 size={11} /> Auto-filled
-                        </span>
-                      )}
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        Live search dropdown
+                      </span>
                     </div>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g. Royal College Colombo"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm font-bold focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all placeholder:text-slate-300 placeholder:font-normal"
-                    />
+
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={(e) => handleSchoolNameChange(e.target.value)}
+                        onFocus={() => {
+                          if (formData.name.trim().length >= 2) setShowDropdown(true);
+                        }}
+                        placeholder="Type school name (e.g. Royal College, Dharmaraja...)"
+                        className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm font-bold focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all placeholder:text-slate-300 placeholder:font-normal"
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        {isSearchingSchools ? (
+                          <Loader2 size={16} className="animate-spin text-emerald-600" />
+                        ) : (
+                          <Search size={16} />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Autocomplete Dropdown Menu */}
+                    {showDropdown && formData.name.trim().length >= 2 && (
+                      <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white rounded-2xl shadow-2xl border border-slate-200 max-h-64 overflow-y-auto divide-y divide-slate-100 animate-in fade-in slide-in-from-top-1 duration-150">
+                        <div className="p-2 bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                          <span>School Suggestions</span>
+                          {isSearchingSchools && (
+                            <span className="text-emerald-600 flex items-center gap-1 normal-case font-semibold">
+                              <Loader2 size={10} className="animate-spin" /> Searching...
+                            </span>
+                          )}
+                        </div>
+
+                        {/* List of matched schools from search */}
+                        {schoolSuggestions.length > 0 ? (
+                          schoolSuggestions.map((school, idx) => (
+                            <button
+                              key={`${school.name}-${idx}`}
+                              type="button"
+                              onClick={() => handleSelectSchool(school)}
+                              className="w-full p-2.5 text-left hover:bg-emerald-50/70 transition-colors flex items-start gap-2.5 group"
+                            >
+                              <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors shrink-0 mt-0.5">
+                                <GraduationCap size={15} />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between gap-1">
+                                  <p className="font-bold text-slate-900 text-xs truncate group-hover:text-emerald-900">
+                                    {school.name}
+                                  </p>
+                                  {school.city && (
+                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md shrink-0">
+                                      {school.city}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                                  {school.address || "Sri Lanka"}
+                                </p>
+                              </div>
+                            </button>
+                          ))
+                        ) : !isSearchingSchools ? (
+                          <div className="p-3 text-center text-xs text-slate-400">
+                            No matching schools found on map.
+                          </div>
+                        ) : null}
+
+                        {/* If school doesn't exist, button: "+ Add [The user has typed]" */}
+                        <button
+                          type="button"
+                          onClick={handleUseTypedName}
+                          className="w-full p-2.5 text-left hover:bg-emerald-50/80 bg-slate-50 text-emerald-700 font-bold text-xs flex items-center gap-2 transition-colors border-t border-slate-100"
+                        >
+                          <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                            <Plus size={13} />
+                          </div>
+                          <span className="truncate">
+                            + Add &ldquo;{formData.name.trim()}&rdquo;
+                          </span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -385,7 +583,7 @@ export default function SchoolManagement() {
                     </div>
 
                     <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                      💡 Coordinates update automatically from map selection, or you can type/edit them manually above to reposition the pin.
+                      💡 Longitude and latitude update automatically, but you can adjust them manually or drag the map pin.
                     </p>
                   </div>
                 </form>
@@ -407,6 +605,29 @@ export default function SchoolManagement() {
                   >
                     {isSubmitting ? "Registering..." : "Save School"}
                   </button>
+                </div>
+              </div>
+
+              {/* Right Column: Interactive Map with Draggable Pin (7 cols) */}
+              <div className="lg:col-span-7 flex flex-col min-h-[380px] lg:min-h-[460px]">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                      Location Map
+                    </span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                      Draggable Pin
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex-1 rounded-2xl bg-slate-50 p-2.5 border border-slate-100 flex flex-col">
+                  <SchoolMapPicker
+                    selectedLat={formData.latitude ? parseFloat(formData.latitude) : undefined}
+                    selectedLng={formData.longitude ? parseFloat(formData.longitude) : undefined}
+                    onCoordinatesChange={handleCoordinatesChange}
+                    existingSchools={schools}
+                  />
                 </div>
               </div>
             </div>

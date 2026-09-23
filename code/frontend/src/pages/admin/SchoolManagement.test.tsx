@@ -65,12 +65,38 @@ vi.mock('../../services/adminService', () => ({
   deleteSchool: vi.fn().mockResolvedValue({ success: true }),
 }));
 
-describe('SchoolManagement - Map-assisted Registration', () => {
+describe('SchoolManagement - Live School Name Autocomplete & Map Registration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
+      if (url.includes('nominatim.openstreetmap.org/search')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve([
+              {
+                place_id: 101,
+                name: 'Dharmaraja College',
+                display_name: 'Dharmaraja College, Kandy, Central Province, Sri Lanka',
+                lat: '7.2885',
+                lon: '80.6472',
+                address: {
+                  school: 'Dharmaraja College',
+                  city: 'Kandy',
+                  road: 'Dharmaraja Hill',
+                },
+              },
+            ]),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      });
+    }));
   });
 
-  it('renders school directory and opens Add School modal with map picker', async () => {
+  it('renders school directory and opens Add School modal with School Name input and map', async () => {
     render(<SchoolManagement />);
 
     expect(await screen.findByText('Royal College')).toBeInTheDocument();
@@ -80,59 +106,95 @@ describe('SchoolManagement - Map-assisted Registration', () => {
 
     // Modal opens
     expect(screen.getByText('Register New School')).toBeInTheDocument();
-    expect(screen.getByText('Map & School Listing')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Search school name/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Type school name/i)).toBeInTheDocument();
+    expect(screen.getByText('Location Map')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/6.904200/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/79.859600/i)).toBeInTheDocument();
   });
 
-  it('allows manual adjustment of latitude and longitude coordinates', async () => {
+  it('shows dropdown while typing school name and populates details when school is chosen', async () => {
     render(<SchoolManagement />);
 
     const addButton = screen.getByRole('button', { name: /Add New School/i });
     fireEvent.click(addButton);
 
-    const latInput = screen.getByPlaceholderText('6.904200') as HTMLInputElement;
-    const lngInput = screen.getByPlaceholderText('79.859600') as HTMLInputElement;
+    const nameInput = screen.getByPlaceholderText(/Type school name/i);
+    fireEvent.change(nameInput, { target: { value: 'Dharmaraja' } });
 
-    // Manually type adjusted coordinates
-    fireEvent.change(latInput, { target: { value: '7.290600' } });
-    fireEvent.change(lngInput, { target: { value: '80.633700' } });
+    // Autocomplete dropdown appears with suggestion
+    expect(await screen.findByText('Dharmaraja College')).toBeInTheDocument();
 
+    // Click on the suggested school
+    const schoolOption = screen.getByText('Dharmaraja College');
+    fireEvent.click(schoolOption);
+
+    // Form fields are populated
     await waitFor(() => {
-      expect(latInput.value).toBe('7.290600');
-      expect(lngInput.value).toBe('80.633700');
+      expect((screen.getByPlaceholderText(/Type school name/i) as HTMLInputElement).value).toBe(
+        'Dharmaraja College'
+      );
+      expect(
+        (screen.getByPlaceholderText(/e.g. Rajakeeya Mawatha/i) as HTMLInputElement).value
+      ).toBe('Dharmaraja Hill');
+      expect((screen.getByPlaceholderText(/e.g. Colombo, Kandy/i) as HTMLInputElement).value).toBe(
+        'Kandy'
+      );
+      expect((screen.getByPlaceholderText(/6.904200/i) as HTMLInputElement).value).toBe('7.288500');
+      expect((screen.getByPlaceholderText(/79.859600/i) as HTMLInputElement).value).toBe(
+        '80.647200'
+      );
     });
   });
 
-  it('submits school creation with manually adjusted or auto-populated coordinates', async () => {
+  it('shows "+ Add [Typed Name]" button in dropdown when custom school name is typed', async () => {
     render(<SchoolManagement />);
 
     const addButton = screen.getByRole('button', { name: /Add New School/i });
     fireEvent.click(addButton);
 
-    const nameInput = screen.getByPlaceholderText('e.g. Royal College Colombo');
-    const addressInput = screen.getByPlaceholderText('e.g. Rajakeeya Mawatha, Colombo 07');
-    const cityInput = screen.getByPlaceholderText('e.g. Colombo, Kandy, Gampaha');
+    const nameInput = screen.getByPlaceholderText(/Type school name/i);
+    fireEvent.change(nameInput, { target: { value: 'My Custom Academy' } });
+
+    // "+ Add 'My Custom Academy'" button is present
+    const addCustomBtn = await screen.findByText(/\+ Add “My Custom Academy”/i);
+    expect(addCustomBtn).toBeInTheDocument();
+
+    fireEvent.click(addCustomBtn);
+
+    // Dropdown closes, name is preserved
+    expect((screen.getByPlaceholderText(/Type school name/i) as HTMLInputElement).value).toBe(
+      'My Custom Academy'
+    );
+  });
+
+  it('allows manual adjustment of latitude and longitude coordinates and submits', async () => {
+    render(<SchoolManagement />);
+
+    const addButton = screen.getByRole('button', { name: /Add New School/i });
+    fireEvent.click(addButton);
+
+    const nameInput = screen.getByPlaceholderText(/Type school name/i);
+    const addressInput = screen.getByPlaceholderText(/e.g. Rajakeeya Mawatha/i);
+    const cityInput = screen.getByPlaceholderText(/e.g. Colombo, Kandy/i);
     const latInput = screen.getByPlaceholderText('6.904200');
     const lngInput = screen.getByPlaceholderText('79.859600');
 
-    fireEvent.change(nameInput, { target: { value: 'Ananda College' } });
-    fireEvent.change(addressInput, { target: { value: 'Maradana Road' } });
-    fireEvent.change(cityInput, { target: { value: 'Colombo' } });
-    fireEvent.change(latInput, { target: { value: '6.921800' } });
-    fireEvent.change(lngInput, { target: { value: '79.870200' } });
+    fireEvent.change(nameInput, { target: { value: 'Visakha Vidyalaya' } });
+    fireEvent.change(addressInput, { target: { value: 'Vajira Road' } });
+    fireEvent.change(cityInput, { target: { value: 'Colombo 04' } });
+    fireEvent.change(latInput, { target: { value: '6.889900' } });
+    fireEvent.change(lngInput, { target: { value: '79.860100' } });
 
     const submitBtn = screen.getByRole('button', { name: /Save School/i });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
       expect(adminService.createSchool).toHaveBeenCalledWith({
-        name: 'Ananda College',
-        address: 'Maradana Road',
-        city: 'Colombo',
-        latitude: 6.9218,
-        longitude: 79.8702,
+        name: 'Visakha Vidyalaya',
+        address: 'Vajira Road',
+        city: 'Colombo 04',
+        latitude: 6.8899,
+        longitude: 79.8601,
       });
     });
   });
