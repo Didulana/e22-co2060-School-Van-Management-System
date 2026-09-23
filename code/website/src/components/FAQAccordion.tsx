@@ -10,14 +10,14 @@ export const FAQAccordion: React.FC = () => {
   };
 
   return (
-    <section id="faq" className="py-20 relative bg-slate-50 border-b border-slate-200/80">
+    <section id="faq" className="py-20 relative bg-canvasBg border-t border-slate-100">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-bold tracking-widest text-blue-700 uppercase bg-blue-100 px-3 py-1 rounded-full border border-blue-200">
+          <span className="text-xs font-bold tracking-widest text-brand-700 uppercase bg-brand-100 px-3 py-1 rounded-full border border-brand-200">
             Got Questions?
           </span>
-          <h2 className="text-3xl font-extrabold text-slate-900 mt-3">
+          <h2 className="text-3xl font-extrabold text-ink mt-3">
             Frequently Asked Questions
           </h2>
           <p className="text-sm text-slate-600 mt-2">
@@ -38,11 +38,11 @@ export const FAQAccordion: React.FC = () => {
                   onClick={() => toggleFAQ(index)}
                   className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
                 >
-                  <span className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-3">
-                    <HelpCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <span className="text-sm sm:text-base font-bold text-ink flex items-center gap-3">
+                    <HelpCircle className="w-4 h-4 text-brand-600 flex-shrink-0" />
                     <span>{item.question}</span>
                   </span>
-                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 flex-shrink-0 ${isOpen ? 'rotate-180 text-blue-600' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 flex-shrink-0 ${isOpen ? 'rotate-180 text-brand-600' : ''}`} />
                 </button>
 
                 {isOpen && (

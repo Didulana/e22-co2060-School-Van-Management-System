@@ -26,10 +26,10 @@ export const DemoContactForm: React.FC = () => {
             
             {/* Left Content Side */}
             <div className="space-y-6">
-              <span className="text-xs font-bold tracking-widest text-blue-700 uppercase bg-blue-100 px-3 py-1 rounded-full border border-blue-200 inline-block">
-                Schedule a Fleet Demo
+              <span className="text-xs font-bold tracking-widest text-brand-700 uppercase bg-brand-100 px-3 py-1 rounded-full border border-brand-200 inline-block">
+                Get In Touch
               </span>
-              <h2 className="text-3xl font-extrabold text-slate-900">
+              <h2 className="text-3xl font-extrabold text-ink">
                 Transform Your School Van Operation Today
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
@@ -38,22 +38,22 @@ export const DemoContactForm: React.FC = () => {
 
               <div className="space-y-3 pt-2">
                 <div className="flex items-center gap-3 text-xs text-slate-700 font-semibold">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center flex-shrink-0">
                     <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <span>14-day free trial with full feature access</span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-slate-700 font-semibold">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center flex-shrink-0">
                     <Bus className="w-4 h-4" />
                   </div>
                   <span>Free onboarding for drivers & parent accounts</span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-slate-700 font-semibold">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center flex-shrink-0">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
-                  <span>Dedicated support from Team AlphaWolves</span>
+                  <span>Dedicated support from our team</span>
                 </div>
               </div>
             </div>
@@ -65,9 +65,9 @@ export const DemoContactForm: React.FC = () => {
                   <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900">Demo Request Submitted!</h3>
+                  <h3 className="text-xl font-bold text-ink">Request Submitted!</h3>
                   <p className="text-xs text-slate-600 font-medium">
-                    Thank you, <span className="text-slate-900 font-bold">{formData.fullName || 'there'}</span>. Our school transport specialist will contact you within 24 hours.
+                    Thank you, <span className="text-ink font-bold">{formData.fullName || 'there'}</span>. Our team will contact you within 24 hours.
                   </p>
                   <button 
                     onClick={() => setSubmitted(false)} 
@@ -86,7 +86,7 @@ export const DemoContactForm: React.FC = () => {
                       placeholder="e.g., Suneth Perera"
                       value={formData.fullName}
                       onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-blue-600 shadow-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-ink text-xs focus:outline-none focus:border-brand-600 shadow-sm"
                     />
                   </div>
 
@@ -98,7 +98,7 @@ export const DemoContactForm: React.FC = () => {
                       placeholder="name@school.com"
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-blue-600 shadow-sm"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-ink text-xs focus:outline-none focus:border-brand-600 shadow-sm"
                     />
                   </div>
 
@@ -108,7 +108,7 @@ export const DemoContactForm: React.FC = () => {
                       <select 
                         value={formData.role}
                         onChange={(e) => setFormData({...formData, role: e.target.value})}
-                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-blue-600 shadow-sm"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-ink text-xs focus:outline-none focus:border-brand-600 shadow-sm"
                       >
                         <option value="Parent">Parent</option>
                         <option value="Driver">Van Driver</option>
@@ -122,7 +122,7 @@ export const DemoContactForm: React.FC = () => {
                       <select 
                         value={formData.fleetSize}
                         onChange={(e) => setFormData({...formData, fleetSize: e.target.value})}
-                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-blue-600 shadow-sm"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-ink text-xs focus:outline-none focus:border-brand-600 shadow-sm"
                       >
                         <option value="1-3 Vans">1-3 Vans</option>
                         <option value="4-10 Vans">4-10 Vans</option>
@@ -138,16 +138,16 @@ export const DemoContactForm: React.FC = () => {
                       placeholder="Tell us about your route or school transport requirements..."
                       value={formData.message}
                       onChange={(e) => setFormData({...formData, message: e.target.value})}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-xs focus:outline-none focus:border-blue-600 shadow-sm resize-none"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-ink text-xs focus:outline-none focus:border-brand-600 shadow-sm resize-none"
                     ></textarea>
                   </div>
 
                   <button 
                     type="submit"
-                    className="w-full py-3 px-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
+                    className="w-full py-3 px-4 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>Submit Fleet Demo Request</span>
+                    <span>Send Request</span>
                   </button>
                 </form>
               )}

@@ -7,13 +7,17 @@ export default {
   theme: {
     extend: {
       colors: {
+        ink: "#0b1625",
+        navy: "#10243d",
+        mist: "#f4efe6",
+        amber: "#fdc358",
         brand: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          900: '#1e3a8a',
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          500: '#10b981', // emerald-500
+          600: '#059669', // emerald-600
+          700: '#047857', // emerald-700
+          900: '#064e3b', // emerald-900
         },
         safety: {
           emerald: '#10b981',
@@ -21,15 +25,17 @@ export default {
           rose: '#ef4444',
           indigo: '#6366f1',
         },
-        canvasBg: '#f8fafc',
+        canvasBg: '#fdfdfc', // Lighter background matching portal
       },
       fontFamily: {
-        sans: ['Outfit', 'Inter', 'sans-serif'],
+        sans: ['"Stack Sans Text"', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif'],
+        display: ['"Stack Sans Headline"', '"Stack Sans Text"', 'Inter', 'ui-sans-serif', 'system-ui', "sans-serif"],
+        body: ['"Stack Sans Text"', 'Inter', '"Segoe UI"', "Tahoma", "Geneva", "Verdana", "sans-serif"],
       },
       boxShadow: {
         soft: '0 10px 30px -10px rgba(0, 0, 0, 0.05)',
         card: '0 4px 20px -2px rgba(0, 0, 0, 0.06)',
-        lifted: '0 20px 40px -15px rgba(37, 99, 235, 0.12)',
+        lifted: '0 20px 40px -15px rgba(16, 185, 129, 0.12)', // Emerald shadow
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',

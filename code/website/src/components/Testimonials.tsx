@@ -11,7 +11,7 @@ export const Testimonials: React.FC = () => {
           <span className="text-xs font-bold tracking-widest text-amber-800 uppercase bg-amber-100 px-3 py-1 rounded-full border border-amber-300">
             Social Proof
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-3">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-ink mt-3">
             Trusted by Parents, Drivers & Principals
           </h2>
           <p className="text-sm text-slate-600 mt-2">
@@ -44,7 +44,7 @@ export const Testimonials: React.FC = () => {
                   className="w-10 h-10 rounded-full object-cover border border-slate-300 shadow-sm" 
                 />
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">{item.name}</h4>
+                  <h4 className="text-sm font-bold text-ink">{item.name}</h4>
                   <p className="text-[11px] text-slate-500 font-semibold">{item.role} • {item.location}</p>
                 </div>
               </div>

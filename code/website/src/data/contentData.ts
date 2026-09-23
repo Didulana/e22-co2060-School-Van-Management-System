@@ -26,44 +26,44 @@ export const FEATURES_DATA: FeatureItem[] = [
   {
     id: 'live-tracking',
     iconName: 'MapPin',
-    title: 'Sub-Second Live GPS Telemetry',
-    description: 'Track your child\'s school van position on an interactive live map with instant position updates powered by Socket.io websockets.',
+    title: 'Live GPS Tracking',
+    description: 'Track your child\'s school van on an interactive map with real-time updates so you always know their location.',
     tag: 'Real-Time'
   },
   {
     id: 'offline-resilience',
     iconName: 'WifiOff',
-    title: 'Resilient Connection Drop Fallback',
-    description: 'When cell reception fails, KidsRoute preserves the last known GPS location and reverse-geocodes the city name via Nominatim so parents are never left guessing.',
-    tag: 'Patent-Pending'
+    title: 'Reliable Connection',
+    description: 'If the driver loses cell service, you can still see the last known location of the van, ensuring you are never left guessing.',
+    tag: 'Dependable'
   },
   {
     id: 'instant-alerts',
     iconName: 'BellRing',
     title: 'Boarding & Drop-Off Alerts',
-    description: 'Parents receive push and WebSocket notifications the exact moment their child steps onto the van or alights at the school gate.',
+    description: 'Receive instant notifications the exact moment your child steps onto the van or arrives safely at the school gate.',
     tag: 'Instant'
   },
   {
     id: 'sos-panic',
     iconName: 'AlertTriangle',
-    title: 'One-Tap Emergency SOS Trigger',
-    description: 'Drivers can instantly trigger a high-priority emergency panic signal that alerts all parents and school dispatchers with one tap.',
-    tag: 'Safety'
+    title: 'Emergency SOS Alerts',
+    description: 'In case of an emergency, drivers can alert all parents and schools immediately with a single tap.',
+    tag: 'Safety First'
   },
   {
     id: 'absence-mgr',
     iconName: 'CalendarX',
-    title: 'One-Tap Absence Management',
-    description: 'Notify drivers early when your child is sick or absent, automatically optimizing pickup routes and preventing unnecessary delays.',
-    tag: 'Efficiency'
+    title: 'Easy Absence Reporting',
+    description: 'Notify the driver if your child is sick or absent, which automatically updates the route and prevents delays.',
+    tag: 'Convenience'
   },
   {
     id: 'fee-tracking',
     iconName: 'CreditCard',
-    title: 'Integrated Transport Dues & Receipts',
-    description: 'Parents can view monthly transport fees, upload payment receipts, and receive digital confirmation from van operators seamlessly.',
-    tag: 'Finance'
+    title: 'Simple Fee Tracking',
+    description: 'Easily track monthly transport fees, upload payment receipts, and receive confirmation from van operators.',
+    tag: 'Transparent'
   }
 ];
 

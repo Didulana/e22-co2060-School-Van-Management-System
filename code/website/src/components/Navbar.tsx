@@ -21,13 +21,12 @@ export const Navbar: React.FC = () => {
           
           {/* Brand Logo */}
           <a href="#" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/25 group-hover:scale-105 transition-transform">
               <Bus className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-xl tracking-tight text-slate-900">KidsRoute</span>
-                <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200">PRO</span>
+                <span className="font-extrabold text-xl tracking-tight text-ink">KidsRoute</span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium tracking-wide">School Van Management</p>
             </div>
@@ -35,31 +34,23 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">Features</a>
-            <a href="#simulator" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors flex items-center gap-1.5">
-              <span>Live Simulator</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            </a>
-            <a href="#solutions" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">Solutions</a>
-            <a href="#pricing" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">Pricing</a>
-            <a href="#faq" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">FAQ</a>
+            <a href="#features" className="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Features</a>
+            <a href="#solutions" className="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Solutions</a>
+            <a href="#team" className="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">Our Team</a>
+            <a href="#faq" className="text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors">FAQ</a>
           </nav>
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <a 
               href={PORTAL_URLS.signIn} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-xs font-bold text-slate-700 hover:text-blue-600 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-blue-300 bg-white shadow-sm transition-all"
+              className="text-xs font-bold text-slate-700 hover:text-brand-600 px-4 py-2.5 rounded-xl border border-slate-200 hover:border-brand-300 bg-white shadow-sm transition-all"
             >
               Sign In
             </a>
             <a 
               href={PORTAL_URLS.getStarted}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2.5 rounded-xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all hover:-translate-y-0.5"
+              className="flex items-center gap-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 px-4 py-2.5 rounded-xl shadow-md shadow-brand-500/20 hover:shadow-lg hover:shadow-brand-500/30 transition-all hover:-translate-y-0.5"
             >
               <span>Get Started</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -69,7 +60,7 @@ export const Navbar: React.FC = () => {
           {/* Mobile Menu Toggle */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-slate-700 hover:text-blue-600 p-2"
+            className="md:hidden text-slate-700 hover:text-brand-600 p-2"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -80,25 +71,20 @@ export const Navbar: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white/95 backdrop-blur-lg border-b border-slate-200 px-6 py-6 mt-3 space-y-4 shadow-xl animate-fadeIn">
           <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block text-base font-semibold text-slate-800">Features</a>
-          <a href="#simulator" onClick={() => setMobileMenuOpen(false)} className="block text-base font-semibold text-slate-800">Live Simulator</a>
           <a href="#solutions" onClick={() => setMobileMenuOpen(false)} className="block text-base font-semibold text-slate-800">Solutions</a>
-          <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block text-base font-semibold text-slate-800">Pricing</a>
+          <a href="#team" onClick={() => setMobileMenuOpen(false)} className="block text-base font-semibold text-slate-800">Our Team</a>
           <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block text-base font-semibold text-slate-800">FAQ</a>
           <div className="pt-4 border-t border-slate-100 flex flex-col gap-3">
             <a 
               href={PORTAL_URLS.signIn}
-              target="_blank"
-              rel="noopener noreferrer"
               className="w-full text-center py-2.5 text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl"
             >
               Sign In
             </a>
             <a 
               href={PORTAL_URLS.getStarted}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={() => setMobileMenuOpen(false)} 
-              className="w-full text-center py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl shadow-md"
+              className="w-full text-center py-2.5 text-sm font-bold text-white bg-brand-600 rounded-xl shadow-md"
             >
               Get Started
             </a>
