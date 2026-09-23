@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bus, Check, ArrowRight, Shield, Zap } from 'lucide-react';
+import { Bus, Check, ArrowRight } from 'lucide-react';
 
 export const PricingCalculator: React.FC = () => {
   const [vanCount, setVanCount] = useState<number>(3);
@@ -13,31 +13,31 @@ export const PricingCalculator: React.FC = () => {
   const cost = calculateCost(vanCount);
 
   return (
-    <section id="pricing" className="py-20 relative bg-slate-900/40 border-y border-slate-800/80">
+    <section id="pricing" className="py-20 relative bg-slate-50 border-b border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-bold tracking-widest text-emerald-400 uppercase bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+          <span className="text-xs font-bold tracking-widest text-emerald-800 uppercase bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
             Transparent Pricing
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-3">
             Simple Plans That Scale With Your Fleet
           </h2>
-          <p className="text-sm text-slate-300 mt-2">
+          <p className="text-sm text-slate-600 mt-2">
             Zero upfront hardware fees. Use your existing smartphones and pay a low monthly subscription.
           </p>
         </div>
 
         {/* Interactive Pricing Estimator Box */}
-        <div className="max-w-3xl mx-auto glass-card rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-xl">
+        <div className="max-w-3xl mx-auto bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-lg">
           
           <div className="text-center mb-8">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
               Estimate Your Fleet Cost
             </p>
             <div className="flex items-center justify-center gap-3">
-              <Bus className="w-6 h-6 text-sky-400" />
-              <span className="text-3xl font-extrabold text-white">{vanCount} {vanCount === 1 ? 'School Van' : 'School Vans'}</span>
+              <Bus className="w-6 h-6 text-blue-600" />
+              <span className="text-3xl font-extrabold text-slate-900">{vanCount} {vanCount === 1 ? 'School Van' : 'School Vans'}</span>
             </div>
           </div>
 
@@ -49,9 +49,9 @@ export const PricingCalculator: React.FC = () => {
               max="25" 
               value={vanCount}
               onChange={(e) => setVanCount(parseInt(e.target.value))}
-              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
+              className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
             />
-            <div className="flex justify-between text-xs text-slate-400 font-semibold mt-2">
+            <div className="flex justify-between text-xs text-slate-500 font-bold mt-2">
               <span>1 Van</span>
               <span>5 Vans</span>
               <span>10 Vans</span>
@@ -60,22 +60,22 @@ export const PricingCalculator: React.FC = () => {
           </div>
 
           {/* Result Card Display */}
-          <div className="bg-[#0c1324] p-6 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-inner">
             <div>
-              <span className="text-xs font-bold text-sky-400 uppercase tracking-wide bg-sky-500/10 px-2.5 py-1 rounded-full">
+              <span className="text-xs font-bold text-blue-700 uppercase tracking-wide bg-blue-100 px-2.5 py-1 rounded-full">
                 {cost.tier}
               </span>
-              <p className="text-2xl font-extrabold text-white mt-2">
-                ${cost.total} <span className="text-xs font-normal text-slate-400">/ month total</span>
+              <p className="text-3xl font-extrabold text-slate-900 mt-2">
+                ${cost.total} <span className="text-xs font-semibold text-slate-500">/ month total</span>
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Just <span className="text-emerald-400 font-semibold">${cost.perVan}</span> per van per month
+              <p className="text-xs text-slate-600 font-medium mt-0.5">
+                Just <span className="text-emerald-600 font-bold">${cost.perVan}</span> per van per month
               </p>
             </div>
 
             <a 
               href="#contact" 
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 text-xs font-bold text-white bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 rounded-xl shadow-lg shadow-sky-500/20"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20"
             >
               <span>Start Free 14-Day Trial</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -83,21 +83,21 @@ export const PricingCalculator: React.FC = () => {
           </div>
 
           {/* Included Features List */}
-          <div className="mt-8 pt-6 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-300">
+          <div className="mt-8 pt-6 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700 font-semibold">
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400" />
+              <Check className="w-4 h-4 text-emerald-600" />
               <span>Unlimited Parent App Downloads</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400" />
+              <Check className="w-4 h-4 text-emerald-600" />
               <span>Resilient Offline Location Fallback</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400" />
+              <Check className="w-4 h-4 text-emerald-600" />
               <span>Driver Attendance & SOS Panic Button</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400" />
+              <Check className="w-4 h-4 text-emerald-600" />
               <span>Monthly Transport Fee Management</span>
             </div>
           </div>

@@ -8,24 +8,28 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          500: '#0284c7',
-          600: '#0284c7',
-          700: '#0369a1',
-          900: '#0c4a6e',
+          50: '#eff6ff',
+          100: '#dbeafe',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          900: '#1e3a8a',
         },
         safety: {
           emerald: '#10b981',
           amber: '#f59e0b',
-          rose: '#f43f5e',
+          rose: '#ef4444',
           indigo: '#6366f1',
         },
-        darkBg: '#0b0f19',
-        cardBg: '#131b2e',
+        canvasBg: '#f8fafc',
       },
       fontFamily: {
         sans: ['Outfit', 'Inter', 'sans-serif'],
+      },
+      boxShadow: {
+        soft: '0 10px 30px -10px rgba(0, 0, 0, 0.05)',
+        card: '0 4px 20px -2px rgba(0, 0, 0, 0.06)',
+        lifted: '0 20px 40px -15px rgba(37, 99, 235, 0.12)',
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -34,7 +38,7 @@ export default {
       keyframes: {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' },
+          '50%': { transform: 'translateY(-8px)' },
         }
       }
     },
