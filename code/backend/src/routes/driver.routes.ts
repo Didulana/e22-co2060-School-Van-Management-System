@@ -1,7 +1,12 @@
 import { Router } from "express";
 import * as driverController from "../controllers/driver.controller";
+import { getPredefinedStops, getOnboardingStatus, submitOnboarding } from "../controllers/onboardingController";
 
 const router = Router();
+
+router.get("/onboarding/status", getOnboardingStatus);
+router.get("/onboarding/stops", getPredefinedStops);
+router.post("/onboarding/submit", submitOnboarding);
 
 /**
  * Create driver
@@ -24,8 +29,8 @@ router.put("/:id", driverController.updateDriver);
 router.delete("/:id", driverController.deleteDriver);
 
 /**
- * Assign vehicle to driver
+ * Trigger SOS / Emergency alert
  */
-router.put("/:id/assign-vehicle", driverController.assignVehicle);
+router.post("/sos", driverController.triggerSOS);
 
 export default router;

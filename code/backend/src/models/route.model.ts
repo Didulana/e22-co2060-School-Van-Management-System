@@ -1,8 +1,11 @@
+import { Pool, PoolClient } from "pg";
 import db from "../config/db";
 
 export interface Stop {
   stop_name: string;
   stop_order: number;
+  latitude: number;
+  longitude: number;
 }
 
 export interface Route {
@@ -39,11 +42,17 @@ export const findVehicleById = async (vehicleId: number) => {
 /**
  * Create route and related stops inside one transaction
  */
-export const createRoute = async ({ route_name, driver_id, vehicle_id, schedule, stops }: Route): Promise<Route> => {
-  const client = await db.connect();
+export const createRoute = async (
+  { route_name, driver_id, vehicle_id, schedule, stops }: Route,
+  providedClient?: PoolClient
+): Promise<Route> => {
+  const isInternalTransaction = !providedClient;
+  const client = providedClient || await db.connect();
 
   try {
-    await client.query("BEGIN");
+    if (isInternalTransaction) {
+      await (client as PoolClient).query("BEGIN");
+    }
 
     const routeQuery = `
       INSERT INTO routes (route_name, driver_id, vehicle_id, schedule)
@@ -62,28 +71,34 @@ export const createRoute = async ({ route_name, driver_id, vehicle_id, schedule,
         const stop = stops[i];
 
         const stopQuery = `
-          INSERT INTO route_stops (route_id, stop_name, stop_order)
-          VALUES ($1, $2, $3)
+          INSERT INTO route_stops (route_id, stop_name, stop_order, latitude, longitude)
+          VALUES ($1, $2, $3, $4, $5)
           RETURNING *;
         `;
 
-        const stopValues = [newRoute.id, stop.stop_name, stop.stop_order];
+        const stopValues = [newRoute.id, stop.stop_name, stop.stop_order, stop.latitude, stop.longitude];
         const stopResult = await client.query(stopQuery, stopValues);
         insertedStops.push(stopResult.rows[0]);
       }
     }
 
-    await client.query("COMMIT");
+    if (isInternalTransaction) {
+      await (client as PoolClient).query("COMMIT");
+    }
 
     return {
       ...newRoute,
       stops: insertedStops,
     };
   } catch (error) {
-    await client.query("ROLLBACK");
+    if (isInternalTransaction) {
+      await (client as PoolClient).query("ROLLBACK");
+    }
     throw error;
   } finally {
-    client.release();
+    if (isInternalTransaction) {
+      (client as PoolClient).release();
+    }
   }
 };
 
@@ -97,12 +112,19 @@ export const getAllRoutes = async (driverId?: number) => {
       r.route_name,
       r.schedule,
       r.driver_id,
-      d.name AS driver_name,
+      u.name AS driver_name,
       r.vehicle_id,
       v.vehicle_number,
-      v.type AS vehicle_type
+      v.type AS vehicle_type,
+      (
+        SELECT COUNT(DISTINCT s.id)::int
+        FROM students s
+        JOIN route_stops rs ON (s.pickup_stop_id = rs.id OR s.dropoff_stop_id = rs.id)
+        WHERE rs.route_id = r.id
+      ) AS passenger_count
     FROM routes r
     JOIN drivers d ON r.driver_id = d.id
+    JOIN users u ON d.user_id = u.id
     JOIN vehicles v ON r.vehicle_id = v.id
   `;
 
@@ -122,7 +144,7 @@ export const getAllRoutes = async (driverId?: number) => {
   for (const route of routes) {
     const stopsResult = await db.query(
       `
-      SELECT id, route_id, stop_name, stop_order
+      SELECT id, route_id, stop_name, stop_order, latitude, longitude
       FROM route_stops
       WHERE route_id = $1
       ORDER BY stop_order;
@@ -134,4 +156,11 @@ export const getAllRoutes = async (driverId?: number) => {
   }
 
   return routes;
+};
+
+/**
+ * Delete all routes for a driver
+ */
+export const deleteRoutesByDriverId = async (driverId: number, client: Pool | PoolClient = db): Promise<void> => {
+  await client.query("DELETE FROM routes WHERE driver_id = $1", [driverId]);
 };

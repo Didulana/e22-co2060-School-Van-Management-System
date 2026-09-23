@@ -1,13 +1,15 @@
 import { AuthSession, AuthUser, DemoAccount } from "./types";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5001/api";
+import { API_BASE_URL } from "../../config/api";
 
 async function parseResponse<T>(response: Response): Promise<T> {
-  const data = (await response.json()) as T & { error?: string };
+  const data = (await response.json()) as T & { error?: string; message?: string };
 
   if (!response.ok) {
-    throw new Error(data.error || "Request failed");
+    const errorMsg = (data as any).message || (data as any).details || data.error || "Request failed";
+    const error = new Error(errorMsg) as Error & { code?: string; status?: number };
+    error.code = data.error;
+    error.status = response.status;
+    throw error;
   }
 
   return data;

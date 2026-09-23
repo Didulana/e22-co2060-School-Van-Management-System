@@ -9,6 +9,7 @@ jest.mock("../src/middleware/authMiddleware", () => ({
     };
     next();
   },
+  requireRole: (...roles: string[]) => (req: any, res: any, next: any) => next(),
 }));
 
 jest.mock("../src/models/notificationModel", () => ({

@@ -1,34 +1,30 @@
 {
-    "team": [
-        {
-            "name": "Team Member 1",
-            "email": "e22060@eng.pdn.ac.lk",
-            "eNumber": "E/22/060"
-        },
-        {
-            "name": "Team Member 2",
-            "email": "e22xxx@eng.pdn.ac.lk",
-            "eNumber": "E/22/xxx"
-        },
-        {
-            "name": "Team Member 3",
-            "email": "e22xxx@eng.pdn.ac.lk",
-            "eNumber": "E/22/xxx"
-        },
-        {
-            "name": "Team Member 4",
-            "email": "e22xxx@eng.pdn.ac.lk",
-            "eNumber": "E/22/xxx"
-        }
-    ],
-    "supervisors": [
-        {
-            "name": "Supervisor Name",
-            "email": "supervisor@eng.pdn.ac.lk"
-        }
-    ],
-    "tags": ["Web", "Mobile", "Real-time Tracking", "PERN Stack", "Socket.io", "GPS", "CO2060", "School Transport"],
-    "image": "cover_page.jpg",
-    "thumbnail": "thumbnail.jpg"
+  "title": "School Van Management System",
+  "team": [
+    {
+      "name": "H.D. Lokugamage",
+      "email": "e22214@eng.pdn.ac.lk",
+      "eNumber": "E/22/214"
+    },
+    {
+      "name": "K.A.H.G.D.Sandeepa",
+      "email": "e22354@eng.pdn.ac.lk",
+      "eNumber": "E/22/354"
+    },
+    {
+      "name": "K.I.Sewmini",
+      "email": "e22372@eng.pdn.ac.lk",
+      "eNumber": "E/22/372"
+    },
+    {
+      "name": "S.I.Gunawardhana",
+      "email": "e22127@eng.pdn.ac.lk",
+      "eNumber": "E/22/127"
+    },
+    {
+      "name": "Supervisor 2",
+      "email": "email@eng.pdn.ac.lk"
+    }
+  ],
+  "tags": ["Web", "Software Systems", "CO2060"]
 }
-
