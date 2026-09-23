@@ -1,0 +1,7 @@
+{
+  "name": "kidsroute-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "bash build.sh"
+  }
+}
