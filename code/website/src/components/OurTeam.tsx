@@ -4,28 +4,28 @@ import { Github, Linkedin } from 'lucide-react';
 const teamMembers = [
   {
     name: 'Didulana Lokugamage',
-    role: 'Computer Engineer Undergraduate @ University of Peradeniya',
+    role: 'Computer Engineering Undergraduate @ University of Peradeniya',
     image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Member1&backgroundColor=e2e8f0',
     github: 'https://github.com/didulana',
     linkedin: 'https://linkedin.com/in/didulanalokugamage',
   },
   {
     name: 'Dilan Sandeepa',
-    role: 'Computer Engineer Undergraduate @ University of Peradeniya',
+    role: 'Computer Engineering Undergraduate @ University of Peradeniya',
     image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Member2&backgroundColor=e2e8f0',
     github: 'https://github.com/dilansandeepa131',
     linkedin: 'https://linkedin.com',
   },
   {
     name: 'Imasha Sewmini',
-    role: 'Computer Engineer Undergraduate @ University of Peradeniya',
+    role: 'Computer Engineering Undergraduate @ University of Peradeniya',
     image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Member3&backgroundColor=e2e8f0',
     github: 'https://github.com/imasha284',
     linkedin: 'https://linkedin.com',
   },
   {
     name: 'Samara Gunawardhana',
-    role: 'Computer Engineer Undergraduate @ University of Peradeniya',
+    role: 'Computer Engineering Undergraduate @ University of Peradeniya',
     image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Member4&backgroundColor=e2e8f0',
     github: 'https://github.com/samara328',
     linkedin: 'https://linkedin.com',
