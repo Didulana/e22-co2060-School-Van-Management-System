@@ -32,7 +32,7 @@ export async function getCityFromCoordinates(
   }
 
   // Create cache key based on 3 decimal places (~110 meters)
-  const cacheKey = `${latitude.toFixed(3)},${longitude.toFixed(3)}`;
+  const cacheKey = `${Number(latitude).toFixed(3)},${Number(longitude).toFixed(3)}`;
   const now = Date.now();
   const cached = cache.get(cacheKey);
 

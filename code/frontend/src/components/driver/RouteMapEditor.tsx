@@ -453,7 +453,7 @@ export default function RouteMapEditor({
             {startLocation.latitude !== 0 && (
               <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 font-medium">
                 <span className="font-mono">
-                  {startLocation.latitude.toFixed(4)}, {startLocation.longitude.toFixed(4)}
+                  {Number(startLocation.latitude).toFixed(4)}, {Number(startLocation.longitude).toFixed(4)}
                 </span>
                 <button
                   type="button"
@@ -559,7 +559,7 @@ export default function RouteMapEditor({
                 {stop.latitude !== 0 && (
                   <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 font-medium">
                     <span className="font-mono">
-                      {stop.latitude.toFixed(4)}, {stop.longitude.toFixed(4)}
+                      {Number(stop.latitude).toFixed(4)}, {Number(stop.longitude).toFixed(4)}
                     </span>
                     <button
                       type="button"
@@ -645,7 +645,7 @@ export default function RouteMapEditor({
             {endLocation.latitude !== 0 && (
               <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 font-medium">
                 <span className="font-mono">
-                  {endLocation.latitude.toFixed(4)}, {endLocation.longitude.toFixed(4)}
+                  {Number(endLocation.latitude).toFixed(4)}, {Number(endLocation.longitude).toFixed(4)}
                 </span>
                 <button
                   type="button"
@@ -696,7 +696,7 @@ export default function RouteMapEditor({
               </div>
               <div className="text-right shrink-0">
                 <span className="text-[10px] font-mono font-bold text-emerald-700 block">
-                  {activeStop.latitude ? `${activeStop.latitude.toFixed(5)}, ${activeStop.longitude.toFixed(5)}` : "Not set"}
+                  {activeStop.latitude ? `${Number(activeStop.latitude).toFixed(5)}, ${Number(activeStop.longitude).toFixed(5)}` : "Not set"}
                 </span>
               </div>
             </div>

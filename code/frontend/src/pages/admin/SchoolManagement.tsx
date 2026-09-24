@@ -358,7 +358,7 @@ export default function SchoolManagement() {
                         <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
                           <MapPin size={12} className="text-emerald-600" />
                           <span>
-                            {school.latitude.toFixed(4)}, {school.longitude.toFixed(4)}
+                            {Number(school.latitude).toFixed(4)}, {Number(school.longitude).toFixed(4)}
                           </span>
                         </div>
                       ) : (
