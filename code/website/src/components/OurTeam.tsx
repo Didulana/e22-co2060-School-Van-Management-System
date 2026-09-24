@@ -9,28 +9,28 @@ const teamMembers = [
   {
     name: 'Didulana Lokugamage',
     role: 'Computer Engineering Undergraduate @ University of Peradeniya',
-    image: member1Img
+    image: member1Img,
     github: 'https://github.com/didulana',
     linkedin: 'https://linkedin.com/in/didulanalokugamage',
   },
   {
     name: 'Dilan Sandeepa',
     role: 'Computer Engineering Undergraduate @ University of Peradeniya',
-    image: member2Img
+    image: member2Img,
     github: 'https://github.com/dilansandeepa131',
     linkedin: 'https://linkedin.com',
   },
   {
     name: 'Imasha Sewmini',
     role: 'Computer Engineering Undergraduate @ University of Peradeniya',
-    image: member3Img
+    image: member3Img,
     github: 'https://github.com/imasha284',
     linkedin: 'https://linkedin.com',
   },
   {
     name: 'Samara Gunawardhana',
     role: 'Computer Engineering Undergraduate @ University of Peradeniya',
-    image: member4Img
+    image: member4Img,
     github: 'https://github.com/samara328',
     linkedin: 'https://linkedin.com',
   },
