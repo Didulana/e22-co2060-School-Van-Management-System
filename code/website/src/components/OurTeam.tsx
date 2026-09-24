@@ -1,32 +1,36 @@
 import React from 'react';
 import { Github, Linkedin } from 'lucide-react';
+import member1Img from '../assets/member1.png';
+import member2Img from '../assets/member2.png';
+import member3Img from '../assets/member3.png';
+import member4Img from '../assets/member4.png';
 
 const teamMembers = [
   {
     name: 'Didulana Lokugamage',
     role: 'Computer Engineering Undergraduate @ University of Peradeniya',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Member1&backgroundColor=e2e8f0',
+    image: member1Img
     github: 'https://github.com/didulana',
     linkedin: 'https://linkedin.com/in/didulanalokugamage',
   },
   {
     name: 'Dilan Sandeepa',
     role: 'Computer Engineering Undergraduate @ University of Peradeniya',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Member2&backgroundColor=e2e8f0',
+    image: member2Img
     github: 'https://github.com/dilansandeepa131',
     linkedin: 'https://linkedin.com',
   },
   {
     name: 'Imasha Sewmini',
     role: 'Computer Engineering Undergraduate @ University of Peradeniya',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Member3&backgroundColor=e2e8f0',
+    image: member3Img
     github: 'https://github.com/imasha284',
     linkedin: 'https://linkedin.com',
   },
   {
     name: 'Samara Gunawardhana',
     role: 'Computer Engineering Undergraduate @ University of Peradeniya',
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Member4&backgroundColor=e2e8f0',
+    image: member4Img
     github: 'https://github.com/samara328',
     linkedin: 'https://linkedin.com',
   },
