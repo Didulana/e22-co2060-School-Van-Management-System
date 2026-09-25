@@ -72,6 +72,7 @@ Detailed setup, API documentation, and contribution guidelines are available in 
 
 ## 📄 Links & Resources
 
+* 📖 **[System User Manual & Operating Guide](USER_MANUAL.md)** (Detailed guides for Parents, Drivers & Administrators)
 * [Project Documentation Site](https://cepdnaclk.github.io/e22-co2060-School-Van-Management-System/)
 * [Department of Computer Engineering](http://www.ce.pdn.ac.lk/)
 

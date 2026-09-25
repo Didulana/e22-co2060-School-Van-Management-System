@@ -19,9 +19,10 @@ title: School Van Management System
 1. [Introduction](#introduction)
 2. [Solution Architecture](#solution-architecture)
 3. [Software Designs](#software-designs)
-4. [Testing](#testing)
-5. [Conclusion](#conclusion)
-6. [Links](#links)
+4. [User Manual & Operating Guide](USER_MANUAL.md)
+5. [Testing](#testing)
+6. [Conclusion](#conclusion)
+7. [Links](#links)
 
 ---
 
@@ -159,6 +160,7 @@ Future enhancements may include integration with school administration software,
 
 ## Links
 
+- [User Manual & Operating Guide](USER_MANUAL.md)
 - [Project Repository](https://github.com/cepdnaclk/e22-co2060-School-Van-Management-System){:target="_blank"}
 - [Project Page](https://cepdnaclk.github.io/e22-co2060-School-Van-Management-System/){:target="_blank"}
 - [Department of Computer Engineering](http://www.ce.pdn.ac.lk/){:target="_blank"}
