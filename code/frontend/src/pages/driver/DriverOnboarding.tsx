@@ -4,6 +4,7 @@ import {
   submitOnboarding,
   getOnboardingStatus,
   getSchools,
+  createSchool,
 } from "../../services/driverService";
 import RouteMapEditor, { RouteStop } from "../../components/driver/RouteMapEditor";
 import {
@@ -19,6 +20,7 @@ import {
   Search,
   Check,
   ChevronLeft,
+  Plus,
 } from "lucide-react";
 
 interface School {
@@ -37,6 +39,10 @@ export default function DriverOnboarding() {
   const [availableSchools, setAvailableSchools] = useState<School[]>([]);
   const [selectedSchoolIds, setSelectedSchoolIds] = useState<number[]>([]);
   const [schoolSearch, setSchoolSearch] = useState("");
+  const [showAddSchool, setShowAddSchool] = useState(false);
+  const [newSchoolName, setNewSchoolName] = useState("");
+  const [newSchoolCity, setNewSchoolCity] = useState("");
+  const [creatingSchool, setCreatingSchool] = useState(false);
 
   // Form State
   const [licenseNumber, setLicenseNumber] = useState("");
@@ -101,10 +107,43 @@ export default function DriverOnboarding() {
     }
   };
 
+  const handleAddNewSchool = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSchoolName.trim()) return;
+    setCreatingSchool(true);
+    try {
+      const created = await createSchool({
+        name: newSchoolName.trim(),
+        city: newSchoolCity.trim() || undefined,
+      });
+      setAvailableSchools((prev) => [...prev, created]);
+      setSelectedSchoolIds((prev) => [...prev, created.id]);
+      setNewSchoolName("");
+      setNewSchoolCity("");
+      setShowAddSchool(false);
+    } catch (err: any) {
+      alert(`Failed to add school: ${err.message || "Please try again."}`);
+    } finally {
+      setCreatingSchool(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (selectedSchoolIds.length === 0) {
       alert("Please select at least one school covered by your route.");
       setStep(1);
+      return;
+    }
+
+    if (!licenseNumber || !licenseNumber.trim()) {
+      alert("Please provide your driver licence number.");
+      setStep(2);
+      return;
+    }
+
+    if (!vehicleDetails.registrationNumber || !vehicleDetails.registrationNumber.trim()) {
+      alert("Please provide your vehicle registration number.");
+      setStep(2);
       return;
     }
 
@@ -135,8 +174,11 @@ export default function DriverOnboarding() {
     setLoading(true);
     try {
       await submitOnboarding({
-        licenseNumber,
-        vehicleDetails,
+        licenseNumber: licenseNumber.trim(),
+        vehicleDetails: {
+          ...vehicleDetails,
+          registrationNumber: vehicleDetails.registrationNumber.trim().toUpperCase(),
+        },
         schoolIds: selectedSchoolIds,
         routeStops: allStops,
       });
@@ -189,7 +231,25 @@ export default function DriverOnboarding() {
           <button
             key={s.n}
             type="button"
-            onClick={() => setStep(s.n)}
+            onClick={() => {
+              if (s.n === 2 && selectedSchoolIds.length === 0) {
+                alert("Please select at least one school before proceeding.");
+                return;
+              }
+              if (s.n === 3) {
+                if (selectedSchoolIds.length === 0) {
+                  alert("Please select at least one school before proceeding.");
+                  setStep(1);
+                  return;
+                }
+                if (!licenseNumber.trim() || !vehicleDetails.registrationNumber.trim()) {
+                  alert("Please provide both your driving licence and vehicle registration numbers first.");
+                  setStep(2);
+                  return;
+                }
+              }
+              setStep(s.n);
+            }}
             className="flex flex-col items-center group cursor-pointer focus:outline-none"
           >
             <div
@@ -249,23 +309,90 @@ export default function DriverOnboarding() {
                 </p>
               </div>
 
-              {/* School search */}
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input
-                  type="text"
-                  value={schoolSearch}
-                  onChange={(e) => setSchoolSearch(e.target.value)}
-                  placeholder="Search schools by name or city..."
-                  className="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                />
+              {/* School search and Add toggle */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <input
+                    type="text"
+                    value={schoolSearch}
+                    onChange={(e) => setSchoolSearch(e.target.value)}
+                    placeholder="Search schools by name or city..."
+                    className="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddSchool(!showAddSchool)}
+                  className="px-4 py-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-black transition-all flex items-center justify-center gap-2 border border-emerald-200 shrink-0"
+                >
+                  <Plus size={16} /> {showAddSchool ? "Close Form" : "Add School"}
+                </button>
               </div>
+
+              {/* Inline Add School Form */}
+              {showAddSchool && (
+                <form
+                  onSubmit={handleAddNewSchool}
+                  className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 animate-in fade-in duration-200"
+                >
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Add New School</h3>
+                    <p className="text-[11px] text-slate-500">Can't find your school? Add it directly to the system here.</p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      required
+                      placeholder="School Name (e.g. Gateway College)"
+                      value={newSchoolName}
+                      onChange={(e) => setNewSchoolName(e.target.value)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="City / Region (e.g. Kandy)"
+                      value={newSchoolCity}
+                      onChange={(e) => setNewSchoolCity(e.target.value)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddSchool(false)}
+                      className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200/50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={creatingSchool || !newSchoolName.trim()}
+                      className="px-4 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                    >
+                      {creatingSchool ? "Saving..." : "Save & Select"}
+                    </button>
+                  </div>
+                </form>
+              )}
 
               {/* Schools list */}
               <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
                 {filteredSchools.length === 0 ? (
-                  <div className="p-8 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-2xl">
-                    No matching schools found.
+                  <div className="p-8 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-2xl flex flex-col items-center gap-3">
+                    <p>No matching schools found.</p>
+                    {!showAddSchool && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddSchool(true);
+                          if (schoolSearch.trim()) setNewSchoolName(schoolSearch.trim());
+                        }}
+                        className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-sm"
+                      >
+                        <Plus size={14} /> Add "{schoolSearch || "New School"}" now
+                      </button>
+                    )}
                   </div>
                 ) : (
                   filteredSchools.map((school) => {
@@ -412,7 +539,7 @@ export default function DriverOnboarding() {
                 </button>
                 <button
                   type="button"
-                  disabled={!vehicleDetails.registrationNumber.trim()}
+                  disabled={!vehicleDetails.registrationNumber.trim() || !licenseNumber.trim()}
                   onClick={() => setStep(3)}
                   className="px-8 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-emerald-600 shadow-xl shadow-slate-200 hover:shadow-emerald-200 transition-all flex items-center gap-2 disabled:opacity-40"
                 >

@@ -56,6 +56,24 @@ export async function ensureSchema(): Promise<void> {
     `ALTER TABLE students ADD COLUMN IF NOT EXISTS grade VARCHAR(20)`,
     `ALTER TABLE students ADD COLUMN IF NOT EXISTS portrait_photo TEXT`,
     `ALTER TABLE route_stops ALTER COLUMN stop_name TYPE VARCHAR(255)`,
+    `INSERT INTO schools (name, city, latitude, longitude) VALUES
+      ('Royal College', 'Colombo', 6.9056, 79.8617),
+      ('Ananda College', 'Colombo', 6.9279, 79.8711),
+      ('Nalanda College', 'Colombo', 6.9272, 79.8745),
+      ('Visakha Vidyalaya', 'Colombo', 6.8885, 79.8582),
+      ('St. Thomas'' College', 'Mount Lavinia', 6.8378, 79.8665),
+      ('Ladies'' College', 'Colombo', 6.9115, 79.8550),
+      ('Musaeus College', 'Colombo', 6.9095, 79.8672),
+      ('St. Joseph''s College', 'Colombo', 6.9190, 79.8687),
+      ('St. Peter''s College', 'Colombo', 6.8860, 79.8596),
+      ('Bishop''s College', 'Colombo', 6.9130, 79.8540),
+      ('Sirimavo Bandaranaike Vidyalaya', 'Colombo', 6.8967, 79.8661),
+      ('Trinity College', 'Kandy', 7.2995, 80.6384),
+      ('Kingswood College', 'Kandy', 7.2798, 80.6128),
+      ('Dharmaraja College', 'Kandy', 7.2917, 80.6482),
+      ('Mahinda College', 'Galle', 6.0463, 80.2185),
+      ('Richmond College', 'Galle', 6.0536, 80.2117)
+    ON CONFLICT (name) DO NOTHING`,
   ];
 
   for (const sql of statements) {

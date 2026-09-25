@@ -247,6 +247,26 @@ export async function getSchools(): Promise<Array<{ id: number; name: string; ci
   return res.json();
 }
 
+export async function createSchool(data: {
+  name: string;
+  city?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+}): Promise<{ id: number; name: string; city?: string; address?: string; latitude?: number; longitude?: number }> {
+  const res = await fetch(`${API_BASE_URL}/schools`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${getAuthToken()}`,
+    },
+    body: JSON.stringify(data),
+  });
+  const resData = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(resData.error || "Failed to create school");
+  return resData;
+}
+
 // ---- Tracking ----
 
 export async function updateDriverLocation(journeyId: number, lat: number, lng: number): Promise<void> {
