@@ -61,7 +61,13 @@ export const updateVehicle = async (id: number, vehicle: Partial<Vehicle>, clien
     RETURNING *;
   `;
 
-  const values = [vehicle_number, type, capacity, is_ac, id];
+  const values = [
+    vehicle_number !== undefined ? vehicle_number : null,
+    type !== undefined ? type : null,
+    capacity !== undefined ? capacity : null,
+    is_ac !== undefined ? is_ac : null,
+    id
+  ];
 
   const result = await client.query(query, values);
   return result.rows[0];

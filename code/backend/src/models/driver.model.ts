@@ -57,7 +57,13 @@ export const updateDriver = async (id: number, driver: Partial<Driver>, client: 
     RETURNING *;
   `;
 
-  const values = [license_number, vehicle_id, license_image, license_expiry, id];
+  const values = [
+    license_number !== undefined ? license_number : null,
+    vehicle_id !== undefined ? vehicle_id : null,
+    license_image !== undefined ? license_image : null,
+    license_expiry !== undefined ? license_expiry : null,
+    id
+  ];
 
   const result = await client.query(query, values);
   return result.rows[0];
