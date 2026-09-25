@@ -33,15 +33,21 @@ export const Hero: React.FC = () => {
             {/* CTAs */}
             <div className="flex flex-wrap items-center gap-3.5 pt-2">
               <a
-                href={PORTAL_URLS.signIn}
+                href={PORTAL_URLS.getStarted}
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#006948] hover:bg-[#00855d] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
               >
-                <span>Access Portal (Sign In)</span>
+                <span>Sign Up (Register)</span>
                 <ArrowRight className="w-4 h-4" />
               </a>
               <a
+                href={PORTAL_URLS.signIn}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-white hover:bg-slate-50 text-[#131b2e] text-xs sm:text-sm font-bold border border-slate-200 shadow-xs transition-all"
+              >
+                <span>Sign In</span>
+              </a>
+              <a
                 href="#features"
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#eaedff] hover:bg-[#e2e7ff] text-[#131b2e] text-xs sm:text-sm font-bold transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-3.5 text-slate-600 hover:text-[#006948] text-xs sm:text-sm font-semibold transition-colors"
               >
                 <span>Learn How It Works</span>
                 <ChevronDown className="w-4 h-4" />

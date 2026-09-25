@@ -49,7 +49,12 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <a href={PORTAL_URLS.signIn} className="hover:text-[#006948] transition-colors">
-                  Portal Access
+                  Sign In
+                </a>
+              </li>
+              <li>
+                <a href={PORTAL_URLS.getStarted} className="hover:text-[#006948] transition-colors font-bold text-[#006948]">
+                  Sign Up (New Account)
                 </a>
               </li>
               <li>

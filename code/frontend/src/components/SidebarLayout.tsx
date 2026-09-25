@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Outlet, NavLink, Link } from "react-router-dom";
 import {
   Bell,
-  BusFront,
   ClipboardList,
   CreditCard,
   GraduationCap,
@@ -23,6 +22,7 @@ import {
 import { useAuth } from "../features/auth/AuthContext";
 import { getHomePath } from "../features/auth/navigation";
 import { APP_SETTINGS_EVENT, applyAppSettings, readAppSettings } from "../features/settings/appSettings";
+import kidsrouteLogo from "../assets/kidsroute-logo.png";
 import { getParentNotifications } from "../services/parentService";
 
 export default function SidebarLayout() {
@@ -100,9 +100,11 @@ export default function SidebarLayout() {
               className="flex items-center gap-4 rounded-2xl transition hover:opacity-80"
               aria-label="Go to home dashboard"
             >
-              <div className="bg-slate-950 p-2.5 rounded-2xl shadow-lg shadow-slate-300/60 flex items-center justify-center shrink-0">
-                <BusFront className="text-white w-6 h-6" />
-              </div>
+              <img
+                src={kidsrouteLogo}
+                alt="KidsRoute Logo"
+                className="w-10 h-10 object-contain shrink-0 drop-shadow-sm transition-transform group-hover:scale-105"
+              />
               <div className={isSidebarCollapsed ? "lg:hidden" : "min-w-0"}>
                 <span className="font-display block font-black text-2xl text-slate-950 leading-none">KidsRoute</span>
                 <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mt-1 block">School Van System</span>

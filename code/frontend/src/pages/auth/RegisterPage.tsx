@@ -6,6 +6,7 @@ import {
   UserCircle, ShieldCheck, Truck, Camera, ChevronRight, ChevronLeft,
   CheckCircle2, CreditCard, MapPin, Upload, Zap, FileImage
 } from "lucide-react";
+import kidsrouteLogo from "../../assets/kidsroute-logo.png";
 
 const SRI_LANKAN_PROVINCES = [
   "Western", "Central", "Southern", "Northern", "Eastern",
@@ -215,7 +216,13 @@ function RegisterPage() {
       <div className="min-h-screen bg-[#f8f8f6] text-slate-900 flex flex-col justify-center py-12 px-6">
         <div className="sm:mx-auto sm:w-full sm:max-w-lg animate-in fade-in duration-700">
           <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-3xl border-4 border-emerald-400 bg-white shadow-xl text-3xl font-extrabold text-emerald-600">K</div>
+            <Link to="/" className="group flex items-center justify-center">
+              <img
+                src={kidsrouteLogo}
+                alt="KidsRoute Logo"
+                className="h-16 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
+              />
+            </Link>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight">Create your KidsRoute account</h2>
           <p className="mt-2 text-center text-sm text-slate-500">Choose your account type to get started</p>

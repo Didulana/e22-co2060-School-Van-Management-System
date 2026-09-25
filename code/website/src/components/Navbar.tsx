@@ -57,19 +57,26 @@ export const Navbar: React.FC = () => {
           })}
         </nav>
 
-        {/* Right CTA & Account Controls */}
-        <div className="flex items-center gap-3">
+        {/* Right CTA: Sign In & Sign Up Options */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <a
             href={PORTAL_URLS.signIn}
-            className="hidden sm:inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-full bg-[#006948] hover:bg-[#00855d] text-white text-xs font-bold shadow-sm transition-all hover:scale-[0.99] active:scale-[0.98]"
+            className="hidden sm:inline-flex items-center justify-center px-4 py-2 rounded-full text-xs font-bold text-slate-700 hover:text-[#006948] bg-white border border-slate-200 hover:border-[#006948]/30 shadow-2xs transition-all"
           >
-            <span>Sign In / Portal</span>
+            <span>Sign In</span>
+          </a>
+
+          <a
+            href={PORTAL_URLS.getStarted}
+            className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full bg-[#006948] hover:bg-[#00855d] text-white text-xs font-bold shadow-sm transition-all hover:scale-[0.99] active:scale-[0.98]"
+          >
+            <span>Sign Up</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </a>
 
           <a
             href={PORTAL_URLS.signIn}
-            className="w-8 h-8 rounded-full bg-[#006948] flex items-center justify-center text-white shadow-sm hover:opacity-90 transition-opacity"
+            className="w-8 h-8 rounded-full bg-[#eaedff] hover:bg-[#dae2fd] text-[#006948] flex items-center justify-center shadow-xs transition-colors"
             title="User Portal"
           >
             <User className="w-4 h-4" />
@@ -107,9 +114,15 @@ export const Navbar: React.FC = () => {
           <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
             <a
               href={PORTAL_URLS.signIn}
+              className="w-full text-center py-2.5 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full"
+            >
+              Sign In
+            </a>
+            <a
+              href={PORTAL_URLS.getStarted}
               className="w-full text-center py-2.5 text-xs font-bold text-white bg-[#006948] rounded-full shadow-sm"
             >
-              Sign In to Portal
+              Sign Up (Register)
             </a>
           </div>
         </div>

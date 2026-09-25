@@ -19,6 +19,7 @@ import {
   User,
   Info,
   PhoneCall,
+  UserPlus,
 } from "lucide-react";
 import kidsrouteLogo from "../../assets/kidsroute-logo.png";
 import schoolBusHero from "../../assets/school-bus-hero.jpg";
@@ -173,7 +174,15 @@ export function LoginPage() {
           </a>
 
           {/* Header Controls */}
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-2 md:gap-3">
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#006948]/30 text-[#006948] text-xs font-bold shadow-2xs transition-all"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Sign Up</span>
+            </Link>
+
             <div className="hidden sm:flex items-center gap-1.5 bg-[#eaedff] px-3.5 py-1.5 rounded-full shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
               <span className="text-[#fea619] font-black text-xs px-1.5 py-0.5 rounded bg-amber-100 flex items-center gap-1">
                 <PhoneCall className="w-3 h-3 text-[#855300]" />
@@ -445,14 +454,27 @@ export function LoginPage() {
                           </>
                         )}
                       </button>
+
+                      {/* Explicit Sign Up Link Prompt */}
+                      <div className="pt-2 text-center">
+                        <p className="text-xs text-slate-500 font-medium">
+                          Don't have an account yet?{" "}
+                          <Link
+                            to="/register"
+                            className="font-bold text-[#006948] hover:text-[#005137] hover:underline"
+                          >
+                            Sign Up (Register Account) →
+                          </Link>
+                        </p>
+                      </div>
                     </form>
 
                     {/* Help, Invitation & System Status Sub-Card */}
-                    <div className="mt-6 pt-3.5 bg-[#f2f3ff]/70 rounded-2xl p-4 space-y-2 border border-[#eaedff]">
+                    <div className="mt-5 pt-3.5 bg-[#f2f3ff]/70 rounded-2xl p-4 space-y-2 border border-[#eaedff]">
                       <div className="flex items-center justify-between text-slate-600 text-xs flex-wrap gap-2">
-                        <span>New school or family?</span>
+                        <span>New school, driver, or family?</span>
                         <Link to="/register" className="text-[#006948] hover:underline font-bold">
-                          Request an invitation →
+                          Sign Up / Register →
                         </Link>
                       </div>
 
