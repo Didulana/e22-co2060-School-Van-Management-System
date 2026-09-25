@@ -1,5 +1,5 @@
 import React from 'react';
-import { Github, Linkedin, GraduationCap, Code2, Sparkles, ExternalLink } from 'lucide-react';
+import { GraduationCap, Github, Linkedin, Terminal, ExternalLink } from 'lucide-react';
 import member1Img from '../assets/member1.png';
 import member2Img from '../assets/member2.png';
 import member3Img from '../assets/member3.png';
@@ -8,8 +8,8 @@ import member4Img from '../assets/member4.png';
 const teamMembers = [
   {
     name: 'Didulana Lokugamage',
-    institution: 'University of Peradeniya',
-    role: 'Computer Engineering Undergraduate',
+    field: 'Computer Engineering',
+    institution: 'Univ. of Peradeniya',
     focus: 'Full-Stack Architecture & Real-Time Telemetry',
     image: member1Img,
     github: 'https://github.com/didulana',
@@ -17,8 +17,8 @@ const teamMembers = [
   },
   {
     name: 'Dilan Sandeepa',
-    institution: 'University of Peradeniya',
-    role: 'Computer Engineering Undergraduate',
+    field: 'Computer Engineering',
+    institution: 'Univ. of Peradeniya',
     focus: 'Driver Portal & Journey Lifecycle Workflow',
     image: member2Img,
     github: 'https://github.com/dilansandeepa131',
@@ -26,8 +26,8 @@ const teamMembers = [
   },
   {
     name: 'Imasha Sewmini',
-    institution: 'University of Peradeniya',
-    role: 'Computer Engineering Undergraduate',
+    field: 'Computer Engineering',
+    institution: 'Univ. of Peradeniya',
     focus: 'Parent Experience & Notification Services',
     image: member3Img,
     github: 'https://github.com/imasha284',
@@ -35,8 +35,8 @@ const teamMembers = [
   },
   {
     name: 'Samara Gunawardhana',
-    institution: 'University of Peradeniya',
-    role: 'Computer Engineering Undergraduate',
+    field: 'Computer Engineering',
+    institution: 'Univ. of Peradeniya',
     focus: 'Database Modeling & Geocoding Integration',
     image: member4Img,
     github: 'https://github.com/samara328',
@@ -46,79 +46,68 @@ const teamMembers = [
 
 export const OurTeam: React.FC = () => {
   return (
-    <section id="team" className="py-24 bg-gradient-to-b from-canvasBg via-brand-50/20 to-white relative overflow-hidden border-t border-slate-200/80">
-      {/* Subtle background ambient lights */}
-      <div className="absolute top-12 left-1/4 w-96 h-96 bg-brand-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <section className="w-full py-16 md:py-24 bg-[#f2f3ff]" id="engineering-team">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
         
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 text-brand-800 font-bold text-xs mb-4 border border-brand-200 shadow-sm">
-            <GraduationCap className="w-3.5 h-3.5 text-brand-600" />
-            <span>Faculty of Engineering • University of Peradeniya</span>
+        {/* Academic Heading */}
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white shadow-sm border border-slate-200 mb-3">
+            <GraduationCap className="w-4 h-4 text-[#006948]" />
+            <span className="text-xs font-bold text-[#006948]">
+              Faculty of Engineering • University of Peradeniya
+            </span>
           </div>
-          
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-black text-ink mb-4 tracking-tight">
+
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#131b2e] tracking-tight">
             Meet Team AlphaWolves
           </h2>
-          <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-medium">
-            The engineering undergraduates designing and building KidsRoute for the 2YP CO2060 Software Engineering project evaluation.
+          <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed font-medium">
+            Computer Engineering Undergraduates engineering resilient, community-first transit software for the 2YP CO2060 Software Engineering project evaluation.
           </p>
         </div>
 
-        {/* Team Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        {/* 4 Authentic Member Profiles */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {teamMembers.map((member, index) => (
             <div
               key={index}
-              className="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 border border-slate-200/90 flex flex-col justify-between relative overflow-hidden"
+              className="flex flex-col justify-between p-6 rounded-3xl bg-white shadow-sm hover:shadow-md transition-all border border-slate-100 group"
             >
-              {/* Top Accent Gradient Border */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-500 via-emerald-400 to-amber-400 opacity-80 group-hover:opacity-100 transition-opacity" />
-
-              <div>
+              <div className="flex flex-col items-center text-center">
                 {/* Avatar with Halo Ring */}
-                <div className="relative w-28 h-28 mx-auto mb-5">
-                  <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-brand-400 to-amber-300 opacity-60 blur-xs group-hover:opacity-100 transition-all duration-300" />
-                  <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white shadow-md">
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
+                <div className="w-24 h-24 rounded-full overflow-hidden mb-4 ring-4 ring-[#006948]/20 transition-all duration-300 group-hover:ring-[#006948]/40 shadow-sm">
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                  />
                 </div>
 
-                {/* Member Info */}
-                <div className="text-center">
-                  <h3 className="text-lg font-bold text-ink group-hover:text-brand-700 transition-colors">
-                    {member.name}
-                  </h3>
-                  <p className="text-xs font-semibold text-brand-600 mt-0.5">
-                    {member.role}
-                  </p>
-                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                    {member.institution}
-                  </p>
+                <h3 className="font-bold text-base text-[#131b2e] group-hover:text-[#006948] transition-colors">
+                  {member.name}
+                </h3>
+                <span className="text-xs font-semibold text-[#006948] mt-0.5">
+                  {member.field}
+                </span>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  {member.institution}
+                </span>
 
-                  {/* Specialization Badge */}
-                  <div className="mt-4 pt-3 border-t border-slate-100">
-                    <span className="inline-block text-[11px] font-semibold text-slate-700 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-xl">
-                      {member.focus}
-                    </span>
-                  </div>
+                {/* Focus Pill Box */}
+                <div className="mt-4 p-2.5 rounded-xl bg-[#f2f3ff] w-full border border-slate-100">
+                  <span className="text-[11px] text-slate-600 font-semibold block leading-tight">
+                    {member.focus}
+                  </span>
                 </div>
               </div>
 
               {/* Social Links */}
-              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-center gap-3">
+              <div className="mt-5 pt-3.5 flex items-center justify-center gap-3 border-t border-slate-100">
                 <a
                   href={member.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-ink transition-colors shadow-xs"
+                  className="w-9 h-9 rounded-full bg-[#eaedff] hover:bg-[#dae2fd] flex items-center justify-center text-[#131b2e] transition-colors shadow-2xs"
                   title={`${member.name} GitHub`}
                 >
                   <Github className="w-4 h-4" />
@@ -127,7 +116,7 @@ export const OurTeam: React.FC = () => {
                   href={member.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-[#0077b5]/10 border border-slate-200 hover:border-[#0077b5]/30 flex items-center justify-center text-slate-600 hover:text-[#0077b5] transition-colors shadow-xs"
+                  className="w-9 h-9 rounded-full bg-[#eaedff] hover:bg-[#dae2fd] flex items-center justify-center text-[#006948] transition-colors shadow-2xs"
                   title={`${member.name} LinkedIn`}
                 >
                   <Linkedin className="w-4 h-4" />
@@ -137,26 +126,31 @@ export const OurTeam: React.FC = () => {
           ))}
         </div>
 
-        {/* Project Evaluation Banner */}
-        <div className="mt-14 max-w-3xl mx-auto p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center border border-brand-200 shrink-0">
-              <Code2 className="w-5 h-5" />
+        {/* Verified Open Source Project Repository Card */}
+        <div className="mt-8 p-4 sm:p-6 rounded-2xl bg-white shadow-sm border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-[#006948]/10 text-[#006948] flex items-center justify-center shrink-0">
+              <Terminal className="w-5 h-5 text-[#006948]" />
             </div>
             <div>
-              <p className="font-bold text-ink text-xs">2YP CO2060 Software Engineering Project</p>
-              <p className="text-[11px] text-slate-500 font-medium">Department of Computer Engineering, University of Peradeniya</p>
+              <h4 className="font-bold text-sm text-[#131b2e]">
+                CO2060 Software Engineering Evaluation Repository
+              </h4>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                Department of Computer Engineering, University of Peradeniya • PERN Stack (PostgreSQL, Express, React, Node.js) & OpenStreetMap
+              </p>
             </div>
           </div>
+
           <a
             href="https://github.com/cepdnaclk/e22-co2060-School-Van-Management-System"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-ink font-bold text-xs shrink-0 transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#eaedff] hover:bg-[#e2e7ff] text-[#131b2e] text-xs font-bold transition-all shrink-0 shadow-xs"
           >
-            <Github className="w-3.5 h-3.5" />
+            <Github className="w-4 h-4" />
             <span>View Source on GitHub</span>
-            <ExternalLink className="w-3 h-3 text-slate-400" />
+            <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
           </a>
         </div>
 

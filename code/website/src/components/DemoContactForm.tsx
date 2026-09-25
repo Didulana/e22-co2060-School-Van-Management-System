@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Send, CheckCircle2, Bus, ShieldCheck } from 'lucide-react';
+import { Send, CheckCircle2, Headphones, Check } from 'lucide-react';
 
 export const DemoContactForm: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    role: 'Parent',
-    fleetSize: '1-3 Vans',
-    message: ''
+    role: 'parent',
+    vanCount: '1',
+    notes: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -17,146 +17,167 @@ export const DemoContactForm: React.FC = () => {
   };
 
   return (
-    <section id="contact" className="py-20 relative bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <div className="max-w-4xl mx-auto bg-slate-50 rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-xl relative overflow-hidden">
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+    <section className="w-full py-16 md:py-24 bg-[#f2f3ff]" id="contact">
+      <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="rounded-3xl bg-white shadow-xl p-6 sm:p-10 border border-slate-100">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-10">
             
-            {/* Left Content Side */}
-            <div className="space-y-6">
-              <span className="text-xs font-bold tracking-widest text-brand-700 uppercase bg-brand-100 px-3 py-1 rounded-full border border-brand-200 inline-block">
-                Get In Touch
-              </span>
-              <h2 className="text-3xl font-extrabold text-ink">
-                Transform Your School Van Operation Today
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                Connect with our team to see how KidsRoute can be customized for your school fleet, driver routes, or transport association.
-              </p>
+            {/* Contact Left Info */}
+            <div className="md:col-span-5 flex flex-col justify-between">
+              <div className="flex flex-col gap-2">
+                <span className="text-xs uppercase tracking-wider text-[#006948] font-bold">
+                  Pilot Demonstration
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#131b2e] leading-snug">
+                  Ready to Trial KidsRoute on Your Local Route?
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal mt-1">
+                  Connect with our Peradeniya engineering team. We provide complimentary onboarding and technical demonstration for school van operators, parent associations, and transport coordinators.
+                </p>
+              </div>
 
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-3 text-xs text-slate-700 font-semibold">
-                  <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 className="w-4 h-4" />
+              <div className="flex flex-col gap-4 pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#006948]/10 text-[#006948] flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
-                  <span>Academic pilot demonstration with live tracking</span>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-xs sm:text-sm text-[#131b2e]">
+                      100% Free Academic Trial
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      Zero hidden contracts or hardware costs
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-slate-700 font-semibold">
-                  <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center flex-shrink-0">
-                    <Bus className="w-4 h-4" />
+
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#006948]/10 text-[#006948] flex items-center justify-center shrink-0">
+                    <Headphones className="w-5 h-5" />
                   </div>
-                  <span>Free onboarding for drivers & parent accounts</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-slate-700 font-semibold">
-                  <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center flex-shrink-0">
-                    <ShieldCheck className="w-4 h-4" />
+                  <div className="flex flex-col">
+                    <span className="font-bold text-xs sm:text-sm text-[#131b2e]">
+                      Direct Engineering Support
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      Guided driver setup in Sinhalese and English
+                    </span>
                   </div>
-                  <span>Dedicated support from our team</span>
                 </div>
               </div>
             </div>
 
-            {/* Right Form Side */}
-            <div>
+            {/* Pilot Inquiry Form */}
+            <div className="md:col-span-7 bg-[#f2f3ff] p-5 sm:p-6 rounded-2xl shadow-inner border border-slate-200/60">
               {submitted ? (
-                <div className="h-full bg-emerald-50 border border-emerald-200 rounded-2xl p-8 flex flex-col items-center justify-center text-center space-y-3 animate-fadeIn">
-                  <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                    <CheckCircle2 className="w-8 h-8" />
+                <div className="h-full flex flex-col items-center justify-center text-center py-8 space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-emerald-100 text-[#006948] flex items-center justify-center">
+                    <Check className="w-7 h-7" />
                   </div>
-                  <h3 className="text-xl font-bold text-ink">Request Submitted!</h3>
-                  <p className="text-xs text-slate-600 font-medium">
-                    Thank you, <span className="text-ink font-bold">{formData.fullName || 'there'}</span>. Our team will contact you within 24 hours.
+                  <h3 className="text-xl font-bold text-[#131b2e]">
+                    Inquiry Received!
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-sm">
+                    Thank you, <strong className="text-[#131b2e]">{formData.fullName || 'there'}</strong>. Team AlphaWolves has received your pilot inquiry and will be in touch shortly.
                   </p>
-                  <button 
-                    onClick={() => setSubmitted(false)} 
-                    className="mt-4 px-4 py-2 text-xs font-bold text-emerald-800 bg-emerald-200/80 rounded-xl hover:bg-emerald-200"
+                  <button
+                    type="button"
+                    onClick={() => setSubmitted(false)}
+                    className="mt-3 px-5 py-2 text-xs font-bold text-[#006948] bg-white rounded-full hover:bg-slate-50 border border-slate-200 shadow-xs"
                   >
                     Submit Another Request
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
-                    <input 
-                      type="text" 
+                    <label className="block text-xs font-bold text-[#131b2e] mb-1">
+                      Your Full Name
+                    </label>
+                    <input
                       required
+                      type="text"
                       placeholder="e.g., Suneth Perera"
                       value={formData.fullName}
-                      onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-ink text-xs focus:outline-none focus:border-brand-600 shadow-sm"
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white text-[#131b2e] text-xs font-medium shadow-sm outline-none focus:ring-2 focus:ring-[#006948]/40 border border-slate-200"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
-                    <input 
-                      type="email" 
+                    <label className="block text-xs font-bold text-[#131b2e] mb-1">
+                      Email Address
+                    </label>
+                    <input
                       required
-                      placeholder="name@school.com"
+                      type="email"
+                      placeholder="name@domain.com"
                       value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-ink text-xs focus:outline-none focus:border-brand-600 shadow-sm"
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white text-[#131b2e] text-xs font-medium shadow-sm outline-none focus:ring-2 focus:ring-[#006948]/40 border border-slate-200"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Your Role</label>
-                      <select 
+                      <label className="block text-xs font-bold text-[#131b2e] mb-1">
+                        Your Role
+                      </label>
+                      <select
                         value={formData.role}
-                        onChange={(e) => setFormData({...formData, role: e.target.value})}
-                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-ink text-xs focus:outline-none focus:border-brand-600 shadow-sm"
+                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                        className="w-full px-3 py-2.5 rounded-xl bg-white text-[#131b2e] text-xs font-medium shadow-sm outline-none focus:ring-2 focus:ring-[#006948]/40 border border-slate-200"
                       >
-                        <option value="Parent">Parent</option>
-                        <option value="Driver">Van Driver</option>
-                        <option value="School Authority">School Representative</option>
-                        <option value="Fleet Owner">Fleet Owner</option>
+                        <option value="parent">Parent</option>
+                        <option value="driver">Van Driver</option>
+                        <option value="school-rep">School Coordinator</option>
+                        <option value="fleet-operator">Fleet Operator</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Fleet Size</label>
-                      <select 
-                        value={formData.fleetSize}
-                        onChange={(e) => setFormData({...formData, fleetSize: e.target.value})}
-                        className="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-ink text-xs focus:outline-none focus:border-brand-600 shadow-sm"
+                      <label className="block text-xs font-bold text-[#131b2e] mb-1">
+                        Fleet or Van Count
+                      </label>
+                      <select
+                        value={formData.vanCount}
+                        onChange={(e) => setFormData({ ...formData, vanCount: e.target.value })}
+                        className="w-full px-3 py-2.5 rounded-xl bg-white text-[#131b2e] text-xs font-medium shadow-sm outline-none focus:ring-2 focus:ring-[#006948]/40 border border-slate-200"
                       >
-                        <option value="1-3 Vans">1-3 Vans</option>
-                        <option value="4-10 Vans">4-10 Vans</option>
-                        <option value="10+ Vans">10+ Vans</option>
+                        <option value="1">1 Van</option>
+                        <option value="2-5">2 - 5 Vans</option>
+                        <option value="6-15">6 - 15 Vans</option>
+                        <option value="15+">15+ Vans</option>
                       </select>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Message / Notes</label>
-                    <textarea 
+                    <label className="block text-xs font-bold text-[#131b2e] mb-1">
+                      Route Location or Requirements
+                    </label>
+                    <textarea
                       rows={3}
-                      placeholder="Tell us about your route or school transport requirements..."
-                      value={formData.message}
-                      onChange={(e) => setFormData({...formData, message: e.target.value})}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-ink text-xs focus:outline-none focus:border-brand-600 shadow-sm resize-none"
-                    ></textarea>
+                      placeholder="e.g., Kandy to Peradeniya school van route with 14 students..."
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white text-[#131b2e] text-xs font-medium shadow-sm outline-none resize-none focus:ring-2 focus:ring-[#006948]/40 border border-slate-200"
+                    />
                   </div>
 
-                  <button 
+                  <button
                     type="submit"
-                    className="w-full py-3 px-4 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
+                    className="w-full mt-1 py-3 px-6 rounded-full bg-[#006948] hover:bg-[#00855d] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                   >
+                    <span>Submit Pilot Request</span>
                     <Send className="w-3.5 h-3.5" />
-                    <span>Send Request</span>
                   </button>
                 </form>
               )}
             </div>
 
           </div>
-
         </div>
-
       </div>
     </section>
   );

@@ -1,222 +1,233 @@
 import React, { useState } from 'react';
-import { Users, Bus, Building2, CheckCircle2, ShieldCheck, Map, AlertTriangle, CreditCard, BarChart3 } from 'lucide-react';
+import { Users, Bus, CheckCircle2, ArrowRight, HeartHandshake } from 'lucide-react';
+import { PORTAL_URLS } from '../config';
+import parentTrackingMockup from '../assets/parent-tracking-3d-mockup.png';
 
 export const RoleSolutions: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'parents' | 'drivers' | 'schools'>('parents');
+  const [activeTab, setActiveTab] = useState<'parents' | 'drivers'>('parents');
 
   return (
-    <section id="solutions" className="py-20 relative bg-canvasBg border-t border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="w-full py-16 md:py-24 bg-[#faf8ff]" id="solutions">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
         
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs font-bold tracking-widest text-brand-700 uppercase bg-brand-50 px-3 py-1 rounded-full border border-brand-200">
-            Tailored Experience
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="text-xs uppercase tracking-wider text-[#006948] font-bold">
+            Targeted Portals
           </span>
-          <h2 className="text-3xl font-extrabold text-ink mt-3">
-            Designed for Every Journey
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#131b2e] tracking-tight mt-1">
+            Engineered for Daily Utility
           </h2>
-          <p className="text-sm text-slate-600 mt-2">
-            Explore dedicated features customized specifically for parents, drivers, and schools.
+          <p className="text-sm sm:text-base text-slate-600 mt-2 font-medium">
+            Every feature is designed around the morning reality of Sri Lankan families and dependable school van operators.
           </p>
         </div>
 
-        {/* Tab Navigation Controls */}
+        {/* Tab Switcher (Parents vs Drivers Only) */}
         <div className="flex justify-center mb-10">
-          <div className="inline-flex p-1.5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+          <div className="inline-flex p-1.5 rounded-full bg-[#f2f3ff] shadow-sm">
             <button
+              type="button"
               onClick={() => setActiveTab('parents')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all ${
                 activeTab === 'parents'
-                  ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-                  : 'text-slate-600 hover:text-ink'
+                  ? 'bg-[#006948] text-white shadow-sm'
+                  : 'text-slate-600 hover:text-[#131b2e]'
               }`}
             >
               <Users className="w-4 h-4" />
               <span>For Parents</span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('drivers')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all ${
                 activeTab === 'drivers'
-                  ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-                  : 'text-slate-600 hover:text-ink'
+                  ? 'bg-[#855300] text-white shadow-sm'
+                  : 'text-slate-600 hover:text-[#131b2e]'
               }`}
             >
               <Bus className="w-4 h-4" />
-              <span>For Drivers</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('schools')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-                activeTab === 'schools'
-                  ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-                  : 'text-slate-600 hover:text-ink'
-              }`}
-            >
-              <Building2 className="w-4 h-4" />
-              <span>For Schools</span>
+              <span>For Van Drivers</span>
             </button>
           </div>
         </div>
 
-        {/* Tab Content Display */}
-        <div className="max-w-4xl mx-auto bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-card">
+        {/* Tab Content Container */}
+        <div className="max-w-5xl mx-auto rounded-3xl bg-white shadow-md p-6 sm:p-10 border border-slate-100">
           
+          {/* TAB 1: PARENTS VIEW */}
           {activeTab === 'parents' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-fadeIn">
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center border border-brand-200">
-                  <ShieldCheck className="w-6 h-6" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center animate-fadeIn">
+              {/* Left Column */}
+              <div className="lg:col-span-6 flex flex-col gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#006948]/10 text-[#006948] flex items-center justify-center">
+                  <HeartHandshake className="w-6 h-6 text-[#006948]" />
                 </div>
-                <h3 className="text-2xl font-bold text-ink">Complete Peace of Mind on Every School Run</h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Never worry about delays or missed pickups again. Track your child's van live on your smartphone, receive instant boarding notifications, and mark absences easily.
+                <h3 className="text-2xl font-bold text-[#131b2e]">
+                  Unconditional Reassurance for Working Parents
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                  Never wonder if the van is stuck in city center traffic or already past your lane. With live map telemetry and instant boarding confirmations, your morning routine stays calm.
                 </p>
-                <ul className="space-y-2.5 pt-2">
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>Live tracking on an interactive map</span>
+
+                <ul className="flex flex-col gap-3 pt-2">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#006948] shrink-0 mt-0.5" />
+                    <span className="text-xs sm:text-sm text-[#131b2e]">
+                      <strong>Live Route Progression:</strong> Watch the vehicle icon advance stop-by-stop toward your gate.
+                    </span>
                   </li>
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>Instant alerts when your child boards or arrives</span>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#006948] shrink-0 mt-0.5" />
+                    <span className="text-xs sm:text-sm text-[#131b2e]">
+                      <strong>Boarding Confirmation:</strong> Immediate ping when your child steps aboard safely.
+                    </span>
                   </li>
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>See the last known location even with a poor connection</span>
-                  </li>
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>Easily inform drivers if your child is absent</span>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#006948] shrink-0 mt-0.5" />
+                    <span className="text-xs sm:text-sm text-[#131b2e]">
+                      <strong>One-Tap Absent Mode:</strong> Notify the driver with one click if your child has a fever or holiday.
+                    </span>
                   </li>
                 </ul>
+
+                <div className="pt-3">
+                  <a
+                    href={PORTAL_URLS.parent}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#006948] hover:bg-[#00855d] text-white text-xs font-bold shadow-sm transition-all"
+                  >
+                    <span>Open Parent Dashboard</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
               </div>
-              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-3 shadow-inner">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-                  <span className="text-xs font-bold text-ink flex items-center gap-1.5">
-                    <Map className="w-4 h-4 text-brand-600" /> Parent Dashboard
-                  </span>
-                  <span className="text-[10px] bg-brand-100 text-brand-800 font-bold px-2 py-0.5 rounded font-mono">LIVE TRACKING</span>
-                </div>
-                <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1 shadow-sm">
-                  <p className="font-bold text-ink">Child Status: Boarded (Seat #03)</p>
-                  <p className="text-slate-500 text-[11px] font-medium">Van #04 ETA to School: 8 minutes</p>
-                </div>
-                <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1 shadow-sm">
-                  <p className="font-bold text-ink">Last Known Location</p>
-                  <p className="text-slate-500 text-[11px] font-medium">Kandy Clock Tower</p>
+
+              {/* Right Column: 3D Isometric Mobile App Snapshot */}
+              <div className="lg:col-span-6 flex justify-center">
+                <div className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-lg bg-[#f2f3ff] p-4 border border-slate-100">
+                  <div className="rounded-2xl overflow-hidden bg-white shadow-sm">
+                    <img
+                      src={parentTrackingMockup}
+                      alt="KidsRoute Mobile App 3D Route Map Mockup"
+                      className="w-full h-80 object-cover"
+                    />
+                    <div className="p-4 bg-white">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="font-bold text-sm text-[#131b2e]">Van Route #04</span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#006948]/10 text-[#006948] text-[10px] font-bold">
+                          ETA: 6 Mins
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium">
+                        Samantha Kumara (Toyota HiAce) • Approach to Galle Road
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
+          {/* TAB 2: DRIVERS VIEW */}
           {activeTab === 'drivers' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-fadeIn">
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
-                  <Bus className="w-6 h-6" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center animate-fadeIn">
+              {/* Left Column */}
+              <div className="lg:col-span-6 flex flex-col gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-100 text-[#855300] flex items-center justify-center">
+                  <Bus className="w-6 h-6 text-[#855300]" />
                 </div>
-                <h3 className="text-2xl font-bold text-ink">Streamlined Journeys & Easy Management</h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Focus on safe driving while KidsRoute handles attendance, navigation, and keeping parents updated automatically.
+                <h3 className="text-2xl font-bold text-[#131b2e]">
+                  Streamlined Student Manifest for Drivers
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                  No expensive tracking hardware or complicated setups. The KidsRoute Driver Portal runs smoothly on any smartphone with a clean, high-contrast, thumb-friendly pickup manifest.
                 </p>
-                <ul className="space-y-2.5 pt-2">
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>Simple daily trip controls (Start, Board, Complete)</span>
-                  </li>
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>Digital attendance checklist updated in real-time</span>
-                  </li>
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>One-tap emergency alerts for immediate assistance</span>
-                  </li>
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>Easy monthly fee collection tracking</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-3 shadow-inner">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-                  <span className="text-xs font-bold text-ink flex items-center gap-1.5">
-                    <Bus className="w-4 h-4 text-amber-600" /> Driver App
-                  </span>
-                  <span className="text-[10px] bg-brand-100 text-brand-800 font-bold px-2 py-0.5 rounded font-mono">TRIP ACTIVE</span>
-                </div>
-                <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 flex justify-between items-center shadow-sm">
-                  <div>
-                    <p className="font-bold text-ink">Nuwan Perera (Stop #2)</p>
-                    <p className="text-[10px] text-brand-600 font-bold">Boarded at 07:18 AM</p>
-                  </div>
-                  <span className="px-2 py-1 bg-brand-100 text-brand-800 rounded text-[10px] font-bold">Checked</span>
-                </div>
-                <div className="p-3 bg-rose-50 rounded-xl border border-rose-200 text-xs flex justify-between items-center text-rose-800 shadow-sm">
-                  <span className="font-bold flex items-center gap-1.5 text-rose-700">
-                    <AlertTriangle className="w-4 h-4" /> Emergency SOS
-                  </span>
-                  <span className="text-[10px] bg-rose-200 px-2 py-0.5 rounded font-bold">Ready</span>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {activeTab === 'schools' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-fadeIn">
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center border border-brand-200">
-                  <Building2 className="w-6 h-6" />
-                </div>
-                <h3 className="text-2xl font-bold text-ink">Centralized Oversight & Better Communication</h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Oversee all school vans, verify driver credentials, and ensure student safety through a unified dashboard.
-                </p>
-                <ul className="space-y-2.5 pt-2">
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>Monitor all arriving vans on a single map</span>
+                <ul className="flex flex-col gap-3 pt-2">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#855300] shrink-0 mt-0.5" />
+                    <span className="text-xs sm:text-sm text-[#131b2e]">
+                      <strong>Automated Pickup Roster:</strong> Absences are excluded automatically before your vehicle rolls out.
+                    </span>
                   </li>
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>Approve driver registrations and check compliance</span>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#855300] shrink-0 mt-0.5" />
+                    <span className="text-xs sm:text-sm text-[#131b2e]">
+                      <strong>One-Tap Check-In:</strong> Mark boarding in half a second without looking away from the doorway.
+                    </span>
                   </li>
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>Maintain detailed records of daily student transport</span>
-                  </li>
-                  <li className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-brand-600 flex-shrink-0" />
-                    <span>Improve communication with parents and drivers</span>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#855300] shrink-0 mt-0.5" />
+                    <span className="text-xs sm:text-sm text-[#131b2e]">
+                      <strong>Delay Broadcasts:</strong> Stuck at a railway gate? Tap once to let all waiting parents know.
+                    </span>
                   </li>
                 </ul>
+
+                <div className="pt-3">
+                  <a
+                    href={PORTAL_URLS.driver}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#855300] hover:bg-[#684000] text-white text-xs font-bold shadow-sm transition-all"
+                  >
+                    <span>Open Driver Portal</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
               </div>
-              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-3 shadow-inner">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-                  <span className="text-xs font-bold text-ink flex items-center gap-1.5">
-                    <BarChart3 className="w-4 h-4 text-brand-600" /> School Dashboard
-                  </span>
-                  <span className="text-[10px] bg-brand-100 text-brand-800 font-bold px-2 py-0.5 rounded font-mono">15 VANS ACTIVE</span>
-                </div>
-                <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1 shadow-sm">
-                  <div className="flex justify-between font-bold text-ink">
-                    <span>Morning Arrival Status</span>
-                    <span className="text-brand-600">All On-Time</span>
+
+              {/* Right Column: Driver Console Mockup */}
+              <div className="lg:col-span-6 flex justify-center">
+                <div className="w-full max-w-sm rounded-3xl bg-[#f2f3ff] p-5 shadow-inner border border-slate-200/80 flex flex-col gap-3">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#006948] animate-pulse" />
+                      <span className="font-bold text-sm text-[#131b2e]">Morning Route 02</span>
+                    </div>
+                    <span className="text-[11px] font-bold bg-white text-slate-700 px-2.5 py-0.5 rounded-md border border-slate-200">
+                      14 / 16 Boarded
+                    </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 font-medium">Total Arriving Students: 340 Kids</p>
-                </div>
-                <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 flex justify-between items-center shadow-sm">
-                  <span className="font-bold text-ink flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-brand-600" /> Driver Compliance
-                  </span>
-                  <span className="text-xs font-bold text-brand-600">100% Verified</span>
+
+                  {/* Student row 1 */}
+                  <div className="p-3 rounded-xl bg-white shadow-sm flex items-center justify-between border border-slate-100">
+                    <div>
+                      <h4 className="font-bold text-xs text-[#131b2e]">Kavindu Dias</h4>
+                      <p className="text-[11px] text-slate-500 font-medium">Stop #04 • Temple Road</p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-[#006948]/10 text-[#006948] text-[10px] font-bold">
+                      Boarded
+                    </span>
+                  </div>
+
+                  {/* Student row 2 */}
+                  <div className="p-3 rounded-xl bg-white shadow-sm flex items-center justify-between border border-slate-100">
+                    <div>
+                      <h4 className="font-bold text-xs text-[#131b2e]">Senuri Silva</h4>
+                      <p className="text-[11px] text-slate-500 font-medium">Stop #05 • Lake Crescent</p>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-[#fea619] text-[#131b2e] text-[10px] font-bold shadow-xs">
+                      Tap Check-In
+                    </span>
+                  </div>
+
+                  {/* Student row 3 (Absent) */}
+                  <div className="p-3 rounded-xl bg-[#e2e7ff]/60 flex items-center justify-between opacity-75 border border-slate-200/60">
+                    <div>
+                      <h4 className="font-bold text-xs text-slate-500 line-through">Nethmi Perera</h4>
+                      <p className="text-[10px] text-slate-400 font-medium">Reported Sick (Auto-Skipped)</p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold">
+                      Absent
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
         </div>
+
       </div>
     </section>
   );
