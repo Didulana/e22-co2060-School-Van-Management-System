@@ -10,7 +10,6 @@ const teamMembers = [
     name: 'Didulana Lokugamage',
     field: 'Computer Engineering',
     institution: 'Univ. of Peradeniya',
-    focus: 'Full-Stack Architecture & Real-Time Telemetry',
     image: member1Img,
     github: 'https://github.com/didulana',
     linkedin: 'https://linkedin.com/in/didulanalokugamage',
@@ -19,7 +18,6 @@ const teamMembers = [
     name: 'Dilan Sandeepa',
     field: 'Computer Engineering',
     institution: 'Univ. of Peradeniya',
-    focus: 'Driver Portal & Journey Lifecycle Workflow',
     image: member2Img,
     github: 'https://github.com/dilansandeepa131',
     linkedin: 'https://linkedin.com',
@@ -28,19 +26,17 @@ const teamMembers = [
     name: 'Imasha Sewmini',
     field: 'Computer Engineering',
     institution: 'Univ. of Peradeniya',
-    focus: 'Parent Experience & Notification Services',
     image: member3Img,
     github: 'https://github.com/imasha284',
-    linkedin: 'https://linkedin.com',
+    linkedin: 'https://linkedin.com/in/imasha-sewmini-7583b543a/',
   },
   {
     name: 'Samara Gunawardhana',
     field: 'Computer Engineering',
     institution: 'Univ. of Peradeniya',
-    focus: 'Database Modeling & Geocoding Integration',
     image: member4Img,
     github: 'https://github.com/samara328',
-    linkedin: 'https://linkedin.com',
+    linkedin: 'https://linkedin.com/in/samara-gunawardhana-184633398/',
   },
 ];
 
@@ -48,7 +44,7 @@ export const OurTeam: React.FC = () => {
   return (
     <section className="w-full py-16 md:py-24 bg-[#f2f3ff]" id="engineering-team">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
-        
+
         {/* Academic Heading */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white shadow-sm border border-slate-200 mb-3">
@@ -62,7 +58,7 @@ export const OurTeam: React.FC = () => {
             Meet Team AlphaWolves
           </h2>
           <p className="text-sm sm:text-base text-slate-600 mt-2 leading-relaxed font-medium">
-            Computer Engineering Undergraduates engineering resilient, community-first transit software for the 2YP CO2060 Software Engineering project evaluation.
+            Computer Engineering Undergraduates engineering resilient, community-first transit software for the CO2060 Software Systems Development Project.
           </p>
         </div>
 
@@ -92,13 +88,6 @@ export const OurTeam: React.FC = () => {
                 <span className="text-[11px] text-slate-500 font-medium">
                   {member.institution}
                 </span>
-
-                {/* Focus Pill Box */}
-                <div className="mt-4 p-2.5 rounded-xl bg-[#f2f3ff] w-full border border-slate-100">
-                  <span className="text-[11px] text-slate-600 font-semibold block leading-tight">
-                    {member.focus}
-                  </span>
-                </div>
               </div>
 
               {/* Social Links */}
@@ -134,7 +123,7 @@ export const OurTeam: React.FC = () => {
             </div>
             <div>
               <h4 className="font-bold text-sm text-[#131b2e]">
-                CO2060 Software Engineering Evaluation Repository
+                CO2060 Software Systems Development Project - GitHub Repository
               </h4>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
                 Department of Computer Engineering, University of Peradeniya • PERN Stack (PostgreSQL, Express, React, Node.js) & OpenStreetMap
