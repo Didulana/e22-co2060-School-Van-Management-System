@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { login } from "../../features/auth/api";
 import { useAuth } from "../../features/auth/AuthContext";
 import { ShieldCheck, Mail, Lock, Info, ArrowRight } from "lucide-react";
@@ -74,6 +74,14 @@ function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-between items-center mb-6">
+          <Link to="/" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5 transition">
+            &larr; Back to Website
+          </Link>
+          <Link to="/login" className="text-xs font-bold text-emerald-400 hover:underline">
+            Parent / Driver Login
+          </Link>
+        </div>
         <div className="flex justify-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500 shadow-xl shadow-indigo-500/20 text-white">
             <ShieldCheck size={32} />
@@ -85,10 +93,20 @@ function AdminLoginPage() {
         <p className="mt-2 text-center text-sm font-medium text-slate-400">
           Secure access for system administrators
         </p>
+
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setCredentials({ email: "admin@schoolvan.local", password: "Admin@123" })}
+            className="text-xs font-bold px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20 transition flex items-center gap-1.5"
+          >
+            ⚡ Quick Fill Admin Demo Credentials
+          </button>
+        </div>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-slate-800 py-8 px-4 shadow-2xl shadow-black/50 sm:rounded-3xl sm:px-10 border border-slate-700">
+      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-slate-800/90 backdrop-blur-xl py-8 px-4 shadow-2xl shadow-black/50 sm:rounded-3xl sm:px-10 border border-slate-700">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div className="relative">
@@ -124,7 +142,7 @@ function AdminLoginPage() {
 
             <button
               disabled={isSubmitting}
-              className="w-full bg-indigo-500 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-indigo-500/20 hover:bg-indigo-400 hover:shadow-indigo-500/40 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+              className="w-full bg-indigo-500 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-indigo-500/20 hover:bg-indigo-400 hover:shadow-indigo-500/40 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 cursor-pointer"
               type="submit"
             >
               {isSubmitting ? "Authenticating..." : <>Secure Login <ArrowRight size={20} /></>}

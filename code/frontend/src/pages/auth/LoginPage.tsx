@@ -2,26 +2,35 @@ import { FormEvent, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { login } from "../../features/auth/api";
 import { useAuth } from "../../features/auth/AuthContext";
-import { BusFront, ArrowRight, Mail, Lock, Info } from "lucide-react";
+import {
+  BusFront,
+  ArrowRight,
+  Mail,
+  Lock,
+  Info,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Users,
+  Activity,
+  CheckCircle2,
+  ChevronLeft,
+  Sparkles,
+} from "lucide-react";
 
 const emptyCredentials = {
   email: "",
   password: "",
 };
 
-const trustedProfiles = [
-  { name: "Asha", tone: "from-emerald-100 via-teal-50 to-amber-100", accent: "bg-emerald-700" },
-  { name: "Ravi", tone: "from-sky-100 via-white to-emerald-100", accent: "bg-sky-700" },
-  { name: "Nila", tone: "from-rose-100 via-white to-amber-100", accent: "bg-rose-700" },
-  { name: "Dev", tone: "from-amber-100 via-white to-lime-100", accent: "bg-amber-700" },
-];
-
-function LoginPage() {
+export default function LoginPage() {
   const navigate = useNavigate();
   const { session, login: contextLogin, logout: contextLogout } = useAuth();
 
   const [credentials, setCredentials] = useState(emptyCredentials);
-
+  const [selectedRole, setSelectedRole] = useState<"parent" | "driver" | "admin">("parent");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,16 +40,18 @@ function LoginPage() {
     let active = true;
     async function bootstrap() {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 200));
         if (!active) return;
       } catch {
-        // Silently fail or log
+        // Silently fail
       } finally {
         if (active) setIsBootstrapping(false);
       }
     }
     void bootstrap();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -54,10 +65,22 @@ function LoginPage() {
     }
   }, [session, isBootstrapping, navigate]);
 
+  // Demo auto-fill helper
+  const handleQuickDemoFill = (role: "parent" | "driver" | "admin") => {
+    setSelectedRole(role);
+    setErrorMessage(null);
+    if (role === "parent") {
+      setCredentials({ email: "parent@test.com", password: "password123" });
+    } else if (role === "driver") {
+      setCredentials({ email: "driver@test.com", password: "password123" });
+    } else if (role === "admin") {
+      setCredentials({ email: "admin@schoolvan.local", password: "Admin@123" });
+    }
+  };
 
   function validateForm() {
     if (!credentials.email.trim()) {
-      return "Email is required.";
+      return "Email address is required.";
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(credentials.email)) {
@@ -91,168 +114,361 @@ function LoginPage() {
       };
       navigate(roleHome[nextSession.user.role] || "/login", { replace: true });
     } catch (error: any) {
-      if (error?.code === "pending_approval" || error?.message?.includes("pending admin approval") || error?.message === "pending_approval") {
+      if (
+        error?.code === "pending_approval" ||
+        error?.message?.includes("pending admin approval") ||
+        error?.message === "pending_approval"
+      ) {
         navigate("/pending-approval", { state: { email: credentials.email } });
         return;
       }
-      setErrorMessage(error instanceof Error ? error.message : "Unable to sign in");
+      setErrorMessage(error instanceof Error ? error.message : "Unable to sign in. Please verify your credentials.");
     } finally {
       setIsSubmitting(false);
     }
   }
 
-
   if (isBootstrapping) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#fdfdfc]">
-        <div className="h-12 w-12 animate-pulse rounded-2xl bg-emerald-500 shadow-xl shadow-emerald-500/20 flex items-center justify-center">
-            <BusFront className="text-white w-6 h-6" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#070b14] text-white">
+        <div className="h-14 w-14 animate-pulse rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1px] shadow-2xl shadow-emerald-500/30 flex items-center justify-center">
+          <div className="w-full h-full bg-[#0a111e] rounded-2xl flex items-center justify-center">
+            <BusFront className="text-emerald-400 w-7 h-7 animate-bounce" />
+          </div>
         </div>
-        <p className="mt-4 text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">Connecting...</p>
+        <p className="mt-4 text-xs font-black text-slate-400 uppercase tracking-[0.25em] animate-pulse">
+          Initializing Secure Portal...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#fdfdfc] text-slate-900 grid lg:grid-cols-2 font-sans">
-      {/* Left Panel: Hero */}
-      <div className="hidden lg:flex flex-col justify-between p-16 bg-[linear-gradient(145deg,#10724f_0%,#27a977_56%,#f2bd4d_145%)] relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.2),transparent_28%)]" />
-        
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="bg-white/10 backdrop-blur-md p-2 rounded-xl border border-white/20">
-            <BusFront className="text-white w-6 h-6" />
-          </div>
-          <span className="font-display font-black text-2xl text-white">KidsRoute</span>
-        </div>
+    <div className="min-h-screen bg-[#070b14] text-slate-100 grid lg:grid-cols-12 font-sans relative overflow-hidden">
+      {/* Background Ambient Lights */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-32 left-1/3 w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[140px]" />
+        <div className="absolute top-1/3 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-[130px]" />
+      </div>
 
-        <div className="relative z-10">
-          <h1 className="font-display text-5xl xl:text-6xl font-black text-white leading-[1.08] max-w-[13ch]">
-            Experience the <span className="text-emerald-300">future</span> of school transport.
-          </h1>
-          <p className="mt-6 text-lg text-emerald-50/80 max-w-md font-medium leading-8">
-            Real-time tracking, seamless logistics, and ultimate safety for the children who matter most. 
-          </p>
-        </div>
+      {/* Left Column: Rich Visual Brand Experience */}
+      <div className="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-between p-12 xl:p-16 relative border-r border-white/10 bg-gradient-to-br from-[#0a111e] via-[#080d17] to-[#070a12] overflow-hidden">
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:3rem_3rem]" />
 
-        <div className="relative z-10 flex items-center gap-6 rounded-[1.75rem] border border-white/15 bg-white/10 p-4 backdrop-blur-md">
-            <div className="flex -space-x-4">
-                {trustedProfiles.map(profile => (
-                    <ProfilePortrait key={profile.name} {...profile} />
-                ))}
+        {/* Top Header */}
+        <div className="relative z-10 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1px] shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-all">
+              <div className="w-full h-full bg-[#0b121e] rounded-2xl flex items-center justify-center">
+                <BusFront className="text-emerald-400 w-6 h-6" />
+              </div>
             </div>
             <div>
-              <p className="text-sm font-black text-white">Trusted by 200+ locals</p>
-              <p className="mt-1 text-xs font-semibold text-emerald-50/70">Parents and drivers using KidsRoute daily</p>
+              <span className="font-display font-black text-2xl text-white tracking-tight">
+                Kids<span className="text-emerald-400">Route</span>
+              </span>
+              <span className="block text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
+                School Transit Network
+              </span>
             </div>
+          </Link>
+
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-slate-300 hover:text-white transition-all border border-white/10"
+          >
+            <ChevronLeft size={14} /> Back to Website
+          </Link>
+        </div>
+
+        {/* Centerpiece: Hero Message & Floating Status Widgets */}
+        <div className="relative z-10 py-12 space-y-8 max-w-xl">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-bold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>Real-Time Fleet Intelligence Active</span>
+            </div>
+            <h1 className="font-display text-4xl xl:text-5xl font-black text-white leading-tight tracking-tight">
+              Safety, visibility, and <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">peace of mind</span> on every school commute.
+            </h1>
+            <p className="text-slate-400 text-base leading-relaxed">
+              Log in to track your school van with live telemetry, verify student boarding status, or manage driver routes.
+            </p>
+          </div>
+
+          {/* Interactive Live Status Widget Cards */}
+          <div className="space-y-3.5 pt-2">
+            {/* Widget 1 */}
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl shadow-xl flex items-center justify-between animate-float">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  <Activity size={20} className="animate-pulse" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-white">Van #04 • Bambalapitiya Route</p>
+                  <p className="text-[11px] text-emerald-400 font-semibold">Arriving at Ananda College in 4 mins</p>
+                </div>
+              </div>
+              <span className="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 font-bold uppercase tracking-wider">
+                Live GPS
+              </span>
+            </div>
+
+            {/* Widget 2 */}
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl shadow-xl flex items-center justify-between animate-float-delayed">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <CheckCircle2 size={20} />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-white">Student Boarding Verified</p>
+                  <p className="text-[11px] text-slate-400">14 of 14 students accounted for today</p>
+                </div>
+              </div>
+              <span className="text-[10px] px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30 font-bold uppercase tracking-wider">
+                Synced
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Proof Quote */}
+        <div className="relative z-10 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={16} className="text-emerald-400" />
+            <span>Bank-grade 256-bit SSL encrypted connection</span>
+          </div>
+          <span className="text-[11px] font-mono text-slate-500">v2.4-stable</span>
         </div>
       </div>
 
-      {/* Right Panel: Form */}
-      <div className="flex flex-col justify-center p-8 md:p-16 lg:p-24 bg-white">
-        <div className="max-w-md mx-auto w-full">
-          <div className="mb-12">
-            <h2 className="font-display text-4xl font-black text-slate-900">Welcome Back</h2>
-            <p className="mt-2 text-slate-500 font-medium">Log in to your account to continue.</p>
+      {/* Right Column: Modern Sign-In Form */}
+      <div className="lg:col-span-6 xl:col-span-5 flex flex-col justify-center p-6 sm:p-10 md:p-14 lg:p-12 xl:p-16 bg-[#0a101c]/60 backdrop-blur-xl">
+        <div className="max-w-md mx-auto w-full space-y-8">
+          {/* Header Mobile Brand (visible only on mobile) */}
+          <div className="lg:hidden flex items-center justify-between pb-4 border-b border-white/10">
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <BusFront size={20} />
+              </div>
+              <span className="font-display font-black text-xl text-white">
+                Kids<span className="text-emerald-400">Route</span>
+              </span>
+            </Link>
+            <Link to="/" className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1">
+              <ChevronLeft size={14} /> Website
+            </Link>
+          </div>
+
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20 mb-3">
+              <Sparkles size={12} />
+              <span>Portal Access</span>
+            </div>
+            <h2 className="font-display text-3xl font-black text-white tracking-tight">Sign In to KidsRoute</h2>
+            <p className="mt-1.5 text-slate-400 text-sm font-medium">
+              Select your role or enter your credentials below.
+            </p>
+          </div>
+
+          {/* Interactive Role Switcher & 1-Click Demo Buttons */}
+          <div className="space-y-3">
+            <label className="text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center justify-between">
+              <span>Choose Your Role</span>
+              <span className="text-emerald-400 text-[10px] font-bold">⚡ Click to auto-fill demo</span>
+            </label>
+
+            <div className="grid grid-cols-3 gap-2 p-1.5 rounded-2xl bg-white/5 border border-white/10">
+              <button
+                type="button"
+                onClick={() => handleQuickDemoFill("parent")}
+                className={`py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 ${
+                  selectedRole === "parent"
+                    ? "bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/20"
+                    : "text-slate-300 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <Users size={16} />
+                <span>Parent</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickDemoFill("driver")}
+                className={`py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 ${
+                  selectedRole === "driver"
+                    ? "bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/20"
+                    : "text-slate-300 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <BusFront size={16} />
+                <span>Driver</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickDemoFill("admin")}
+                className={`py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 ${
+                  selectedRole === "admin"
+                    ? "bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/20"
+                    : "text-slate-300 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <ShieldCheck size={16} />
+                <span>Admin</span>
+              </button>
+            </div>
           </div>
 
           {!session ? (
-            <form className="space-y-6" onSubmit={handleSubmit}>
-
-
-              <div className="space-y-4">
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              {/* Email Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300 block">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                   <input
                     required
-                    className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-100 bg-slate-50 text-slate-800 font-bold focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 transition-all outline-none"
-                    onChange={(event) => setCredentials((current) => ({ ...current, email: event.target.value }))}
-                    placeholder="Email or Username"
                     type="email"
                     value={credentials.email}
-                  />
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                  <input
-                    required
-                    className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-100 bg-slate-50 text-slate-800 font-bold focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50 transition-all outline-none"
-                    onChange={(event) => setCredentials((current) => ({ ...current, password: event.target.value }))}
-                    placeholder="Password"
-                    type="password"
-                    value={credentials.password}
+                    onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                    placeholder="e.g. parent@test.com"
+                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm font-semibold focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
               </div>
 
+              {/* Password Input */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-300 block">Password</label>
+                  <span className="text-[11px] text-slate-500">Min 6 characters</span>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                  <input
+                    required
+                    type={showPassword ? "text" : "password"}
+                    value={credentials.password}
+                    onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                    placeholder="••••••••••••"
+                    className="w-full pl-11 pr-12 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm font-semibold focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Remember Me & Help */}
+              <div className="flex items-center justify-between text-xs">
+                <label className="flex items-center gap-2 cursor-pointer select-none text-slate-400">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded-md border-white/10 bg-white/5 text-emerald-500 focus:ring-emerald-500"
+                  />
+                  <span>Remember my login</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => alert("For password resets, please contact your school administrator or system hotline at +94 (11) 234-5678.")}
+                  className="text-emerald-400 hover:text-emerald-300 font-semibold"
+                >
+                  Forgot password?
+                </button>
+              </div>
+
+              {/* Error Message */}
               {errorMessage && (
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-red-50 border border-red-100 text-xs font-bold text-red-600 animate-in fade-in slide-in-from-top-1">
-                  <Info size={16} />
-                  {errorMessage}
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-red-500/10 border border-red-500/25 text-xs font-bold text-red-400 animate-in fade-in">
+                  <Info size={16} className="shrink-0" />
+                  <span>{errorMessage}</span>
                 </div>
               )}
 
+              {/* Submit Button */}
               <button
-                disabled={isSubmitting}
-                className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:shadow-emerald-200 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
                 type="submit"
+                disabled={isSubmitting}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black text-base shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:brightness-105 active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-2.5 cursor-pointer"
               >
-                {isSubmitting ? "Signing in..." : <>Access Dashboard <ArrowRight size={20} /></>}
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />
+                    <span>Signing In...</span>
+                  </span>
+                ) : (
+                  <>
+                    <span>Sign In to Dashboard</span>
+                    <ArrowRight size={18} />
+                  </>
+                )}
               </button>
 
-              <div className="pt-8 text-center">
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                  New to KidsRoute?{" "}
-                  <Link to="/register" className="text-emerald-600 hover:text-emerald-500 underline underline-offset-8 decoration-2">
-                    Create an account
+              {/* Registration Link */}
+              <div className="pt-4 text-center border-t border-white/10">
+                <p className="text-xs text-slate-400 font-medium">
+                  Don't have an account yet?{" "}
+                  <Link
+                    to="/register"
+                    className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4"
+                  >
+                    Register as Parent or Driver
                   </Link>
                 </p>
               </div>
             </form>
           ) : (
-            <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
-                <div className="flex items-center gap-4 p-6 bg-emerald-50 border border-emerald-100 rounded-[2.5rem]">
-                    <div className="w-16 h-16 rounded-3xl bg-white shadow-sm flex items-center justify-center text-2xl font-black text-emerald-600 border border-emerald-200">
-                        {session.user.name?.charAt(0) || "P"}
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Secure session active</p>
-                        <h3 className="text-2xl font-black text-slate-900 tracking-tighter">Hi, {session.user.name?.split(' ')[0]}</h3>
-                    </div>
+            /* Active Session View */
+            <div className="space-y-6 p-6 rounded-3xl bg-white/5 border border-white/10 animate-in fade-in">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 text-slate-950 font-black text-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                  {session.user.name?.charAt(0) || "U"}
                 </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    Active Session
+                  </span>
+                  <h3 className="text-xl font-black text-white mt-1">Hi, {session.user.name}</h3>
+                  <p className="text-xs text-slate-400 font-medium capitalize">{session.user.role} Account</p>
+                </div>
+              </div>
 
-                <div className="grid gap-3">
-                    <button
-                        onClick={() => navigate({admin: "/admin/dashboard", driver: "/driver", parent: "/tracking"}[session.user.role] || "/login")}
-                        className="w-full bg-emerald-500 text-white py-5 rounded-[2rem] font-black text-xl shadow-2xl shadow-emerald-500/20 hover:scale-[1.02] transition-all"
-                    >
-                        Resume to Dashboard
-                    </button>
-                    <button
-                        onClick={contextLogout}
-                        className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-bold text-sm tracking-widest uppercase hover:bg-red-50 hover:text-red-500 transition-all"
-                    >
-                        Switch Account
-                    </button>
-                </div>
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={() =>
+                    navigate(
+                      {
+                        admin: "/admin/dashboard",
+                        driver: "/driver",
+                        parent: "/parent",
+                      }[session.user.role] || "/parent"
+                    )
+                  }
+                  className="w-full py-4 rounded-2xl bg-emerald-500 text-slate-950 font-black text-sm hover:brightness-110 shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                >
+                  <span>Continue to {session.user.role} Dashboard</span>
+                  <ArrowRight size={16} />
+                </button>
+                <button
+                  onClick={contextLogout}
+                  className="w-full py-3 rounded-2xl bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 text-xs font-bold border border-white/10 hover:border-red-500/30 transition-all"
+                >
+                  Sign Out & Switch Account
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-export default LoginPage;
-
-function ProfilePortrait({ tone, accent, name }: { tone: string; accent: string; name: string }) {
-  return (
-    <div className={`relative h-12 w-12 overflow-hidden rounded-full border-2 border-white/80 bg-gradient-to-br ${tone} shadow-lg`} title={name}>
-      <div className={`absolute left-1/2 top-2 h-5 w-5 -translate-x-1/2 rounded-full ${accent}`} />
-      <div className="absolute bottom-1 left-1/2 h-7 w-8 -translate-x-1/2 rounded-t-full bg-white/90" />
-      <div className="absolute left-1/2 top-4 h-4 w-4 -translate-x-1/2 rounded-full bg-[#f2c6a0]" />
-      <div className="absolute left-[18px] top-[21px] h-1 w-1 rounded-full bg-slate-800" />
-      <div className="absolute right-[18px] top-[21px] h-1 w-1 rounded-full bg-slate-800" />
     </div>
   );
 }

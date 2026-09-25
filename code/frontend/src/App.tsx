@@ -21,42 +21,20 @@ import PaymentSettingsPage from "./pages/driver/PaymentSettingsPage";
 import StudentPaymentDashboard from "./pages/driver/StudentPaymentDashboard";
 import DriverPaymentHistoryPage from "./pages/driver/DriverPaymentHistoryPage";
 import SidebarLayout from "./components/SidebarLayout";
-import { AuthProvider, useAuth } from "./features/auth/AuthContext";
+import { AuthProvider } from "./features/auth/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./pages/account/ProfilePage";
 import SettingsPage from "./pages/account/SettingsPage";
-
-function RoleHomeRedirect() {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-[#fdfdfc]">
-        <div className="animate-spin h-8 w-8 rounded-full border-4 border-slate-200 border-t-emerald-600" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const roleHome: Record<string, string> = {
-    admin: "/admin/dashboard",
-    driver: "/driver",
-    parent: "/parent",
-  };
-
-  return <Navigate to={roleHome[user.role] || "/login"} replace />;
-}
+import LandingPage from "./pages/public/LandingPage";
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter basename="/portal">
         <Routes>
-          {/* root redirect to appropriate dashboard or login */}
-          <Route path="/" element={<RoleHomeRedirect />} />
+          {/* Public Website Landing & Overview */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<LandingPage />} />
 
           {/* auth login page (no sidebar) */}
           <Route path="/login" element={<LoginPage />} />
@@ -172,8 +150,8 @@ export default function App() {
           </Route>
 
 
-          {/* catch-all fallback to appropriate role home or login */}
-          <Route path="*" element={<RoleHomeRedirect />} />
+          {/* catch-all fallback to landing page */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
