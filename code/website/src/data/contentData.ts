@@ -93,7 +93,7 @@ export const TESTIMONIALS_DATA: TestimonialItem[] = [
     location: 'Hillwood College Region',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
     rating: 5,
-    quote: 'KidsRoute transformed our school transport administration. We have complete oversight over 15 vans, emergency response readiness, and total parent trust.'
+    quote: 'KidsRoute transformed our school transport coordination. We have complete oversight over 15 vans, emergency response readiness, and total parent trust.'
   }
 ];
 
@@ -120,7 +120,7 @@ export const FAQ_DATA: FAQItem[] = [
   },
   {
     question: 'How do school van operators get started?',
-    answer: 'School administrators or independent fleet owners can request a free demo or register their account in minutes. Drivers and parents receive simple invite links to join their assigned routes.',
+    answer: 'Schools and independent fleet operators can request a demonstration or register their account in minutes. Drivers and parents receive simple invite links to join their assigned routes.',
     category: 'Setup'
   }
 ];

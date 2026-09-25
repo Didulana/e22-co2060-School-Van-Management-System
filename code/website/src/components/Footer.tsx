@@ -48,7 +48,6 @@ export const Footer: React.FC = () => {
               <li><a href={PORTAL_URLS.getStarted} className="hover:text-brand-400 transition-colors flex items-center gap-1"><span>Get Started</span> <ExternalLink className="w-3 h-3" /></a></li>
               <li><a href={PORTAL_URLS.parent} className="hover:text-brand-400 transition-colors flex items-center gap-1"><span>Parent Dashboard</span> <ExternalLink className="w-3 h-3" /></a></li>
               <li><a href={PORTAL_URLS.driver} className="hover:text-brand-400 transition-colors flex items-center gap-1"><span>Driver Portal</span> <ExternalLink className="w-3 h-3" /></a></li>
-              <li><a href={PORTAL_URLS.admin} className="hover:text-brand-400 transition-colors flex items-center gap-1"><span>School Admin Portal</span> <ExternalLink className="w-3 h-3" /></a></li>
             </ul>
           </div>
 

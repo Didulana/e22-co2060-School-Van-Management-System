@@ -41,7 +41,7 @@ export const DemoContactForm: React.FC = () => {
                   <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center flex-shrink-0">
                     <CheckCircle2 className="w-4 h-4" />
                   </div>
-                  <span>14-day free trial with full feature access</span>
+                  <span>Academic pilot demonstration with live tracking</span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-slate-700 font-semibold">
                   <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center flex-shrink-0">
@@ -112,7 +112,7 @@ export const DemoContactForm: React.FC = () => {
                       >
                         <option value="Parent">Parent</option>
                         <option value="Driver">Van Driver</option>
-                        <option value="School Admin">School Admin</option>
+                        <option value="School Authority">School Representative</option>
                         <option value="Fleet Owner">Fleet Owner</option>
                       </select>
                     </div>
