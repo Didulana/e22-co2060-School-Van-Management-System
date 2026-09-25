@@ -73,8 +73,9 @@ export default function TrackingMap({
         zoomControl: false,
       }).setView([latitude, longitude], 15);
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        attribution: '&copy; CartoDB',
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
       }).addTo(leafletMap.current);
 
       L.control.zoom({ position: 'bottomright' }).addTo(leafletMap.current);
