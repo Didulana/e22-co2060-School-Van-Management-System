@@ -16,9 +16,9 @@ export default {
         panel: "0 24px 80px rgba(0, 0, 0, 0.28)",
       },
       fontFamily: {
-        sans: ['"Stack Sans Text"', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif'],
-        display: ['"Stack Sans Headline"', '"Stack Sans Text"', 'Inter', 'ui-sans-serif', 'system-ui', "sans-serif"],
-        body: ['"Stack Sans Text"', 'Inter', '"Segoe UI"', "Tahoma", "Geneva", "Verdana", "sans-serif"],
+        sans: ['"Plus Jakarta Sans"', '"Stack Sans Text"', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', '"Stack Sans Headline"', '"Stack Sans Text"', 'Inter', 'ui-sans-serif', 'system-ui', "sans-serif"],
+        body: ['"Plus Jakarta Sans"', '"Stack Sans Text"', 'Inter', '"Segoe UI"', "Tahoma", "Geneva", "Verdana", "sans-serif"],
       },
     },
   },
