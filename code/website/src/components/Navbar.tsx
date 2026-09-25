@@ -20,14 +20,14 @@ export const Navbar: React.FC = () => {
       <div className="h-20 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 flex items-center justify-between">
         
         {/* Brand Logo & Team Tag */}
-        <a href="#" className="flex items-center gap-3 group">
+        <a href="#" className="flex items-center gap-2.5 group">
           <img 
             src={kidsrouteLogo} 
             alt="KidsRoute Logo" 
-            className="h-8 w-auto object-contain transition-transform group-hover:scale-105" 
+            className="h-10 w-auto object-contain transition-transform group-hover:scale-105" 
           />
           <div className="flex flex-col">
-            <span className="font-extrabold text-lg text-[#131b2e] tracking-tight leading-none">
+            <span className="font-extrabold text-xl text-[#131b2e] tracking-tight leading-none">
               KidsRoute
             </span>
             <span className="text-[10px] text-[#006948] tracking-wider uppercase font-bold mt-1">

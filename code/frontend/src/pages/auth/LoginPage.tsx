@@ -163,13 +163,13 @@ export function LoginPage() {
       <header className="fixed top-0 left-0 w-full z-50 bg-[#faf8ff]/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="h-16 w-full max-w-[1440px] mx-auto px-4 md:px-6 lg:px-10 flex items-center justify-between">
           {/* Brand Logo */}
-          <a href="/" className="flex items-center gap-2 group transition-transform">
+          <a href="/" className="flex items-center gap-2.5 group transition-transform">
             <img
               alt="KidsRoute Brand Logo"
-              className="h-8 w-auto object-contain"
+              className="h-10 w-auto object-contain transition-transform group-hover:scale-105"
               src={kidsrouteLogo}
             />
-            <span className="font-bold text-lg text-[#006948] tracking-tight">KidsRoute</span>
+            <span className="font-extrabold text-xl text-[#006948] tracking-tight">KidsRoute</span>
           </a>
 
           {/* Header Controls */}

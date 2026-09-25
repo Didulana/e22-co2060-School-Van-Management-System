@@ -1,6 +1,7 @@
 import React from 'react';
-import { Bus, ExternalLink, Code2 } from 'lucide-react';
+import { ExternalLink, Code2 } from 'lucide-react';
 import { PORTAL_URLS } from '../config';
+import kidsrouteLogo from '../assets/kidsroute-logo.png';
 
 export const Footer: React.FC = () => {
   return (
@@ -12,9 +13,11 @@ export const Footer: React.FC = () => {
           {/* Brand Info Column */}
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#006948] text-white flex items-center justify-center shadow-sm">
-                <Bus className="w-5 h-5" />
-              </div>
+              <img 
+                src={kidsrouteLogo} 
+                alt="KidsRoute Logo" 
+                className="h-9 w-auto object-contain" 
+              />
               <span className="font-extrabold text-xl text-[#131b2e] tracking-tight">KidsRoute</span>
             </div>
             <p className="text-xs sm:text-sm text-slate-600 max-w-sm leading-relaxed font-normal">
