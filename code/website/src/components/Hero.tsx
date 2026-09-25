@@ -8,14 +8,14 @@ export const Hero: React.FC = () => {
     <section className="relative w-full overflow-hidden bg-gradient-to-b from-[#006948]/10 via-[#faf8ff] to-[#faf8ff] pt-28 pb-16 md:pt-32 md:pb-20">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          
+
           {/* Left Hero Copy */}
           <div className="lg:col-span-7 flex flex-col items-start gap-4 z-10">
             {/* Academic Pill Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white shadow-sm border border-slate-100">
               <span className="w-2.5 h-2.5 rounded-full bg-[#006948] animate-pulse" />
               <span className="text-xs text-[#006948] font-bold tracking-tight">
-                Faculty of Engineering • University of Peradeniya • 2YP CO2060
+                Faculty of Engineering • University of Peradeniya • CO2060
               </span>
             </div>
 
