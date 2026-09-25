@@ -55,6 +55,7 @@ export async function ensureSchema(): Promise<void> {
     `ALTER TABLE students ADD COLUMN IF NOT EXISTS dob DATE`,
     `ALTER TABLE students ADD COLUMN IF NOT EXISTS grade VARCHAR(20)`,
     `ALTER TABLE students ADD COLUMN IF NOT EXISTS portrait_photo TEXT`,
+    `ALTER TABLE route_stops ALTER COLUMN stop_name TYPE VARCHAR(255)`,
   ];
 
   for (const sql of statements) {
